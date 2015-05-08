@@ -1,19 +1,8 @@
-require 'open3'
 require 'digest'
 require 'fileutils'
+require 'spec_helper'
 
-describe 'binary-builder binary' do
-  def run_binary_builder(interpreter, tag, docker_image, flags = '')
-    binary_builder_path = File.join(Dir.pwd, 'bin', 'binary-builder')
-    Open3.capture2e("#{binary_builder_path} #{interpreter} #{tag} #{flags}")[0]
-  end
-
-  context 'without valid arguments' do
-    it 'prints out a helpful usage message if no arguments are provided' do
-      expect(run_binary_builder('', '', '')).to include('USAGE', 'interpreter', 'git-tag', 'docker-image')
-    end
-  end
-
+describe 'building an interpreter binary' do
   context 'when node is specified' do
     it 'builds the specified binary, tars it, and places it in your current working directory' do
       run_binary_builder('node', 'v0.12.2', 'cloudfoundry/cflinuxfs2')

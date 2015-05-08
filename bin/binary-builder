@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 
+$LOAD_PATH.unshift(File.expand_path('../../lib', __FILE__))
 require 'optparse'
+require 'builder'
 
 USAGE_MESSAGE = "USAGE: binary-builder [interpreter] [git-tag] [docker-image]"
 
@@ -8,3 +10,11 @@ unless ARGV[0] && ARGV[1] && ARGV[2]
   puts USAGE_MESSAGE
   exit 1
 end
+
+options = {
+  interpreter: ARGV[0],
+  git_tag: ARGV[1],
+  docker_image: ARGV[2]
+}
+
+BinaryBuilder::Builder.build!(options)
