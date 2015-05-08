@@ -1,10 +1,10 @@
 require 'open3'
-require 'blueprint/blueprints'
+require 'fileutils'
 
 RSpec.configure do |config|
-  def run_binary_builder(interpreter, tag, docker_image, flags = '')
+  def run_binary_builder(binary_name, tag, docker_image, flags = '')
     binary_builder_path = File.join(Dir.pwd, 'bin', 'binary-builder')
-    Open3.capture2e("#{binary_builder_path} #{interpreter} #{tag} #{flags}")[0]
+    Open3.capture2e("#{binary_builder_path} #{binary_name} #{tag} #{flags}")[0]
   end
 end
 

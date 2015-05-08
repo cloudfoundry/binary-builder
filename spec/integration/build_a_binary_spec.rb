@@ -2,7 +2,7 @@ require 'digest'
 require 'fileutils'
 require 'spec_helper'
 
-describe 'building an interpreter binary' do
+describe 'building a binary' do
   context 'when node is specified' do
     it 'builds the specified binary, tars it, and places it in your current working directory' do
       run_binary_builder('node', 'v0.12.2', 'cloudfoundry/cflinuxfs2')

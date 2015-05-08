@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(File.expand_path('../../lib', __FILE__))
 require 'optparse'
 require 'builder'
 
-USAGE_MESSAGE = "USAGE: binary-builder [interpreter] [git-tag] [docker-image]"
+USAGE_MESSAGE = "USAGE: binary-builder [binary name] [git tag] [docker image]"
 
 unless ARGV[0] && ARGV[1] && ARGV[2]
   puts USAGE_MESSAGE
@@ -12,7 +12,7 @@ unless ARGV[0] && ARGV[1] && ARGV[2]
 end
 
 options = {
-  interpreter: ARGV[0],
+  binary_name: ARGV[0],
   git_tag: ARGV[1],
   docker_image: ARGV[2]
 }
