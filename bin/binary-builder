@@ -17,4 +17,4 @@ options = {
   docker_image: ARGV[2]
 }
 
-BinaryBuilder::Builder.build!(options)
+BinaryBuilder::Builder.build(options)

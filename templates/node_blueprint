@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+git clone https://github.com/joyent/node.git
+cd node
+git checkout GIT_TAG
+./configure --shared-openssl --prefix=/binary-builder/node-v0.12.2-linux-x64
+make
+make install

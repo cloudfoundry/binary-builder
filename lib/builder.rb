@@ -5,6 +5,14 @@ module BinaryBuilder
   class Builder
     attr_reader :binary_name, :git_tag, :docker_image, :architect
 
+    def self.build(options)
+      builder = self.new(options)
+
+      builder.set_foundation
+      builder.install_via_docker
+      builder.tar_installed_binary
+    end
+
     def initialize(binary_name:, git_tag:, docker_image:)
       @architect = architect_for_binary(binary_name).new(git_tag: git_tag)
       @binary_name, @git_tag, @docker_image = binary_name, git_tag, docker_image
@@ -50,7 +58,7 @@ module BinaryBuilder
     end
 
     def docker_command
-      "docker run -v #{foundation_path}:/binary-builder #{docker_image} bash /binary-builder/blueprint.sh"
+      "$(boot2docker shellinit) && docker run -v #{foundation_path}:/binary-builder #{docker_image} bash /binary-builder/blueprint.sh"
     end
 
     def tar_command

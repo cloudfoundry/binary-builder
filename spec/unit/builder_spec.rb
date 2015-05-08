@@ -54,7 +54,7 @@ module BinaryBuilder
     describe '#install_via_docker' do
       it 'runs the appropriate docker command' do
         foundation_path = File.join(ENV['HOME'], '.binary-builder', 'node-v0.12.2-foundation')
-        docker_command = "docker run -v #{foundation_path}:/binary-builder cloudfoundry/cflinuxfs2 bash /binary-builder/blueprint.sh"
+        docker_command = "$(boot2docker shellinit) && docker run -v #{foundation_path}:/binary-builder cloudfoundry/cflinuxfs2 bash /binary-builder/blueprint.sh"
         expect(builder).to receive(:run!).with(docker_command)
         builder.install_via_docker
       end
@@ -89,6 +89,19 @@ module BinaryBuilder
       it 'removes all evidence (big files are big)' do
         expect(FileUtils).to receive(:rm_rf).with(foundation_path)
         builder.tar_installed_binary
+      end
+    end
+
+    describe '#build' do
+      let(:builder) { double(:builder) }
+
+      it 'sets a foundation, installs via docker, and tars the installed binary' do
+        allow(Builder).to receive(:new).with(options).and_return(builder)
+
+        expect(builder).to receive(:set_foundation)
+        expect(builder).to receive(:install_via_docker)
+        expect(builder).to receive(:tar_installed_binary)
+        Builder.build(options)
       end
     end
   end
