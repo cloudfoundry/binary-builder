@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+
+USAGE_MESSAGE = "USAGE: binary-builder [interpreter] [git-tag] [docker-image]"
+
+unless ARGV[0] && ARGV[1] && ARGV[2]
+  puts USAGE_MESSAGE
+  exit 1
+end
