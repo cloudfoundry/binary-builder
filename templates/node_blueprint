@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
+INSTALL_DIRECTORY=/binary-builder/node-GIT_TAG-linux-x64
+
 git clone https://github.com/joyent/node.git
 cd node
 git checkout GIT_TAG
-./configure --shared-openssl --prefix=/binary-builder/node-v0.12.2-linux-x64
-make
-make install
+./configure --shared-openssl --prefix=${INSTALL_DIRECTORY}
+make install PORTABLE=1
+cp LICENSE $INSTALL_DIRECTORY 
