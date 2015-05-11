@@ -13,8 +13,8 @@ module BinaryBuilder
       builder.tar_installed_binary
     end
 
-    def initialize(binary_name:, git_tag:)
-      @binary_name, @git_tag = binary_name, git_tag
+    def initialize(options)
+      @binary_name, @git_tag = options[:binary_name], options[:git_tag]
       @architect = architect_for_binary(binary_name).new(git_tag: @git_tag)
     end
 

@@ -4,8 +4,8 @@ module BinaryBuilder
 
     attr_reader :git_tag
 
-    def initialize(git_tag:)
-      @git_tag = git_tag
+    def initialize(options)
+      @git_tag = options[:git_tag]
     end
 
     def blueprint
