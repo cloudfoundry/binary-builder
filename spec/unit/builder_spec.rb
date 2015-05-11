@@ -46,17 +46,17 @@ module BinaryBuilder
 
         expect(node_architect).to receive(:blueprint).and_return(blueprint)
         expect(FileUtils).to receive(:mkdir_p).with(foundation_path)
-        expect(File).to receive(:write).with(File.join(foundation_path, 'blueprint.sh'), blueprint)
+        expect_any_instance_of(File).to receive(:write).with(blueprint)
         builder.set_foundation
       end
     end
 
-    describe '#install_via_docker' do
-      it 'runs the appropriate docker command' do
+    describe '#install' do
+      it 'exercises the blueprint script' do
         foundation_path = File.join(ENV['HOME'], '.binary-builder', 'node-v0.12.2-foundation')
-        docker_command = "$(boot2docker shellinit) && docker run -v #{foundation_path}:/binary-builder cloudfoundry/cflinuxfs2 bash /binary-builder/blueprint.sh"
-        expect(builder).to receive(:run!).with(docker_command)
-        builder.install_via_docker
+        blueprint_path = File.join(foundation_path, 'blueprint.sh')
+        expect(builder).to receive(:run!).with(blueprint_path)
+        builder.install
       end
     end
 
@@ -76,7 +76,7 @@ module BinaryBuilder
 
       it 'tars the remaining files from their directory' do
         foundation_path = File.join(ENV['HOME'], '.binary-builder', 'node-v0.12.2-foundation')
-        expect(builder).to receive(:run!).with("tar czf node-v0.12.2-cloudfoundry_cflinuxfs2.tgz -C #{foundation_path} .")
+        expect(builder).to receive(:run!).with("tar czf node-v0.12.2-linux-x64.tgz -C #{foundation_path} .")
         builder.tar_installed_binary
       end
 
@@ -93,7 +93,7 @@ module BinaryBuilder
         allow(Builder).to receive(:new).with(options).and_return(builder)
 
         expect(builder).to receive(:set_foundation)
-        expect(builder).to receive(:install_via_docker)
+        expect(builder).to receive(:install)
         expect(builder).to receive(:tar_installed_binary)
         Builder.build(options)
       end

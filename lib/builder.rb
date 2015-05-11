@@ -3,36 +3,38 @@ require 'fileutils'
 
 module BinaryBuilder
   class Builder
-    attr_reader :binary_name, :git_tag, :docker_image, :architect
+    attr_reader :binary_name, :git_tag, :architect
 
     def self.build(options)
       builder = self.new(options)
 
       builder.set_foundation
-      builder.install_via_docker
+      builder.install
       builder.tar_installed_binary
     end
 
-    def initialize(binary_name:, git_tag:, docker_image:)
-      @architect = architect_for_binary(binary_name).new(git_tag: git_tag)
-      @binary_name, @git_tag, @docker_image = binary_name, git_tag, docker_image
+    def initialize(binary_name:, git_tag:)
+      @binary_name, @git_tag = binary_name, git_tag
+      @architect = architect_for_binary(binary_name).new(git_tag: @git_tag)
     end
 
     def set_foundation
       FileUtils.rm_rf(foundation_path) if Dir.exists?(foundation_path)
       FileUtils.mkdir_p(foundation_path)
 
-      File.write(blueprint_path, architect.blueprint)
+      File.open(blueprint_path, 'w') do |file|
+        file.chmod 0755
+        file.write architect.blueprint
+      end
     end
 
-    def install_via_docker
-      run!(docker_command)
+    def install
+      run!(blueprint_path)
     end
 
     def tar_installed_binary
       FileUtils.rm(blueprint_path)
       run!(tar_command)
-      # FileUtils.mv(File.join(foundation_path, tarball_name), Dir.pwd)
       FileUtils.rm_rf(foundation_path)
     end
 
@@ -54,11 +56,11 @@ module BinaryBuilder
     end
 
     def tarball_name
-      "#{binary_name}-#{git_tag}-#{docker_image.gsub('/', '_')}.tgz"
+      "#{binary_name}-#{git_tag}-linux-x64.tgz"
     end
 
-    def docker_command
-      "$(boot2docker shellinit) && docker run -v #{foundation_path}:/binary-builder #{docker_image} bash /binary-builder/blueprint.sh"
+    def install_command
+      blueprint_path
     end
 
     def tar_command
@@ -66,7 +68,7 @@ module BinaryBuilder
     end
 
     def run!(command)
-      system(command)
+      system(command) || raise("Failed to run command: #{command}")
     end
   end
 end
