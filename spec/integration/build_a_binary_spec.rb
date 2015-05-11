@@ -9,7 +9,11 @@ describe 'building a binary' do
 
       binary_tarball_location = File.join(Dir.pwd, 'node-v0.12.2-cloudfoundry_cflinuxfs2.tgz')
       expect(File.exist?(binary_tarball_location)).to be(true)
-      expect(Digest::MD5.file(binary_tarball_location).hexdigest).to eq('3dd3819cd7700bb63a740e4f372c545c')
+
+      docker_command = "docker run -v #{File.expand_path('../../..', __FILE__)}:/binary-builder:ro cloudfoundry/cflinuxfs2 /binary-builder/spec/assets/binary-exerciser.sh"
+      script_output = `#{docker_command}`.chomp
+      expect($?).to be_success
+      expect(script_output).to eq('v0.12.2')
       FileUtils.rm(binary_tarball_location)
     end
   end
