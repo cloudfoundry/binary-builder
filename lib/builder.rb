@@ -32,7 +32,7 @@ module BinaryBuilder
     def tar_installed_binary
       FileUtils.rm(blueprint_path)
       run!(tar_command)
-      FileUtils.mv(File.join(foundation_path, tarball_name), Dir.pwd)
+      # FileUtils.mv(File.join(foundation_path, tarball_name), Dir.pwd)
       FileUtils.rm_rf(foundation_path)
     end
 
@@ -62,7 +62,7 @@ module BinaryBuilder
     end
 
     def tar_command
-      "cd #{foundation_path} && tar czf #{tarball_name} ."
+      "tar czf #{tarball_name} -C #{foundation_path} ."
     end
 
     def run!(command)

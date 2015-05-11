@@ -66,7 +66,6 @@ module BinaryBuilder
       before do
         allow(FileUtils).to receive(:rm)
         allow(FileUtils).to receive(:rm_rf)
-        allow(FileUtils).to receive(:mv)
         allow(builder).to receive(:run!)
       end
 
@@ -77,12 +76,7 @@ module BinaryBuilder
 
       it 'tars the remaining files from their directory' do
         foundation_path = File.join(ENV['HOME'], '.binary-builder', 'node-v0.12.2-foundation')
-        expect(builder).to receive(:run!).with("cd #{foundation_path} && tar czf node-v0.12.2-cloudfoundry_cflinuxfs2.tgz .")
-        builder.tar_installed_binary
-      end
-
-      it 'moves the tarball to the current working directory' do
-        expect(FileUtils).to receive(:mv).with(File.join(foundation_path, 'node-v0.12.2-cloudfoundry_cflinuxfs2.tgz'), Dir.pwd)
+        expect(builder).to receive(:run!).with("tar czf node-v0.12.2-cloudfoundry_cflinuxfs2.tgz -C #{foundation_path} .")
         builder.tar_installed_binary
       end
 
