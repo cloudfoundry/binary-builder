@@ -1,13 +1,12 @@
 #!/bin/sh
 set +e
 
-TAR_NAME=node-v0.12.2-cloudfoundry_cflinuxfs2.tgz
-EXECUTABLE_PATH=node-v0.12.2-linux-x64/bin/node
-EXECUTABLE_TEST='console.log(process.version)'
+tar_name=$1
+executable_path=$2
+executable_test=$3
 
-mkdir node-exerciser
-cd node-exerciser
+mkdir binary-exerciser
+cd binary-exerciser
 
-cp /binary-builder/${TAR_NAME} .
-tar xzf ${TAR_NAME}
-${EXECUTABLE_PATH} -e "${EXECUTABLE_TEST}"
+tar xzf /binary-builder/${tar_name}
+${executable_path} -e "${executable_test}"
