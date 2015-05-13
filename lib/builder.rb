@@ -1,5 +1,6 @@
 require_relative 'architect/architects'
 require 'fileutils'
+require 'tmpdir'
 
 module BinaryBuilder
   class Builder
@@ -19,13 +20,10 @@ module BinaryBuilder
     end
 
     def set_foundation
-      FileUtils.rm_rf(foundation_path) if Dir.exists?(foundation_path)
       FileUtils.mkdir_p(foundation_path)
 
-      File.open(blueprint_path, 'w') do |file|
-        file.chmod 0755
-        file.write architect.blueprint
-      end
+      File.write(blueprint_path, architect.blueprint)
+      FileUtils.chmod('+x', blueprint_path)
     end
 
     def install
@@ -35,7 +33,6 @@ module BinaryBuilder
     def tar_installed_binary
       FileUtils.rm(blueprint_path)
       run!(tar_command)
-      FileUtils.rm_rf(foundation_path)
     end
 
     private
@@ -49,7 +46,7 @@ module BinaryBuilder
     end
 
     def foundation_path
-      @foundation_path ||= File.join(ENV['HOME'], '.binary-builder', "#{binary_name}-#{binary_version}-foundation")
+      @foundation_path ||= Dir.mktmpdir
     end
 
     def blueprint_path

@@ -12,9 +12,11 @@ module BinaryBuilder
         binary_version: 'v0.12.2'
       }
     end
+    let (:foundation_path) { 'tmp_dir' }
 
     before do
       allow(NodeArchitect).to receive(:new)
+      allow(Dir).to receive(:mktmpdir).and_return('tmp_dir')
     end
 
     describe '#new' do
@@ -36,22 +38,22 @@ module BinaryBuilder
 
       before do
         allow(NodeArchitect).to receive(:new).and_return(node_architect)
-        allow(FileUtils).to receive(:rm_rf)
+        allow(FileUtils).to receive(:chmod)
       end
 
-      it "writes the architect's blueprint to a temporary file within $HOME" do
-        foundation_path = File.join(ENV['HOME'], '.binary-builder', 'node-v0.12.2-foundation')
-
+      it "writes the architect's blueprint to a temporary executable within $HOME" do
         expect(node_architect).to receive(:blueprint).and_return(blueprint)
         expect(FileUtils).to receive(:mkdir_p).with(foundation_path)
-        expect_any_instance_of(File).to receive(:write).with(blueprint)
+
+        blueprint_path = File.join(foundation_path, 'blueprint.sh')
+        expect(File).to receive(:write).with(blueprint_path, blueprint)
+        expect(FileUtils).to receive(:chmod).with('+x', blueprint_path)
         builder.set_foundation
       end
     end
 
     describe '#install' do
       it 'exercises the blueprint script' do
-        foundation_path = File.join(ENV['HOME'], '.binary-builder', 'node-v0.12.2-foundation')
         blueprint_path = File.join(foundation_path, 'blueprint.sh')
         expect(builder).to receive(:run!).with(blueprint_path)
         builder.install
@@ -59,11 +61,9 @@ module BinaryBuilder
     end
 
     describe '#tar_installed_binary' do
-      let (:foundation_path) { File.join(ENV['HOME'], '.binary-builder', 'node-v0.12.2-foundation') }
 
       before do
         allow(FileUtils).to receive(:rm)
-        allow(FileUtils).to receive(:rm_rf)
         allow(builder).to receive(:run!)
       end
 
@@ -73,13 +73,7 @@ module BinaryBuilder
       end
 
       it 'tars the remaining files from their directory' do
-        foundation_path = File.join(ENV['HOME'], '.binary-builder', 'node-v0.12.2-foundation')
         expect(builder).to receive(:run!).with("tar czf node-v0.12.2-linux-x64.tgz -C #{foundation_path} .")
-        builder.tar_installed_binary
-      end
-
-      it 'removes all evidence (big files are big)' do
-        expect(FileUtils).to receive(:rm_rf).with(foundation_path)
         builder.tar_installed_binary
       end
     end

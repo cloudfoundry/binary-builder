@@ -8,4 +8,4 @@ git clone --depth 1 --branch GIT_TAG https://github.com/joyent/node.git
 cd node
 ./configure --shared-openssl --prefix=/
 make install DESTDIR=$INSTALL_DIRECTORY PORTABLE=1
-cp LICENSE $INSTALL_DIRECTORY 
+cp LICENSE $INSTALL_DIRECTORY
