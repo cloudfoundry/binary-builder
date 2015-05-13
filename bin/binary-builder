@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(File.expand_path('../../lib', __FILE__))
 require 'optparse'
 require 'builder'
 
-USAGE_MESSAGE = "USAGE: binary-builder [binary name] [git tag]"
+USAGE_MESSAGE = "USAGE: binary-builder [binary name] [binary version]"
 
 unless ARGV[0] && ARGV[1]
   puts USAGE_MESSAGE
@@ -13,7 +13,7 @@ end
 
 options = {
   binary_name: ARGV[0],
-  git_tag: ARGV[1]
+  binary_version: ARGV[1]
 }
 
 BinaryBuilder::Builder.build(options)

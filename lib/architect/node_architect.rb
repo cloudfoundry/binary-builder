@@ -2,15 +2,15 @@ module BinaryBuilder
   class NodeArchitect < Architect
     NODE_TEMPLATE_PATH = File.expand_path('../../../templates/node_blueprint', __FILE__)
 
-    attr_reader :git_tag
+    attr_reader :binary_version
 
     def initialize(options)
-      @git_tag = options[:git_tag]
+      @binary_version = options[:binary_version]
     end
 
     def blueprint
       blueprint_string = read_file(NODE_TEMPLATE_PATH)
-      blueprint_string.gsub('GIT_TAG', git_tag)
+      blueprint_string.gsub('GIT_TAG', binary_version)
     end
 
     private

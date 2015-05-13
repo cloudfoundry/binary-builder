@@ -3,7 +3,7 @@ require 'fileutils'
 
 module BinaryBuilder
   class Builder
-    attr_reader :binary_name, :git_tag, :architect
+    attr_reader :binary_name, :binary_version, :architect
 
     def self.build(options)
       builder = self.new(options)
@@ -14,8 +14,8 @@ module BinaryBuilder
     end
 
     def initialize(options)
-      @binary_name, @git_tag = options[:binary_name], options[:git_tag]
-      @architect = architect_for_binary(binary_name).new(git_tag: @git_tag)
+      @binary_name, @binary_version = options[:binary_name], options[:binary_version]
+      @architect = architect_for_binary(binary_name).new(binary_version: @binary_version)
     end
 
     def set_foundation
@@ -49,7 +49,7 @@ module BinaryBuilder
     end
 
     def foundation_path
-      @foundation_path ||= File.join(ENV['HOME'], '.binary-builder', "#{binary_name}-#{git_tag}-foundation")
+      @foundation_path ||= File.join(ENV['HOME'], '.binary-builder', "#{binary_name}-#{binary_version}-foundation")
     end
 
     def blueprint_path
@@ -57,11 +57,7 @@ module BinaryBuilder
     end
 
     def tarball_name
-      "#{binary_name}-#{git_tag}-linux-x64.tgz"
-    end
-
-    def install_command
-      blueprint_path
+      "#{binary_name}-#{binary_version}-linux-x64.tgz"
     end
 
     def tar_command

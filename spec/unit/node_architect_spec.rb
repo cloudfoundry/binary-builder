@@ -2,12 +2,12 @@ require 'spec_helper'
 
 module BinaryBuilder
   describe NodeArchitect do
-    subject(:architect) { NodeArchitect.new(git_tag: 'v0.12.2') }
+    subject(:architect) { NodeArchitect.new(binary_version: 'v0.12.2') }
 
     describe '#new' do
 
-      it 'sets a git tag' do
-        expect(architect.git_tag).to eq('v0.12.2')
+      it 'sets a binary version' do
+        expect(architect.binary_version).to eq('v0.12.2')
       end
     end
 

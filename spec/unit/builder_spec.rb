@@ -9,8 +9,7 @@ module BinaryBuilder
     let(:options) do
       {
         binary_name: 'node',
-        git_tag: 'v0.12.2',
-        docker_image: 'cloudfoundry/cflinuxfs2'
+        binary_version: 'v0.12.2'
       }
     end
 
@@ -20,14 +19,13 @@ module BinaryBuilder
 
     describe '#new' do
       context 'for a node binary' do
-        it 'sets binary_name, git_tag, and docker_image values' do
+        it 'sets binary_name, binary_version, and docker_image values' do
           expect(builder.binary_name).to eq('node')
-          expect(builder.git_tag).to eq('v0.12.2')
-          expect(builder.docker_image).to eq('cloudfoundry/cflinuxfs2')
+          expect(builder.binary_version).to eq('v0.12.2')
         end
 
         it 'creates a node architect' do
-          expect(NodeArchitect).to receive(:new).with({git_tag: 'v0.12.2'}).and_return(node_architect)
+          expect(NodeArchitect).to receive(:new).with({binary_version: 'v0.12.2'}).and_return(node_architect)
           builder
         end
       end
