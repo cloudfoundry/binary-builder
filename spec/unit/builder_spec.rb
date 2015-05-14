@@ -1,6 +1,4 @@
 require 'spec_helper'
-require 'builder'
-require 'architect/architects'
 
 module BinaryBuilder
   describe Builder do
@@ -41,11 +39,11 @@ module BinaryBuilder
         allow(FileUtils).to receive(:chmod)
       end
 
-      it "writes the architect's blueprint to a temporary executable within $HOME" do
+      it "writes the architect's blueprint to a temporary executable" do
         expect(node_architect).to receive(:blueprint).and_return(blueprint)
-        expect(FileUtils).to receive(:mkdir_p).with(foundation_path)
+        expect(FileUtils).to receive(:mkdir_p).with(File.join(foundation_path, 'installation'))
 
-        blueprint_path = File.join(foundation_path, 'blueprint.sh')
+        blueprint_path = File.join(foundation_path, 'installation', 'blueprint.sh')
         expect(File).to receive(:write).with(blueprint_path, blueprint)
         expect(FileUtils).to receive(:chmod).with('+x', blueprint_path)
         builder.set_foundation
@@ -54,8 +52,8 @@ module BinaryBuilder
 
     describe '#install' do
       it 'exercises the blueprint script' do
-        blueprint_path = File.join(foundation_path, 'blueprint.sh')
-        expect(builder).to receive(:run!).with(blueprint_path)
+        blueprint_path = File.join(foundation_path, 'installation', 'blueprint.sh')
+        expect(builder).to receive(:run!).with(blueprint_path, 'tmp_dir')
         builder.install
       end
     end
@@ -68,12 +66,12 @@ module BinaryBuilder
       end
 
       it 'removes the blueprint' do
-        expect(FileUtils).to receive(:rm).with(File.join(foundation_path, 'blueprint.sh'))
+        expect(FileUtils).to receive(:rm).with(File.join(foundation_path, 'installation', 'blueprint.sh'))
         builder.tar_installed_binary
       end
 
       it 'tars the remaining files from their directory' do
-        expect(builder).to receive(:run!).with("tar czf node-v0.12.2-linux-x64.tgz -C #{foundation_path} .")
+        expect(builder).to receive(:run!).with("tar czf node-v0.12.2-linux-x64.tgz -C #{File.join(foundation_path, 'installation')} .")
         builder.tar_installed_binary
       end
     end
@@ -81,7 +79,7 @@ module BinaryBuilder
     describe '#build' do
       let(:builder) { double(:builder) }
 
-      it 'sets a foundation, installs via docker, and tars the installed binary' do
+      it 'sets a foundation, installs the binary, and tars the installed binary' do
         allow(Builder).to receive(:new).with(options).and_return(builder)
 
         expect(builder).to receive(:set_foundation)
