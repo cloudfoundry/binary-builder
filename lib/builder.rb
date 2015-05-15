@@ -39,6 +39,7 @@ module BinaryBuilder
     BINARY_ARCHITECT_MAP = {
       'node'   => NodeArchitect,
       'ruby'   => RubyArchitect,
+      'jruby'  => JRubyArchitect,
       'python' => PythonArchitect
     }
 

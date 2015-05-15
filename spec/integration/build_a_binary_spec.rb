@@ -43,6 +43,23 @@ describe 'building a binary' do
     end
   end
 
+  context 'when jruby is specified', binary: 'jruby' do
+    let(:binary_name) { 'jruby' }
+    let(:binary_version) { 'ruby-2.2.0-jruby-9.0.0.0.pre1' }
+
+    it 'builds the specified binary, tars it, and places it in your current working directory' do
+      binary_tarball_location = File.join(Dir.pwd, 'jruby-ruby-2.2.0-jruby-9.0.0.0.pre1-linux-x64.tgz')
+      expect(File.exist?(binary_tarball_location)).to be(true)
+
+      docker_exerciser = "docker run -v #{File.expand_path('../../..', __FILE__)}:/binary-builder:ro cloudfoundry/cflinuxfs2 /binary-builder/spec/assets/jruby-exerciser.sh"
+
+      script_output = `#{docker_exerciser}`.chomp
+      expect($?).to be_success
+      expect(script_output).to eq('java 2.2.0')
+      FileUtils.rm(binary_tarball_location)
+    end
+  end
+
   context 'when python is specified', binary: 'python' do
     let(:binary_name) { 'python' }
     let(:binary_version) { '3.4.3' }

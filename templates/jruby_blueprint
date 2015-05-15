@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -e
+
+INSTALL_DIRECTORY=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+apt-get update
+apt-get -y install maven openjdk-7-jdk
+
+git clone --depth 1 --branch GIT_TAG https://github.com/jruby/jruby.git
+cd jruby
+mvn -Djruby.default.ruby.version=RUBY_VERSION
+
+cp -r bin/ $INSTALL_DIRECTORY
+cp -r lib/ $INSTALL_DIRECTORY
