@@ -37,8 +37,9 @@ module BinaryBuilder
 
     private
     BINARY_ARCHITECT_MAP = {
-      'node' => NodeArchitect,
-      'ruby' => RubyArchitect
+      'node'   => NodeArchitect,
+      'ruby'   => RubyArchitect,
+      'python' => PythonArchitect
     }
 
     def architect_for_binary(binary)

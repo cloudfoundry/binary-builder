@@ -16,7 +16,7 @@ describe 'building a binary' do
       expect(File.exist?(binary_tarball_location)).to be(true)
 
       docker_exerciser = "docker run -v #{File.expand_path('../../..', __FILE__)}:/binary-builder:ro cloudfoundry/cflinuxfs2 /binary-builder/spec/assets/binary-exerciser.sh"
-      exerciser_args = "node-v0.12.2-linux-x64.tgz node-v0.12.2-linux-x64/bin/node 'console.log(process.version)'"
+      exerciser_args = "node-v0.12.2-linux-x64.tgz node-v0.12.2-linux-x64/bin/node -e 'console.log(process.version)'"
 
       script_output = `#{docker_exerciser} #{exerciser_args}`.chomp
       expect($?).to be_success
@@ -34,11 +34,29 @@ describe 'building a binary' do
       expect(File.exist?(binary_tarball_location)).to be(true)
 
       docker_exerciser = "docker run -v #{File.expand_path('../../..', __FILE__)}:/binary-builder:ro cloudfoundry/cflinuxfs2 /binary-builder/spec/assets/binary-exerciser.sh"
-      exerciser_args = "ruby-v2_0_0_645-linux-x64.tgz ./bin/ruby 'puts RUBY_VERSION'"
+      exerciser_args = %q{ruby-v2_0_0_645-linux-x64.tgz ./bin/ruby -e 'puts RUBY_VERSION'}
 
       script_output = `#{docker_exerciser} #{exerciser_args}`.chomp
       expect($?).to be_success
       expect(script_output).to eq('2.0.0')
+      FileUtils.rm(binary_tarball_location)
+    end
+  end
+
+  context 'when python is specified' do
+    let(:binary_name) { 'python' }
+    let(:binary_version) { '3.4.3' }
+
+    it 'builds the specified binary, tars it, and places it in your current working directory' do
+      binary_tarball_location = File.join(Dir.pwd, 'python-3.4.3-linux-x64.tgz')
+      expect(File.exist?(binary_tarball_location)).to be(true)
+
+      docker_exerciser = "docker run -v #{File.expand_path('../../..', __FILE__)}:/binary-builder:ro -e LD_LIBRARY_PATH=/binary-exerciser/lib cloudfoundry/cflinuxfs2 /binary-builder/spec/assets/binary-exerciser.sh"
+      exerciser_args = "python-3.4.3-linux-x64.tgz ./bin/python -c 'import sys;print(sys.version[:5])'"
+
+      script_output = `#{docker_exerciser} #{exerciser_args}`.chomp
+      expect($?).to be_success
+      expect(script_output).to eq('3.4.3')
       FileUtils.rm(binary_tarball_location)
     end
   end
