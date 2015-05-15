@@ -7,7 +7,7 @@ describe 'building a binary' do
     run_binary_builder(binary_name, binary_version)
   end
 
-  context 'when node is specified' do
+  context 'when node is specified', binary: 'node' do
     let(:binary_name) { 'node' }
     let(:binary_version) { 'v0.12.2' }
 
@@ -25,7 +25,7 @@ describe 'building a binary' do
     end
   end
 
-  context 'when ruby is specified' do
+  context 'when ruby is specified', binary: 'ruby' do
     let(:binary_name) { 'ruby' }
     let(:binary_version) { 'v2_0_0_645' }
 
@@ -43,7 +43,7 @@ describe 'building a binary' do
     end
   end
 
-  context 'when python is specified' do
+  context 'when python is specified', binary: 'python' do
     let(:binary_name) { 'python' }
     let(:binary_version) { '3.4.3' }
 
