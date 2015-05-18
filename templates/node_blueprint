@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-INSTALL_DIRECTORY=$BASE_DIR/node-GIT_TAG-linux-x64
+INSTALL_DIRECTORY=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/node-GIT_TAG-linux-x64
 
 git clone --depth 1 --branch GIT_TAG https://github.com/joyent/node.git
 cd node

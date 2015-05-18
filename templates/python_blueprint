@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 set -e
 
-BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-INSTALL_DIRECTORY='/app/.heroku/vendor'
+INSTALL_DIRECTORY=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+PREFIX='/app/.heroku/vendor'
 
 mkdir -p /app/.heroku
-ln -s $BASE_DIR $INSTALL_DIRECTORY
+ln -s $INSTALL_DIRECTORY $PREFIX
 
 curl https://www.python.org/ftp/python/BINARY_VERSION/Python-BINARY_VERSION.tgz | tar xzf -
 cd Python-BINARY_VERSION
-./configure --prefix=${INSTALL_DIRECTORY} --enable-shared --with-ensurepip=no
+./configure --prefix=${PREFIX} --enable-shared --with-ensurepip=no
 make
 make install
 
