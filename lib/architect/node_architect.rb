@@ -12,10 +12,5 @@ module BinaryBuilder
       blueprint_string = read_file(NODE_TEMPLATE_PATH)
       blueprint_string.gsub('GIT_TAG', binary_version)
     end
-
-    private
-    def read_file(file)
-      File.open(file).read
-    end
   end
 end

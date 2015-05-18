@@ -12,21 +12,19 @@ module BinaryBuilder
     end
 
     describe 'blueprint' do
-      let(:template_string) { double(:template_string) }
+      let(:template_file) { double(read: 'BINARY_VERSION') }
 
       before do
-        allow(architect).to receive(:read_file).and_return(template_string)
-        allow(template_string).to receive(:gsub)
+        allow(File).to receive(:open).and_return(template_file)
       end
 
       it 'uses the python_blueprint template' do
-        expect(architect).to receive(:read_file).with(File.expand_path('../../../templates/python_blueprint', __FILE__))
+        expect(File).to receive(:open).with(File.expand_path('../../../templates/python_blueprint', __FILE__))
         architect.blueprint
       end
 
       it 'adds the binary version value' do
-        expect(template_string).to receive(:gsub).with('BINARY_VERSION', '3.4.3')
-        architect.blueprint
+        expect(architect.blueprint).to include '3.4.3'
       end
     end
   end
