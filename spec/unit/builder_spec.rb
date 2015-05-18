@@ -53,7 +53,8 @@ module BinaryBuilder
     describe '#install' do
       it 'exercises the blueprint script' do
         blueprint_path = File.join(foundation_path, 'installation', 'blueprint.sh')
-        expect(builder).to receive(:run!).with(blueprint_path, 'tmp_dir')
+        expect(Dir).to receive(:chdir).with('tmp_dir').and_yield
+        expect(builder).to receive(:system).with(blueprint_path).and_return(true)
         builder.install
       end
     end
@@ -62,7 +63,7 @@ module BinaryBuilder
 
       before do
         allow(FileUtils).to receive(:rm)
-        allow(builder).to receive(:run!)
+        allow(builder).to receive(:system).and_return(true)
       end
 
       it 'removes the blueprint' do
@@ -71,7 +72,7 @@ module BinaryBuilder
       end
 
       it 'tars the remaining files from their directory' do
-        expect(builder).to receive(:run!).with("tar czf node-v0.12.2-linux-x64.tgz -C #{File.join(foundation_path, 'installation')} .")
+        expect(builder).to receive(:system).with("tar czf node-v0.12.2-linux-x64.tgz -C #{File.join(foundation_path, 'installation')} .")
         builder.tar_installed_binary
       end
     end
