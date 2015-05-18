@@ -20,15 +20,15 @@ module BinaryBuilder
     end
 
     def set_foundation
-      FileUtils.mkdir(installation_path)
+      FileUtils.mkdir(installation_dir)
 
       File.write(blueprint_path, architect.blueprint)
       FileUtils.chmod('+x', blueprint_path)
     end
 
     def install
-      Dir.chdir(foundation_path) do
-        run!("#{blueprint_path} #{installation_path}")
+      Dir.chdir(foundation_dir) do
+        run!("#{blueprint_path} #{installation_dir}")
       end
     end
 
@@ -48,16 +48,16 @@ module BinaryBuilder
       BINARY_ARCHITECT_MAP[binary]
     end
 
-    def foundation_path
-      @foundation_path ||= Dir.mktmpdir
+    def foundation_dir
+      @foundation_dir ||= Dir.mktmpdir
     end
 
-    def installation_path
-      @installation_path ||= File.join(foundation_path, 'installation')
+    def installation_dir
+      @installation_dir ||= File.join(foundation_dir, 'installation')
     end
 
     def blueprint_path
-      @blueprint_path ||= File.join(foundation_path, 'blueprint.sh')
+      @blueprint_path ||= File.join(foundation_dir, 'blueprint.sh')
     end
 
     def tarball_name
@@ -65,7 +65,7 @@ module BinaryBuilder
     end
 
     def tar_command
-      "tar czf #{tarball_name} -C #{installation_path} ."
+      "tar czf #{tarball_name} -C #{installation_dir} ."
     end
 
     def run!(command)

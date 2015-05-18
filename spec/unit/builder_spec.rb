@@ -10,7 +10,7 @@ module BinaryBuilder
         binary_version: 'v0.12.2'
       }
     end
-    let (:foundation_path) { 'tmp_dir' }
+    let (:foundation_dir) { 'tmp_dir' }
 
     before do
       allow(NodeArchitect).to receive(:new)
@@ -41,9 +41,9 @@ module BinaryBuilder
 
       it "writes the architect's blueprint to a temporary executable" do
         expect(node_architect).to receive(:blueprint).and_return(blueprint)
-        expect(FileUtils).to receive(:mkdir).with(File.join(foundation_path, 'installation'))
+        expect(FileUtils).to receive(:mkdir).with(File.join(foundation_dir, 'installation'))
 
-        blueprint_path = File.join(foundation_path, 'blueprint.sh')
+        blueprint_path = File.join(foundation_dir, 'blueprint.sh')
         expect(File).to receive(:write).with(blueprint_path, blueprint)
         expect(FileUtils).to receive(:chmod).with('+x', blueprint_path)
         builder.set_foundation
@@ -56,7 +56,7 @@ module BinaryBuilder
       end
 
       it 'exercises the blueprint script' do
-        blueprint_path = File.join(foundation_path, 'blueprint.sh')
+        blueprint_path = File.join(foundation_dir, 'blueprint.sh')
         expect(Dir).to receive(:chdir).with('tmp_dir').and_yield
         expect(builder).to receive(:system).with("#{blueprint_path} tmp_dir/installation").and_return(true)
         builder.install
@@ -70,7 +70,7 @@ module BinaryBuilder
       end
 
       it 'tars the remaining files from their directory' do
-        expect(builder).to receive(:system).with("tar czf node-v0.12.2-linux-x64.tgz -C #{File.join(foundation_path, 'installation')} .")
+        expect(builder).to receive(:system).with("tar czf node-v0.12.2-linux-x64.tgz -C #{File.join(foundation_dir, 'installation')} .")
         builder.tar_installed_binary
       end
     end
