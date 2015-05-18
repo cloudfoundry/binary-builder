@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 set -e
 
-BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-INSTALL_DIRECTORY='/app/vendor/RUBY_DIRECTORY'
+INSTALLATION_DIR=$1
+PREFIX='/app/vendor/RUBY_DIRECTORY'
 
 mkdir -p /app/vendor
-ln -s $BASE_DIR $INSTALL_DIRECTORY
+ln -s $INSTALLATION_DIR $PREFIX
 
 git clone --depth 1 --branch GIT_TAG https://github.com/ruby/ruby.git
 cd ruby
 apt-get install -y autoconf
 autoconf
-./configure --prefix=${INSTALL_DIRECTORY} --enable-load-relative --disable-install-doc
+./configure --prefix=${PREFIX} --enable-load-relative --disable-install-doc
 make install

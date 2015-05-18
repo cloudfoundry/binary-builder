@@ -41,9 +41,9 @@ module BinaryBuilder
 
       it "writes the architect's blueprint to a temporary executable" do
         expect(node_architect).to receive(:blueprint).and_return(blueprint)
-        expect(FileUtils).to receive(:mkdir_p).with(File.join(foundation_path, 'installation'))
+        expect(FileUtils).to receive(:mkdir).with(File.join(foundation_path, 'installation'))
 
-        blueprint_path = File.join(foundation_path, 'installation', 'blueprint.sh')
+        blueprint_path = File.join(foundation_path, 'blueprint.sh')
         expect(File).to receive(:write).with(blueprint_path, blueprint)
         expect(FileUtils).to receive(:chmod).with('+x', blueprint_path)
         builder.set_foundation
@@ -51,10 +51,14 @@ module BinaryBuilder
     end
 
     describe '#install' do
+      before do
+        allow(FileUtils).to receive(:mkdir)
+      end
+
       it 'exercises the blueprint script' do
-        blueprint_path = File.join(foundation_path, 'installation', 'blueprint.sh')
+        blueprint_path = File.join(foundation_path, 'blueprint.sh')
         expect(Dir).to receive(:chdir).with('tmp_dir').and_yield
-        expect(builder).to receive(:system).with(blueprint_path).and_return(true)
+        expect(builder).to receive(:system).with("#{blueprint_path} tmp_dir/installation").and_return(true)
         builder.install
       end
     end
@@ -62,13 +66,7 @@ module BinaryBuilder
     describe '#tar_installed_binary' do
 
       before do
-        allow(FileUtils).to receive(:rm)
         allow(builder).to receive(:system).and_return(true)
-      end
-
-      it 'removes the blueprint' do
-        expect(FileUtils).to receive(:rm).with(File.join(foundation_path, 'installation', 'blueprint.sh'))
-        builder.tar_installed_binary
       end
 
       it 'tars the remaining files from their directory' do
@@ -77,7 +75,7 @@ module BinaryBuilder
       end
     end
 
-    describe '#build' do
+    describe '::build' do
       let(:builder) { double(:builder) }
 
       it 'sets a foundation, installs the binary, and tars the installed binary' do

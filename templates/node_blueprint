@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
-INSTALL_DIRECTORY=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/node-GIT_TAG-linux-x64
+INSTALLATION_DIR=$1
+NODE_DIR=$INSTALLATION_DIR/node-GIT_TAG-linux-x64
 
 git clone --depth 1 --branch GIT_TAG https://github.com/joyent/node.git
 cd node
 ./configure --shared-openssl --prefix=/
-make install DESTDIR=$INSTALL_DIRECTORY PORTABLE=1
-cp LICENSE $INSTALL_DIRECTORY
+make install DESTDIR=$NODE_DIR PORTABLE=1
+cp LICENSE $NODE_DIR

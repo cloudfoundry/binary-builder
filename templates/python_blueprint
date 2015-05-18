@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
-INSTALL_DIRECTORY=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+INSTALLATION_DIR=$1
 PREFIX='/app/.heroku/vendor'
 
 mkdir -p /app/.heroku
-ln -s $INSTALL_DIRECTORY $PREFIX
+ln -s $INSTALLATION_DIR $PREFIX
 
 curl https://www.python.org/ftp/python/BINARY_VERSION/Python-BINARY_VERSION.tgz | tar xzf -
 cd Python-BINARY_VERSION
@@ -14,7 +14,7 @@ make
 make install
 
 # For python3 only:
-cd $INSTALL_DIRECTORY/bin
+cd $INSTALLATION_DIR/bin
 if ! [ -f ./python ]; then
   ln -s ./python3 ./python
 fi
