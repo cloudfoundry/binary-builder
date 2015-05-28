@@ -61,7 +61,11 @@ module BinaryBuilder
     end
 
     def tarball_name
-      "#{binary_name}-#{binary_version}-linux-x64.tgz"
+      if binary_name == 'node'
+        "#{binary_name}-#{binary_version}-linux-x64.tar.gz"
+      else
+        "#{binary_name}-#{binary_version}-linux-x64.tgz"
+      end
     end
 
     def tar_command
