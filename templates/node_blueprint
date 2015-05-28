@@ -4,8 +4,15 @@ set -e
 INSTALLATION_DIR=$1
 NODE_DIR=$INSTALLATION_DIR/node-GIT_TAG-linux-x64
 
-git clone --depth 1 --branch GIT_TAG https://github.com/joyent/node.git
-cd node
-./configure --shared-openssl --prefix=/
+if [[ `lsb_release -r` == *10.04* ]]; then
+  git clone https://github.com/joyent/node.git
+  cd node
+  git checkout GIT_TAG
+  ./configure --shared-openssl-libpath=/lib/ --prefix=/
+elif [[ `lsb_release -r` == *14.04* ]]; then 
+  git clone --depth 1 --branch GIT_TAG https://github.com/joyent/node.git
+  cd node
+  ./configure --shared-openssl --prefix=/
+fi
 make install DESTDIR=$NODE_DIR PORTABLE=1
 cp LICENSE $NODE_DIR
