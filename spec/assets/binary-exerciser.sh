@@ -1,13 +1,10 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set +e
 
-tar_name=$1
-exec_path=$2
-exec_flag=$3
-exec_test=$4
+tar_name=$1; shift
 
 mkdir binary-exerciser
 cd binary-exerciser
 
 tar xzf /binary-builder/${tar_name}
-${exec_path} $exec_flag "${exec_test}"
+eval $(printf '%q ' "$@")

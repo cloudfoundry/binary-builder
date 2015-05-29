@@ -101,4 +101,23 @@ describe 'building a binary' do
       FileUtils.rm(binary_tarball_location)
     end
   end
+
+  context 'when httpd is specified', binary: 'httpd' do
+    let(:binary_name) { 'httpd' }
+    let(:binary_version) { '2.4.12' }
+    let(:rootfs) { 'cflinuxfs2' }
+
+    it 'builds the specified binary, tars it, and places it in your current working directory' do
+      binary_tarball_location = File.join(Dir.pwd, 'httpd-2.4.12-linux-x64.tgz')
+      expect(File.exist?(binary_tarball_location)).to be(true)
+
+      docker_exerciser = "docker run -v #{File.expand_path('../../..', __FILE__)}:/binary-builder:ro -e LD_LIBRARY_PATH=/binary-exerciser/httpd/lib cloudfoundry/cflinuxfs2 /binary-builder/spec/assets/binary-exerciser.sh"
+      exerciser_args = "httpd-2.4.12-linux-x64.tgz ./httpd/bin/httpd -v"
+
+      script_output = `#{docker_exerciser} #{exerciser_args}`.chomp
+      expect($?).to be_success
+      expect(script_output).to include('2.4.12')
+      FileUtils.rm(binary_tarball_location)
+    end
+  end
 end

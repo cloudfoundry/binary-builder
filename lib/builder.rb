@@ -41,7 +41,8 @@ module BinaryBuilder
       'node'   => NodeArchitect,
       'ruby'   => RubyArchitect,
       'jruby'  => JRubyArchitect,
-      'python' => PythonArchitect
+      'python' => PythonArchitect,
+      'httpd' => HttpdArchitect
     }
 
     def architect_for_binary(binary)

@@ -10,4 +10,3 @@ RSpec.configure do |config|
     Open3.capture2e("#{boot2docker_shellinit_cmd} && #{docker_run_cmd} '#{binary_builder_cmd}'")[0]
   end
 end
-
