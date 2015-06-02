@@ -19,7 +19,7 @@ describe 'building a binary', :integration do
       binary_tarball_location = File.join(Dir.pwd, 'node-v0.12.2-linux-x64.tar.gz')
       expect(File).to exist(binary_tarball_location)
 
-      node_version_cmd = %q{/binary-builder/spec/assets/binary-exerciser.sh node-v0.12.2-linux-x64.tar.gz node-v0.12.2-linux-x64/bin/node -e 'console.log(process.version)'}
+      node_version_cmd = %q{./spec/assets/binary-exerciser.sh node-v0.12.2-linux-x64.tar.gz node-v0.12.2-linux-x64/bin/node -e 'console.log(process.version)'}
       output, status = run(node_version_cmd)
 
       expect(status).to be_success
@@ -36,7 +36,7 @@ describe 'building a binary', :integration do
       binary_tarball_location = File.join(Dir.pwd, 'ruby-v2_0_0_645-linux-x64.tgz')
       expect(File).to exist(binary_tarball_location)
 
-      ruby_version_cmd = %q{/binary-builder/spec/assets/binary-exerciser.sh ruby-v2_0_0_645-linux-x64.tgz ./bin/ruby -e 'puts RUBY_VERSION'}
+      ruby_version_cmd = %q{./spec/assets/binary-exerciser.sh ruby-v2_0_0_645-linux-x64.tgz ./bin/ruby -e 'puts RUBY_VERSION'}
       output, status = run(ruby_version_cmd)
 
       expect(status).to be_success
@@ -53,7 +53,7 @@ describe 'building a binary', :integration do
       binary_tarball_location = File.join(Dir.pwd, 'jruby-ruby-2.2.0-jruby-9.0.0.0.pre1-linux-x64.tgz')
       expect(File).to exist(binary_tarball_location)
 
-      jruby_version_cmd = %q{/binary-builder/spec/assets/jruby-exerciser.sh}
+      jruby_version_cmd = %q{./spec/assets/jruby-exerciser.sh}
       output, status = run(jruby_version_cmd)
 
       expect(status).to be_success
@@ -70,7 +70,7 @@ describe 'building a binary', :integration do
       binary_tarball_location = File.join(Dir.pwd, 'python-3.4.3-linux-x64.tgz')
       expect(File).to exist(binary_tarball_location)
 
-      python_version_cmd = %q{env LD_LIBRARY_PATH=/tmp/binary-exerciser/lib /binary-builder/spec/assets/binary-exerciser.sh python-3.4.3-linux-x64.tgz ./bin/python -c 'import sys;print(sys.version[:5])'}
+      python_version_cmd = %q{env LD_LIBRARY_PATH=/tmp/binary-exerciser/lib ./spec/assets/binary-exerciser.sh python-3.4.3-linux-x64.tgz ./bin/python -c 'import sys;print(sys.version[:5])'}
       output, status = run(python_version_cmd)
 
       expect(status).to be_success
@@ -87,7 +87,7 @@ describe 'building a binary', :integration do
       binary_tarball_location = File.join(Dir.pwd, 'httpd-2.4.12-linux-x64.tgz')
       expect(File).to exist(binary_tarball_location)
 
-      httpd_version_cmd = %q{env LD_LIBRARY_PATH=/tmp/binary-exerciser/lib /binary-builder/spec/assets/binary-exerciser.sh httpd-2.4.12-linux-x64.tgz ./bin/httpd -v}
+      httpd_version_cmd = %q{env LD_LIBRARY_PATH=/tmp/binary-exerciser/lib ./spec/assets/binary-exerciser.sh httpd-2.4.12-linux-x64.tgz ./bin/httpd -v}
 
       output, status = run(httpd_version_cmd)
 
