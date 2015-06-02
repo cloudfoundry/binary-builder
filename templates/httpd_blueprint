@@ -5,6 +5,7 @@ STAGING_DIR="/tmp/staged/app"
 
 INSTALLATION_DIR=$1
 
+mkdir -p /app
 ln -sf $INSTALLATION_DIR /app/httpd
 
 function build_apr() {
@@ -73,6 +74,7 @@ function build_httpd_24() {
 }
 
 # build required libs & httpd
+apt-get -y install libpcre3-dev
 build_required_libs
 build_httpd_24
 

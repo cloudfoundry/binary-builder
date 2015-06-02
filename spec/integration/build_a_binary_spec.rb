@@ -1,66 +1,46 @@
-require 'digest'
-require 'fileutils'
 require 'spec_helper'
+require 'fileutils'
 
-describe 'building a binary' do
+describe 'building a binary', :integration do
+  def run_binary_builder(binary_name, binary_version, flags = '')
+    binary_builder_cmd = "#{File.join('./bin', 'binary-builder')} #{binary_name} #{binary_version} #{flags}"
+    run(binary_builder_cmd)[0]
+  end
+
   before do
-    run_binary_builder(binary_name, binary_version, rootfs)
+    output, _ = run_binary_builder(binary_name, binary_version)
   end
 
   context 'when node is specified', binary: 'node' do
     let(:binary_name) { 'node' }
     let(:binary_version) { 'v0.12.2' }
 
-    context 'on the lucid64 rootfs' do
-      let(:rootfs) { 'lucid64' }
+    it 'builds the specified binary, tars it, and places it in your current working directory' do
+      binary_tarball_location = File.join(Dir.pwd, 'node-v0.12.2-linux-x64.tar.gz')
+      expect(File).to exist(binary_tarball_location)
 
-      it 'builds the specified binary, tars it, and places it in your current working directory' do
-        binary_tarball_location = File.join(Dir.pwd, 'node-v0.12.2-linux-x64.tgz')
-        expect(File.exist?(binary_tarball_location)).to be(true)
+      node_version_cmd = %q{/binary-builder/spec/assets/binary-exerciser.sh node-v0.12.2-linux-x64.tar.gz node-v0.12.2-linux-x64/bin/node -e 'console.log(process.version)'}
+      output, status = run(node_version_cmd)
 
-        docker_exerciser = "docker run -v #{File.expand_path('../../..', __FILE__)}:/binary-builder:ro cloudfoundry/#{rootfs} /binary-builder/spec/assets/binary-exerciser.sh"
-        exerciser_args = "node-v0.12.2-linux-x64.tgz node-v0.12.2-linux-x64/bin/node -e 'console.log(process.version)'"
-
-        script_output = `#{docker_exerciser} #{exerciser_args}`.chomp
-        expect($?).to be_success
-        expect(script_output).to eq('v0.12.2')
-        FileUtils.rm(binary_tarball_location)
-      end
-    end
-
-    context 'on the cflinuxfs2 rootfs' do
-      let(:rootfs) { 'cflinuxfs2' }
-
-      it 'builds the specified binary, tars it, and places it in your current working directory' do
-        binary_tarball_location = File.join(Dir.pwd, 'node-v0.12.2-linux-x64.tgz')
-        expect(File.exist?(binary_tarball_location)).to be(true)
-
-        docker_exerciser = "docker run -v #{File.expand_path('../../..', __FILE__)}:/binary-builder:ro cloudfoundry/#{rootfs} /binary-builder/spec/assets/binary-exerciser.sh"
-        exerciser_args = "node-v0.12.2-linux-x64.tgz node-v0.12.2-linux-x64/bin/node -e 'console.log(process.version)'"
-
-        script_output = `#{docker_exerciser} #{exerciser_args}`.chomp
-        expect($?).to be_success
-        expect(script_output).to eq('v0.12.2')
-        FileUtils.rm(binary_tarball_location)
-      end
+      expect(status).to be_success
+      expect(output).to include('v0.12.2')
+      FileUtils.rm(binary_tarball_location)
     end
   end
 
   context 'when ruby is specified', binary: 'ruby' do
     let(:binary_name) { 'ruby' }
     let(:binary_version) { 'v2_0_0_645' }
-    let(:rootfs) { 'cflinuxfs2' }
 
     it 'builds the specified binary, tars it, and places it in your current working directory' do
       binary_tarball_location = File.join(Dir.pwd, 'ruby-v2_0_0_645-linux-x64.tgz')
-      expect(File.exist?(binary_tarball_location)).to be(true)
+      expect(File).to exist(binary_tarball_location)
 
-      docker_exerciser = "docker run -v #{File.expand_path('../../..', __FILE__)}:/binary-builder:ro cloudfoundry/cflinuxfs2 /binary-builder/spec/assets/binary-exerciser.sh"
-      exerciser_args = %q{ruby-v2_0_0_645-linux-x64.tgz ./bin/ruby -e 'puts RUBY_VERSION'}
+      ruby_version_cmd = %q{/binary-builder/spec/assets/binary-exerciser.sh ruby-v2_0_0_645-linux-x64.tgz ./bin/ruby -e 'puts RUBY_VERSION'}
+      output, status = run(ruby_version_cmd)
 
-      script_output = `#{docker_exerciser} #{exerciser_args}`.chomp
-      expect($?).to be_success
-      expect(script_output).to eq('2.0.0')
+      expect(status).to be_success
+      expect(output).to include('2.0.0')
       FileUtils.rm(binary_tarball_location)
     end
   end
@@ -68,17 +48,16 @@ describe 'building a binary' do
   context 'when jruby is specified', binary: 'jruby' do
     let(:binary_name) { 'jruby' }
     let(:binary_version) { 'ruby-2.2.0-jruby-9.0.0.0.pre1' }
-    let(:rootfs) { 'cflinuxfs2' }
 
     it 'builds the specified binary, tars it, and places it in your current working directory' do
       binary_tarball_location = File.join(Dir.pwd, 'jruby-ruby-2.2.0-jruby-9.0.0.0.pre1-linux-x64.tgz')
-      expect(File.exist?(binary_tarball_location)).to be(true)
+      expect(File).to exist(binary_tarball_location)
 
-      docker_exerciser = "docker run -v #{File.expand_path('../../..', __FILE__)}:/binary-builder:ro cloudfoundry/cflinuxfs2 /binary-builder/spec/assets/jruby-exerciser.sh"
+      jruby_version_cmd = %q{/binary-builder/spec/assets/jruby-exerciser.sh}
+      output, status = run(jruby_version_cmd)
 
-      script_output = `#{docker_exerciser}`.chomp
-      expect($?).to be_success
-      expect(script_output).to eq('java 2.2.0')
+      expect(status).to be_success
+      expect(output).to include('java 2.2.0')
       FileUtils.rm(binary_tarball_location)
     end
   end
@@ -86,18 +65,16 @@ describe 'building a binary' do
   context 'when python is specified', binary: 'python' do
     let(:binary_name) { 'python' }
     let(:binary_version) { '3.4.3' }
-    let(:rootfs) { 'cflinuxfs2' }
 
     it 'builds the specified binary, tars it, and places it in your current working directory' do
       binary_tarball_location = File.join(Dir.pwd, 'python-3.4.3-linux-x64.tgz')
-      expect(File.exist?(binary_tarball_location)).to be(true)
+      expect(File).to exist(binary_tarball_location)
 
-      docker_exerciser = "docker run -v #{File.expand_path('../../..', __FILE__)}:/binary-builder:ro -e LD_LIBRARY_PATH=/binary-exerciser/lib cloudfoundry/cflinuxfs2 /binary-builder/spec/assets/binary-exerciser.sh"
-      exerciser_args = "python-3.4.3-linux-x64.tgz ./bin/python -c 'import sys;print(sys.version[:5])'"
+      python_version_cmd = %q{env LD_LIBRARY_PATH=/tmp/binary-exerciser/lib /binary-builder/spec/assets/binary-exerciser.sh python-3.4.3-linux-x64.tgz ./bin/python -c 'import sys;print(sys.version[:5])'}
+      output, status = run(python_version_cmd)
 
-      script_output = `#{docker_exerciser} #{exerciser_args}`.chomp
-      expect($?).to be_success
-      expect(script_output).to eq('3.4.3')
+      expect(status).to be_success
+      expect(output).to include('3.4.3')
       FileUtils.rm(binary_tarball_location)
     end
   end
@@ -105,18 +82,17 @@ describe 'building a binary' do
   context 'when httpd is specified', binary: 'httpd' do
     let(:binary_name) { 'httpd' }
     let(:binary_version) { '2.4.12' }
-    let(:rootfs) { 'cflinuxfs2' }
 
     it 'builds the specified binary, tars it, and places it in your current working directory' do
       binary_tarball_location = File.join(Dir.pwd, 'httpd-2.4.12-linux-x64.tgz')
-      expect(File.exist?(binary_tarball_location)).to be(true)
+      expect(File).to exist(binary_tarball_location)
 
-      docker_exerciser = "docker run -v #{File.expand_path('../../..', __FILE__)}:/binary-builder:ro -e LD_LIBRARY_PATH=/binary-exerciser/httpd/lib cloudfoundry/cflinuxfs2 /binary-builder/spec/assets/binary-exerciser.sh"
-      exerciser_args = "httpd-2.4.12-linux-x64.tgz ./httpd/bin/httpd -v"
+      httpd_version_cmd = %q{env LD_LIBRARY_PATH=/tmp/binary-exerciser/lib /binary-builder/spec/assets/binary-exerciser.sh httpd-2.4.12-linux-x64.tgz ./bin/httpd -v}
 
-      script_output = `#{docker_exerciser} #{exerciser_args}`.chomp
-      expect($?).to be_success
-      expect(script_output).to include('2.4.12')
+      output, status = run(httpd_version_cmd)
+
+      expect(status).to be_success
+      expect(output).to include('2.4.12')
       FileUtils.rm(binary_tarball_location)
     end
   end

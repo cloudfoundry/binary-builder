@@ -3,8 +3,8 @@ set +e
 
 tar_name=$1; shift
 
-mkdir binary-exerciser
-cd binary-exerciser
+mkdir /tmp/binary-exerciser
+cd /tmp/binary-exerciser
 
 tar xzf /binary-builder/${tar_name}
 eval $(printf '%q ' "$@")

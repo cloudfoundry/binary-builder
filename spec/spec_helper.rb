@@ -3,10 +3,28 @@ require 'fileutils'
 require 'builder'
 
 RSpec.configure do |config|
-  def run_binary_builder(binary_name, binary_version, rootfs, flags = '')
-    boot2docker_shellinit_cmd = '$(boot2docker shellinit)'
-    docker_run_cmd = "docker run -i -v #{Dir.pwd}:/binary-builder cloudfoundry/#{rootfs} bash -c"
-    binary_builder_cmd = "cd /binary-builder; #{File.join('./bin', 'binary-builder')} #{binary_name} #{binary_version} #{flags}"
-    Open3.capture2e("#{boot2docker_shellinit_cmd} && #{docker_run_cmd} '#{binary_builder_cmd}'")[0]
+  if RUBY_PLATFORM.include?('darwin')
+    DOCKER_CONTAINER_NAME = "test-suite-binary-builder-#{Time.now.to_i}"
+
+    config.before(:all, :integration) do
+      docker_image = 'cloudfoundry/cflinuxfs2'
+
+      %x{docker run --name #{DOCKER_CONTAINER_NAME} -dit -v #{Dir.pwd}:/binary-builder -w /binary-builder #{docker_image} bash}
+      `docker exec #{DOCKER_CONTAINER_NAME} gem install bundler`
+      `docker exec #{DOCKER_CONTAINER_NAME} bundle install -j4`
+    end
+
+    config.after(:all, :integration) do
+      `docker stop #{DOCKER_CONTAINER_NAME}`
+    end
+
+    def run(cmd)
+      docker_cmd = "docker exec #{DOCKER_CONTAINER_NAME} #{cmd}"
+      output, status = Open3.capture2e(docker_cmd)
+    end
+  else
+    def run(cmd)
+      output, status = Open3.capture2e(cmd)
+    end
   end
 end
