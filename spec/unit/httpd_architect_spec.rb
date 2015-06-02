@@ -12,7 +12,7 @@ module BinaryBuilder
     end
 
     describe 'blueprint' do
-      let(:template_file) { double(read: 'BINARY_VERSION') }
+      let(:template_file) { double(read: '$HTTPD_VERSION') }
 
       before do
         allow(File).to receive(:open).and_return(template_file)
