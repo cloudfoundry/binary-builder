@@ -11,8 +11,8 @@
 #  Configuration
 #
 
-/binary-builder/helpers/php/install-deps.sh
-source /binary-builder/helpers/php/php-common.sh
+<%= File.read(File.expand_path('../helpers/php/install-deps.sh', __FILE__)) %>
+<%= File.read(File.expand_path('../helpers/php/php-common.sh', __FILE__)) %>
 
 INSTALLATION_DIR=$1
 
