@@ -32,8 +32,8 @@ HIREDIS_VERSION=<%= external_libraries[:HIREDIS_VERSION] %>
 LUA_VERSION=<%= external_libraries[:LUA_VERSION] %>
 
 declare -A MODULES
-<% external_modules.each do |name, version| %>
-MODULES[<%= name %>]="<%= version %>"
+<% external_extensions.each do |extension| %>
+MODULES[<%= extension.name %>]="<%= extension.version %>"
 <% end %>
 # location where files are built
 BUILD_DIR=`pwd`/build
@@ -136,9 +136,9 @@ package_php_extensions() {
   package_php_extension "xsl"
   package_php_extension "zlib"
 
-  <% external_modules.each do |name, version| %>
-  <% external_deps = external_module_dependencies[name] || [] %>
-  package_php_extension "<%= name %>" <%= external_deps.map { |dep| %("#{dep}") }.join(' ') %>
+  # put package_php_extension_args in quotes and join them with whitespace
+  <% external_extensions.each do |extension| %>
+    package_php_extension <%= extension.package_php_extension_args.map(&:inspect).join(' ') %>
   <% end %>
 
   # remove packaged files
