@@ -5,7 +5,7 @@ module BinaryBuilder
     def blueprint
       contents = read_file(RUBY_TEMPLATE_PATH)
       contents
-        .gsub('GIT_TAG', binary_version)
+        .gsub(/\bGIT_TAG\b/, binary_version)
         .gsub('RUBY_DIRECTORY', "ruby-#{binary_version[1..-1].split('_')[0..2].join('.')}")
     end
   end
