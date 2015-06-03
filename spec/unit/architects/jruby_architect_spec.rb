@@ -19,7 +19,7 @@ module BinaryBuilder
       end
 
       it 'uses the jruby_blueprint template' do
-        expect(File).to receive(:open).with(File.expand_path('../../../templates/jruby_blueprint', __FILE__))
+        expect(File).to receive(:open).with(File.expand_path('../../../../templates/jruby_blueprint', __FILE__))
         architect.blueprint
       end
 

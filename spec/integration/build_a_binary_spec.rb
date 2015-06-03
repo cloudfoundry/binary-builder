@@ -96,4 +96,22 @@ describe 'building a binary', :integration do
       FileUtils.rm(binary_tarball_location)
     end
   end
+
+  context 'when php is specified', binary: 'php' do
+    let(:binary_name) { 'php' }
+    let(:binary_version) { '5.6.7' }
+
+    it 'builds the specified binary, tars it, and places it in your current working directory' do
+      binary_tarball_location = File.join(Dir.pwd, 'php-5.6.7-linux-x64.tgz')
+      expect(File.exist?(binary_tarball_location)).to be(true)
+
+      docker_exerciser = "docker run -v #{File.expand_path('../../..', __FILE__)}:/binary-builder:ro cloudfoundry/cflinuxfs2 /binary-builder/spec/assets/binary-exerciser.sh"
+      exerciser_args = "php-5.6.7-linux-x64.tgz ./bin/php -r 'echo phpversion();'"
+
+      script_output = `#{docker_exerciser} #{exerciser_args}`.chomp
+      expect($?).to be_success
+      expect(script_output).to eq('5.6.7')
+      FileUtils.rm(binary_tarball_location)
+    end
+  end
 end

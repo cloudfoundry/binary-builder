@@ -4,13 +4,6 @@ module BinaryBuilder
   describe NodeArchitect do
     subject(:architect) { NodeArchitect.new(binary_version: 'v0.12.2') }
 
-    describe '#new' do
-
-      it 'sets a binary version' do
-        expect(architect.binary_version).to eq('v0.12.2')
-      end
-    end
-
     describe 'blueprint' do
       let(:template_file) { double(read: 'GIT_TAG') }
 
@@ -19,7 +12,7 @@ module BinaryBuilder
       end
 
       it 'uses the node_blueprint template' do
-        expect(File).to receive(:open).with(File.expand_path('../../../templates/node_blueprint', __FILE__))
+        expect(File).to receive(:open).with(File.expand_path('../../../../templates/node_blueprint', __FILE__))
         architect.blueprint
       end
 

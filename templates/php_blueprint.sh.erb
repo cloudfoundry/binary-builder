@@ -1,0 +1,182 @@
+#!/bin/bash
+#
+##################################################################
+#
+# Script to build PHPs for use with CloudFoundry
+#
+#   Author:  Daniel Mikusa
+#     Date:  08-28-2014
+#
+##################################################################
+#  Configuration
+#
+
+/binary-builder/helpers/php/install-deps.sh
+source /binary-builder/helpers/php/php-common.sh
+
+INSTALLATION_DIR=$1
+
+APP_DIR=/tmp/staged/app
+mkdir -p $APP_DIR
+
+EXTENSION_DIR=$(pwd)/extensions
+mkdir $EXTENSION_DIR
+
+PHP_VERSION=<%= binary_version %>
+VERSION_POSTFIX=
+ZTS_VERSION=<%= external_libraries[:ZTS_VERSION] %>
+
+# Third Party Module Versions
+RABBITMQ_C_VERSION=<%= external_libraries[:RABBITMQ_C_VERSION] %>
+HIREDIS_VERSION=<%= external_libraries[:HIREDIS_VERSION] %>
+LUA_VERSION=<%= external_libraries[:LUA_VERSION] %>
+
+declare -A MODULES
+<% external_modules.each do |name, version| %>
+MODULES[<%= name %>]="<%= version %>"
+<% end %>
+# location where files are built
+BUILD_DIR=`pwd`/build
+
+##################################################################
+set -e
+
+function build_php() {
+  cd "$BUILD_DIR"
+  if [ ! -d "php-$PHP_VERSION" ]; then
+    curl -L -o "php-$PHP_VERSION.tar.bz2" "http://us1.php.net/get/php-$PHP_VERSION.tar.bz2/from/us2.php.net/mirror"
+    tar jxf "php-$PHP_VERSION.tar.bz2"
+    rm "php-$PHP_VERSION.tar.bz2"
+    cd "php-$PHP_VERSION"
+    LIBS=-lz ./configure \
+      --prefix="$APP_DIR/php" \
+      --disable-static \
+      --enable-shared \
+      --enable-ftp=shared \
+      --enable-sockets=shared \
+      --enable-soap=shared \
+      --enable-fileinfo=shared \
+      --enable-bcmath \
+      --enable-calendar \
+      --with-kerberos \
+      --enable-zip=shared \
+      --with-bz2=shared \
+      --with-curl=shared \
+      --enable-dba=shared \
+      --with-cdb \
+      --with-gdbm \
+      --with-mcrypt=shared \
+      --with-mhash=shared \
+      --with-mysql=shared \
+      --with-mysqli=shared \
+      --enable-pdo=shared \
+      --with-pdo-sqlite=shared,/usr \
+      --with-pdo-mysql=shared,mysqlnd \
+      --with-gd=shared \
+      --with-jpeg-dir=/usr \
+      --with-freetype-dir=/usr \
+      --enable-gd-native-ttf \
+      --with-pdo-pgsql=shared \
+      --with-pgsql=shared \
+      --with-pspell=shared \
+      --with-gettext=shared \
+      --with-gmp=shared \
+      --with-imap=shared \
+      --with-imap-ssl=shared \
+      --with-ldap=shared \
+      --with-ldap-sasl \
+      --with-zlib=shared \
+      --with-xsl=shared \
+      --with-snmp=shared \
+      --enable-mbstring=shared \
+      --enable-mbregex \
+      --enable-exif=shared \
+      --with-openssl=shared \
+      --enable-fpm
+  else
+    cd "php-$PHP_VERSION"
+  fi
+  # Fix path on phar.phar
+  sed 's|PHP_PHARCMD_BANG = `.*`|PHP_PHARCMD_BANG = /home/vcap/app/php/bin/php|' Makefile > Makefile.phar-fix
+  mv Makefile.phar-fix Makefile
+  # Build
+  make -j 5
+  make install
+  cd "$BUILD_DIR"
+}
+
+package_php_extensions() {
+  cd "$APP_DIR"
+  package_php_extension "bz2"
+  package_php_extension "curl"
+  package_php_extension "dba"
+  package_php_extension "exif"
+  package_php_extension "fileinfo"
+  package_php_extension "ftp"
+  package_php_extension "gd"
+  package_php_extension "gettext"
+  package_php_extension "gmp"
+  package_php_extension "imap" "libc-client.so.2007e"
+  package_php_extension "ldap"
+  package_php_extension "mbstring"
+  package_php_extension "mcrypt" "libmcrypt.so.4"
+  package_php_extension "mysqli"
+  package_php_extension "mysql"
+  package_php_extension "opcache"
+  package_php_extension "openssl"
+  package_php_extension "pdo_mysql"
+  package_php_extension "pdo_pgsql"
+  package_php_extension "pdo"
+  package_php_extension "pdo_sqlite"
+  package_php_extension "pgsql"
+  package_php_extension "pspell" "libaspell.so.15" "libpspell.so.15"
+  package_php_extension_snmp
+  package_php_extension "soap"
+  package_php_extension "sockets"
+  package_php_extension "xsl"
+  package_php_extension "zlib"
+
+  <% external_modules.each do |name, version| %>
+  <% external_deps = external_module_dependencies[name] || [] %>
+  package_php_extension "<%= name %>" <%= external_deps.map { |dep| %("#{dep}") }.join(' ') %>
+  <% end %>
+
+  # remove packaged files
+  rm php/lib/lib*
+  rm php/lib/php/extensions/no-debug-non-zts-$ZTS_VERSION/*
+  cd "$APP_DIR"
+}
+
+# setup build directory
+if [ ! -d "$BUILD_DIR" ]; then
+  mkdir "$BUILD_DIR"
+fi
+
+# build and install php
+build_php
+build_external_extensions
+
+# Remove unused files
+rm "$APP_DIR/php/etc/php-fpm.conf.default"
+rm -rf "$APP_DIR/php/include"
+rm -rf "$APP_DIR/php/php/man"
+rm -rf "$APP_DIR/php/lib/php/build"
+
+# Build binaries - one for PHP, one for FPM and one for each module
+package_php_extensions
+package_php_fpm
+package_php_cgi
+package_php_cli
+package_php_pear
+package_php
+
+# Move packages to the output directory
+output_dir="${INSTALLATION_DIR}/php-${PHP_VERSION}"
+mkdir -p $output_dir
+mv $APP_DIR/php-*.gz $output_dir
+mv $APP_DIR/php-*.gz.sha1 $output_dir
+
+# Rename with correct postfix
+rename_with_postfix
+
+echo "Done!"

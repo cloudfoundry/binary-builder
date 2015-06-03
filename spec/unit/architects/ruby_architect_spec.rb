@@ -4,13 +4,6 @@ module BinaryBuilder
   describe RubyArchitect do
     subject(:architect) { RubyArchitect.new(binary_version: 'v2_0_0_645') }
 
-    describe '#new' do
-
-      it 'sets a binary version' do
-        expect(architect.binary_version).to eq('v2_0_0_645')
-      end
-    end
-
     describe 'blueprint' do
       let(:template_file) { double(read: 'GIT_TAG RUBY_DIRECTORY') }
 
@@ -19,7 +12,7 @@ module BinaryBuilder
       end
 
       it 'uses the ruby_blueprint template' do
-        expect(File).to receive(:open).with(File.expand_path('../../../templates/ruby_blueprint', __FILE__))
+        expect(File).to receive(:open).with(File.expand_path('../../../../templates/ruby_blueprint', __FILE__))
         architect.blueprint
       end
 
