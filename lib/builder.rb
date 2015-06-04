@@ -43,7 +43,8 @@ module BinaryBuilder
       'jruby'  => JRubyArchitect,
       'python' => PythonArchitect,
       'httpd'  => HttpdArchitect,
-      'php'    => PHPArchitect
+      'php'    => PHPArchitect,
+      'nginx'  => NginxArchitect
     }
 
     def architect_for_binary(binary)

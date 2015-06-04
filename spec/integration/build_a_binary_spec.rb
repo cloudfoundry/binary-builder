@@ -2,11 +2,6 @@ require 'spec_helper'
 require 'fileutils'
 
 describe 'building a binary', :integration do
-  def run_binary_builder(binary_name, binary_version, flags = '')
-    binary_builder_cmd = "#{File.join('./bin', 'binary-builder')} #{binary_name} #{binary_version} #{flags}"
-    run(binary_builder_cmd)[0]
-  end
-
   before do
     output, _ = run_binary_builder(binary_name, binary_version)
   end

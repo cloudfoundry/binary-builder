@@ -27,4 +27,10 @@ RSpec.configure do |config|
       output, status = Open3.capture2e(cmd)
     end
   end
+
+  def run_binary_builder(binary_name, binary_version, flags = '')
+    binary_builder_cmd = "#{File.join('./bin', 'binary-builder')} #{binary_name} #{binary_version} #{flags}"
+    run(binary_builder_cmd)[0]
+  end
+
 end

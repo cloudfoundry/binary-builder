@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -e
+
+INSTALLATION_DIR=$1
+
+function build_nginx() {
+  curl -f -L -O "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
+  tar zxf "nginx-$NGINX_VERSION.tar.gz"
+
+  cd "nginx-$NGINX_VERSION"
+  ./configure \
+    --prefix="/" \
+    --error-log-path=stderr \
+    --with-http_ssl_module \
+    --with-http_realip_module \
+    --with-http_gunzip_module \
+    --with-http_gzip_static_module \
+    --with-http_auth_request_module \
+    --with-http_random_index_module \
+    --with-http_secure_link_module \
+    --with-http_stub_status_module \
+    --without-http_uwsgi_module \
+    --without-http_scgi_module \
+    --with-pcre \
+    --with-pcre-jit
+  make -j 5 install DESTDIR=$INSTALLATION_DIR
+}
+
+# build required libs & httpd
+build_nginx
+
+# Remove unnecessary files and config
+cd $INSTALLATION_DIR
+rm -rf html/ conf/*
+
+echo "Done!"
