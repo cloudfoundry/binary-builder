@@ -23,7 +23,7 @@ function build_nginx() {
     --without-http_scgi_module \
     --with-pcre \
     --with-pcre-jit
-  make -j 5 install DESTDIR=$INSTALLATION_DIR
+  make -j 5 install DESTDIR=$INSTALLATION_DIR/nginx
 }
 
 # build required libs & httpd
@@ -31,6 +31,6 @@ build_nginx
 
 # Remove unnecessary files and config
 cd $INSTALLATION_DIR
-rm -rf html/ conf/*
+rm -rf nginx/html/ nginx/conf/*
 
 echo "Done!"
