@@ -4,10 +4,10 @@ set -e
 INSTALLATION_DIR=$1
 
 function build_nginx() {
-  curl -f -L -O "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
-  tar zxf "nginx-$NGINX_VERSION.tar.gz"
+  curl -f -L -O "http://nginx.org/download/nginx-<%= binary_version %>.tar.gz"
+  tar zxf "nginx-<%= binary_version %>.tar.gz"
 
-  cd "nginx-$NGINX_VERSION"
+  cd "nginx-<%= binary_version %>"
   ./configure \
     --prefix="/" \
     --error-log-path=stderr \

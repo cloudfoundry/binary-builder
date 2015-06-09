@@ -1,12 +1,17 @@
 module BinaryBuilder
   class RubyArchitect < Architect
-    RUBY_TEMPLATE_PATH = File.expand_path('../../../templates/ruby_blueprint', __FILE__)
-
     def blueprint
-      contents = read_file(RUBY_TEMPLATE_PATH)
-      contents
-        .gsub(/\bGIT_TAG\b/, binary_version)
-        .gsub('RUBY_DIRECTORY', "ruby-#{binary_version[1..-1].split('_')[0..2].join('.')}")
+      RubyTemplate.new(binding).result
+    end
+
+    def patchless_version
+      @patchless_version = binary_version.match(/\D*(\d+\.\d+\.\d+)/)[1]
+    end
+  end
+
+  class RubyTemplate < Template
+    def template_path
+      File.expand_path('../../../templates/ruby_blueprint.sh.erb', __FILE__)
     end
   end
 end

@@ -12,18 +12,7 @@ module BinaryBuilder
     end
 
     describe '#blueprint' do
-      let(:template_file) { double(read: 'GIT_TAG RUBY_VERSION') }
-
-      before do
-        allow(File).to receive(:open).and_return(template_file)
-      end
-
-      it 'uses the jruby_blueprint template' do
-        expect(File).to receive(:open).with(File.expand_path('../../../../templates/jruby_blueprint', __FILE__))
-        architect.blueprint
-      end
-
-      it 'adds the git tag value' do
+      it 'adds the binary_version value' do
         expect(architect.blueprint).to include '1.7.19'
       end
 

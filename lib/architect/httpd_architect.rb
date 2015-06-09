@@ -1,14 +1,19 @@
 module BinaryBuilder
   class HttpdArchitect < Architect
-    HTTPD_TEMPLATE_PATH = File.expand_path('../../../templates/httpd_blueprint', __FILE__)
+    BUILD_VERSIONS = {
+      apr_util_version: '1.5.4',
+      apr_iconv_version: '1.2.1',
+      apr_version: '1.5.2'
+    }
 
     def blueprint
-      contents = read_file(HTTPD_TEMPLATE_PATH)
-      contents
-        .gsub('$HTTPD_VERSION', binary_version)
-        .gsub('$APR_UTIL_VERSION', '1.5.4')
-        .gsub('$APR_ICONV_VERSION', '1.2.1')
-        .gsub('$APR_VERSION', '1.5.2')
+      HttpdTemplate.new(binding).result
+    end
+  end
+
+  class HttpdTemplate < Template
+    def template_path
+      File.expand_path('../../../templates/httpd_blueprint.sh.erb', __FILE__)
     end
   end
 end

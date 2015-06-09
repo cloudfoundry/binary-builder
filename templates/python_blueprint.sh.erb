@@ -7,8 +7,8 @@ PREFIX='/app/.heroku/vendor'
 mkdir -p /app/.heroku
 ln -s $INSTALLATION_DIR $PREFIX
 
-curl https://www.python.org/ftp/python/BINARY_VERSION/Python-BINARY_VERSION.tgz | tar xzf -
-cd Python-BINARY_VERSION
+curl https://www.python.org/ftp/python/<%= binary_version %>/Python-<%= binary_version %>.tgz | tar xzf -
+cd Python-<%= binary_version %>
 ./configure --prefix=${PREFIX} --enable-shared --with-ensurepip=no
 make
 make install

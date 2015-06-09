@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -e
+
+INSTALLATION_DIR=$1
+
+apt-get update
+apt-get -y install maven openjdk-7-jdk
+
+curl https://s3.amazonaws.com/jruby.org/downloads/<%= jruby_version %>/jruby-src-<%= jruby_version %>.tar.gz -s --fail -o - | tar xzf - 2>/dev/null
+cd jruby-src-<%= jruby_version %>
+
+mvn -Djruby.default.ruby.version=<%= ruby_version %>
+
+cp -r bin/ $INSTALLATION_DIR
+cp -r lib/ $INSTALLATION_DIR

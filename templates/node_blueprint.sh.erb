@@ -2,11 +2,12 @@
 set -e
 
 INSTALLATION_DIR=$1
-NODE_DIR=$INSTALLATION_DIR/node-GIT_TAG-linux-x64
+NODE_DIR=$INSTALLATION_DIR/node-<%= binary_version %>-linux-x64
 
-git clone https://github.com/joyent/node.git
-cd node
-git checkout GIT_TAG
+
+curl http://nodejs.org/dist/<%= binary_version %>/node-<%= binary_version %>.tar.gz -s --fail -o - | tar xzf - 2>/dev/null
+
+cd node-<%= binary_version %>
 
 if [[ `lsb_release -r` == *10.04* ]]; then
   ./configure --shared-openssl-libpath=/lib/ --prefix=/

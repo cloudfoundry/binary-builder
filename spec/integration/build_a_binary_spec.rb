@@ -25,13 +25,13 @@ describe 'building a binary', :integration do
 
   context 'when ruby is specified', binary: 'ruby' do
     let(:binary_name) { 'ruby' }
-    let(:binary_version) { 'v2_0_0_645' }
+    let(:binary_version) { '2.0.0-p645' }
 
     it 'builds the specified binary, tars it, and places it in your current working directory' do
-      binary_tarball_location = File.join(Dir.pwd, 'ruby-v2_0_0_645-linux-x64.tgz')
+      binary_tarball_location = File.join(Dir.pwd, 'ruby-2.0.0-p645-linux-x64.tgz')
       expect(File).to exist(binary_tarball_location)
 
-      ruby_version_cmd = %q{./spec/assets/binary-exerciser.sh ruby-v2_0_0_645-linux-x64.tgz ./bin/ruby -e 'puts RUBY_VERSION'}
+      ruby_version_cmd = %q{./spec/assets/binary-exerciser.sh ruby-2.0.0-p645-linux-x64.tgz ./bin/ruby -e 'puts RUBY_VERSION'}
       output, status = run(ruby_version_cmd)
 
       expect(status).to be_success

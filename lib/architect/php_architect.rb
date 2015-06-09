@@ -2,7 +2,6 @@ require 'erb'
 
 module BinaryBuilder
   class PHPArchitect < Architect
-    PHP_TEMPLATE_PATH = File.expand_path('../../../templates/php_blueprint.sh.erb', __FILE__)
 
     EXTERNAL_LIBRARIES = {
       '5.4' => {
@@ -110,39 +109,22 @@ module BinaryBuilder
     }
 
     def blueprint
-      contents = read_file(PHP_TEMPLATE_PATH)
-      Template.new(
-        contents: contents,
-        minor_version: minor_version,
-        binary_version: binary_version
-      ).result
+      PHPTemplate.new(binding).result
     end
 
-    private
-    def minor_version
-      binary_version.match(/(\d+\.\d+)/)[1]
+    def external_extensions
+      EXTERNAL_EXTENSIONS[minor_version]
     end
 
-    class Template
-      def initialize(options)
-        @erb = ERB.new(options[:contents])
-        @minor_version = options[:minor_version]
-        @binary_version = options[:binary_version]
-      end
+    def external_libraries
+      EXTERNAL_LIBRARIES[minor_version]
+    end
+  end
 
-      def external_extensions
-        EXTERNAL_EXTENSIONS[@minor_version]
-      end
-
-      def external_libraries
-        EXTERNAL_LIBRARIES[@minor_version]
-      end
-
-      attr_reader :binary_version
-
-      def result
-        @erb.result(binding)
-      end
+  protected
+  class PHPTemplate < Template
+    def template_path
+      File.expand_path('../../../templates/php_blueprint.sh.erb', __FILE__)
     end
   end
 end
