@@ -11,5 +11,5 @@ git clone --depth 1 --branch GIT_TAG https://github.com/ruby/ruby.git
 cd ruby
 apt-get install -y autoconf
 autoconf
-./configure --prefix=${PREFIX} --enable-load-relative --disable-install-doc
+./configure --prefix=${PREFIX} --enable-load-relative --disable-install-doc debugflags="-g"
 make install
