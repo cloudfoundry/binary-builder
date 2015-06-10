@@ -70,7 +70,7 @@ module BinaryBuilder
       end
 
       it 'tars the remaining files from their directory' do
-        expect(builder).to receive(:system).with("tar czf node-v0.12.2-linux-x64.tar.gz -C #{File.join(foundation_dir, 'installation')} .")
+        expect(builder).to receive(:system).with("ls -A tmp_dir/installation | xargs tar czf node-v0.12.2-linux-x64.tar.gz -C tmp_dir/installation")
         builder.tar_installed_binary
       end
     end
