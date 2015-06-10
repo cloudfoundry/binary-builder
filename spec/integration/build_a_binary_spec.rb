@@ -82,7 +82,7 @@ describe 'building a binary', :integration do
       binary_tarball_location = File.join(Dir.pwd, 'httpd-2.4.12-linux-x64.tgz')
       expect(File).to exist(binary_tarball_location)
 
-      httpd_version_cmd = %q{env LD_LIBRARY_PATH=/tmp/binary-exerciser/lib ./spec/assets/binary-exerciser.sh httpd-2.4.12-linux-x64.tgz ./bin/httpd -v}
+      httpd_version_cmd = %q{env LD_LIBRARY_PATH=/tmp/binary-exerciser/lib ./spec/assets/binary-exerciser.sh httpd-2.4.12-linux-x64.tgz ./httpd/bin/httpd -v}
 
       output, status = run(httpd_version_cmd)
 

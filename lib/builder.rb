@@ -72,7 +72,7 @@ module BinaryBuilder
     end
 
     def tar_command
-      "tar czf #{tarball_name} -C #{installation_dir} ."
+      "ls -A #{installation_dir} | xargs tar czf #{tarball_name} -C #{installation_dir}"
     end
 
     def run!(command)

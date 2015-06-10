@@ -10,7 +10,7 @@ describe 'building a binary', :integration do
       binary_tarball_location = File.join(Dir.pwd, 'nginx-1.7.10-linux-x64.tgz')
       expect(File).to exist(binary_tarball_location)
 
-      httpd_version_cmd = %q{./spec/assets/binary-exerciser.sh nginx-1.7.10-linux-x64.tgz ./sbin/nginx -v}
+      httpd_version_cmd = %q{./spec/assets/binary-exerciser.sh nginx-1.7.10-linux-x64.tgz ./nginx/sbin/nginx -v}
       output, status = run(httpd_version_cmd)
 
       expect(status).to be_success
