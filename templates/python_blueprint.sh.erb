@@ -10,8 +10,7 @@ ln -s $INSTALLATION_DIR $PREFIX
 curl https://www.python.org/ftp/python/<%= binary_version %>/Python-<%= binary_version %>.tgz | tar xzf -
 cd Python-<%= binary_version %>
 ./configure --prefix=${PREFIX} --enable-shared --with-ensurepip=no
-make
-make install
+make -j 3 install
 
 # For python3 only:
 cd $INSTALLATION_DIR/bin

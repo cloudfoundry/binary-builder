@@ -23,7 +23,7 @@ function build_nginx() {
     --without-http_scgi_module \
     --with-pcre \
     --with-pcre-jit
-  make -j 5 install DESTDIR=$INSTALLATION_DIR
+  make -j 3 install DESTDIR=$INSTALLATION_DIR
 }
 
 # build required libs & httpd

@@ -11,4 +11,4 @@ curl http://cache.ruby-lang.org/pub/ruby/<%= minor_version %>/ruby-<%= binary_ve
 cd ruby-<%= binary_version %>
 
 ./configure --prefix=${PREFIX} --enable-load-relative --disable-install-doc debugflags="-g"
-make install
+make -j 3 install

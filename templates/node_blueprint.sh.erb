@@ -11,9 +11,9 @@ cd node-<%= binary_version %>
 
 if [[ `lsb_release -r` == *10.04* ]]; then
   ./configure --shared-openssl-libpath=/lib/ --prefix=/
-elif [[ `lsb_release -r` == *14.04* ]]; then 
+elif [[ `lsb_release -r` == *14.04* ]]; then
   ./configure --shared-openssl --prefix=/
 fi
 
-make install DESTDIR=$NODE_DIR PORTABLE=1
+make -j 3 install DESTDIR=$NODE_DIR PORTABLE=1
 cp LICENSE $NODE_DIR

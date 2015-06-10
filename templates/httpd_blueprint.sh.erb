@@ -55,7 +55,7 @@ function build_required_libs() {
   build_apr_util
 }
 
-function build_httpd_24() {
+function build_httpd() {
   curl -f -L -O "http://apache.osuosl.org/httpd/httpd-<%= binary_version %>.tar.bz2"
   tar jxf "httpd-<%= binary_version %>.tar.bz2"
   pushd "httpd-<%= binary_version %>"
@@ -76,7 +76,7 @@ function build_httpd_24() {
 # build required libs & httpd
 apt-get -y install libpcre3-dev
 build_required_libs
-build_httpd_24
+build_httpd
 
 # Remove unnecessary files and config
 cd "/app/httpd"
