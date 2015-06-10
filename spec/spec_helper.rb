@@ -9,7 +9,8 @@ RSpec.configure do |config|
     config.before(:all, :integration) do
       docker_image = 'cloudfoundry/cflinuxfs2'
 
-      %x{docker run --name #{DOCKER_CONTAINER_NAME} -dit -v #{Dir.pwd}:/binary-builder -w /binary-builder #{docker_image} bash}
+      %x{docker run --name #{DOCKER_CONTAINER_NAME} -dit -v #{Dir.pwd}:/binary-builder -e CCACHE_DIR=/binary-builder/.ccache -w /binary-builder #{docker_image} sh -c 'env PATH=/usr/lib/ccache:$PATH bash'}
+      `docker exec #{DOCKER_CONTAINER_NAME} apt-get -y install ccache`
       `docker exec #{DOCKER_CONTAINER_NAME} gem install bundler`
       `docker exec #{DOCKER_CONTAINER_NAME} bundle install -j4`
     end
