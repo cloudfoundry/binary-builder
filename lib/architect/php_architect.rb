@@ -64,7 +64,6 @@ module BinaryBuilder
       ],
       '5.5' => [
         AMQPExtension, IntlExtension, MemcachedExtension, PHPIRedisExtension,
-        PHPExtension.new('APC', '3.1.9', ['apc']),
         PHPExtension.new('igbinary', '1.2.1'),
         PHPExtension.new('imagick', '3.1.2'),
         PHPExtension.new('ioncube', '4.7.5'),
