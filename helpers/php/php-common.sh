@@ -298,35 +298,25 @@ build_external_extensions() {
 }
 
 package_php_extension() {
-	cd "$APP_DIR"
-	NAME=$1
-	tar cf "php-$NAME-${PHP_VERSION}.tar" "php/lib/php/extensions/no-debug-non-zts-$ZTS_VERSION/${NAME}.so"
-	if [ $# -gt 1 ]; then
-		for FILE in "${@:2}"; do
-			if [[ $FILE == /* ]]; then
-				cp $FILE php/lib
-				FILE=`basename $FILE`
-			else
-                if [ -f "/usr/lib/$FILE" ]; then
-                    cp "/usr/lib/$FILE" php/lib/
-                else
-                    cp "/usr/lib/x86_64-linux-gnu/$FILE" php/lib/
-                fi
-			fi
-			tar rf "php-$NAME-$PHP_VERSION.tar" "php/lib/$FILE"
-		done
-	fi
-	gzip -f -9 "php-$NAME-$PHP_VERSION.tar"
-	shasum "php-$NAME-$PHP_VERSION.tar.gz" > "php-$NAME-$PHP_VERSION.tar.gz.sha1"
-	cd "$APP_DIR"
+  cd "$APP_DIR"
+  for FILE in "${@:1}"; do
+    if [[ $FILE == /* ]]; then
+      cp $FILE php/lib
+      FILE=`basename $FILE`
+    else
+      if [ -f "/usr/lib/$FILE" ]; then
+        cp "/usr/lib/$FILE" php/lib/
+      else
+        cp "/usr/lib/x86_64-linux-gnu/$FILE" php/lib/
+      fi
+    fi
+  done
+  cd "$APP_DIR"
 }
 
 package_php_extension_snmp() {
        cd "$APP_DIR"
        NAME=snmp
-       tar cf "php-$NAME-$PHP_VERSION.tar" "php/lib/php/extensions/no-debug-non-zts-$ZTS_VERSION/$NAME.so"
-       cp "/usr/lib/x86_64-linux-gnu/libnetsnmp.so.30" php/lib/
-       tar rf "php-$NAME-$PHP_VERSION.tar" "php/lib/libnetsnmp.so.30"
        mkdir -p php/mibs
        # copy mibs that are packaged freely
        cp /usr/share/snmp/mibs/* php/mibs
@@ -335,7 +325,6 @@ package_php_extension_snmp() {
        cp /usr/bin/smistrip php/bin
        sed -i "s|^CONFDIR=/etc/snmp-mibs-downloader|CONFDIR=\$HOME/php/mibs/conf|" php/bin/download-mibs
        sed -i "s|^SMISTRIP=/usr/bin/smistrip|SMISTRIP=\$HOME/php/bin/smistrip|" php/bin/download-mibs
-       tar rf "php-$NAME-$PHP_VERSION.tar" "php/bin/download-mibs" "php/bin/smistrip"
        rm php/bin/download-mibs php/bin/smistrip
        # copy mibs download config
        cp -R /etc/snmp-mibs-downloader php/mibs/conf
@@ -351,79 +340,8 @@ package_php_extension_snmp() {
        cp -R /usr/share/doc/mibiana php/mibs/originals
        cp -R /usr/share/doc/mibrfcs php/mibs/originals
        # zip up mibs
-       tar rf "php-$NAME-$PHP_VERSION.tar" "php/mibs"
-       gzip -f -9 "php-$NAME-$PHP_VERSION.tar"
-       shasum "php-$NAME-$PHP_VERSION.tar.gz" > "php-$NAME-$PHP_VERSION.tar.gz.sha1"
        cd "$APP_DIR"
 }
 
-package_php_fpm() {
-	cd "$APP_DIR"
-	tar czf "php-fpm-$PHP_VERSION.tar.gz" php/sbin
-	shasum "php-fpm-$PHP_VERSION.tar.gz" > "php-fpm-$PHP_VERSION.tar.gz.sha1"
-	rm php/sbin/*
-	rm -rf php/php/
-	cd "$APP_DIR"
-}
-
-package_php_cgi() {
-	cd "$APP_DIR"
-	tar czf "php-cgi-$PHP_VERSION.tar.gz" php/bin/php-cgi
-	shasum "php-cgi-$PHP_VERSION.tar.gz" > "php-cgi-$PHP_VERSION.tar.gz.sha1"
-	rm php/bin/php-cgi
-	cd "$APP_DIR"
-}
-
-package_php_cli() {
-	cd "$APP_DIR"
-	rm php/bin/phar
-	ln -s /home/vcap/app/php/bin/phar.phar php/bin/phar
-	tar czf "php-cli-$PHP_VERSION.tar.gz" php/bin/php php/bin/phar php/bin/phar.phar 
-	shasum "php-cli-$PHP_VERSION.tar.gz" > "php-cli-$PHP_VERSION.tar.gz.sha1"
-	rm php/bin/php php/bin/phar php/bin/phar.phar
-	cd "$APP_DIR"
-}
-
-package_php_pear() {
-	cd "$APP_DIR"
-	tar czf "php-pear-$PHP_VERSION.tar.gz" \
-		--exclude=php/lib/php/extensions \
-			php/bin/pear \
-			php/bin/pecl \
-			php/bin/peardev \
-			php/etc/pear.conf \
-			php/lib/php
-	shasum "php-pear-$PHP_VERSION.tar.gz" > "php-pear-$PHP_VERSION.tar.gz.sha1"
-	rm php/bin/pear php/bin/pecl php/bin/peardev php/etc/pear.conf
-	# remove everything except 'extensions' dir
-	mv php/lib/php/extensions $EXTENSION_DIR
-	rm -rf php/lib/php
-	mkdir php/lib/php
-	mv $EXTENSION_DIR php/lib/php/extensions
-	cd "$APP_DIR"
-}
-
-package_php() {
-	cd "$APP_DIR"
-	tar czf "php-$PHP_VERSION.tar.gz" "php"
-	shasum "php-$PHP_VERSION.tar.gz" > "php-$PHP_VERSION.tar.gz.sha1"
-	cd "$APP_DIR"
-}
-
-rename_with_postfix() {
-	cd $INSTALLATION_DIR
-	if [ "n$VERSION_POSTFIX" != "n" ]; then
-		echo "Renaming with version postfix [$VERSION_POSTFIX]"
-		mv "php-$PHP_VERSION" "php-$PHP_VERSION$VERSION_POSTFIX"
-		cd "php-$PHP_VERSION$VERSION_POSTFIX"
-		for f in `ls *.gz`; do
-			mv $f "`basename $f $PHP_VERSION.tar.gz`$PHP_VERSION$VERSION_POSTFIX.tar.gz"
-		done
-		for f in `ls *.sha1`; do
-			mv $f "`basename $f $PHP_VERSION.tar.gz.sha1`$PHP_VERSION$VERSION_POSTFIX.tar.gz.sha1"
-		done
-	fi
-	cd "$BUILD_DIR/../"
-}
 ##################################################################
 

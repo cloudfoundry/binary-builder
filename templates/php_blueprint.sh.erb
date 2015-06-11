@@ -16,14 +16,11 @@
 
 INSTALLATION_DIR=$1
 
-APP_DIR=/tmp/staged/app
-mkdir -p $APP_DIR
-
-EXTENSION_DIR=$(pwd)/extensions
-mkdir $EXTENSION_DIR
+APP_DIR=/app
+mkdir $INSTALLATION_DIR/php
+ln -s $INSTALLATION_DIR/php $APP_DIR/php
 
 PHP_VERSION=<%= binary_version %>
-VERSION_POSTFIX=
 ZTS_VERSION=<%= external_libraries[:ZTS_VERSION] %>
 
 # Third Party Module Versions
@@ -107,43 +104,18 @@ function build_php() {
 
 package_php_extensions() {
   cd "$APP_DIR"
-  package_php_extension "bz2"
-  package_php_extension "curl"
-  package_php_extension "dba"
-  package_php_extension "exif"
-  package_php_extension "fileinfo"
-  package_php_extension "ftp"
-  package_php_extension "gd"
-  package_php_extension "gettext"
-  package_php_extension "gmp"
-  package_php_extension "imap" "libc-client.so.2007e"
-  package_php_extension "ldap"
-  package_php_extension "mbstring"
-  package_php_extension "mcrypt" "libmcrypt.so.4"
-  package_php_extension "mysqli"
-  package_php_extension "mysql"
-  package_php_extension "opcache"
-  package_php_extension "openssl"
-  package_php_extension "pdo_mysql"
-  package_php_extension "pdo_pgsql"
-  package_php_extension "pdo"
-  package_php_extension "pdo_sqlite"
-  package_php_extension "pgsql"
-  package_php_extension "pspell" "libaspell.so.15" "libpspell.so.15"
+
+  package_php_extension "libc-client.so.2007e"
+  package_php_extension "libmcrypt.so.4"
+  package_php_extension "libaspell.so.15" "libpspell.so.15"
+
   package_php_extension_snmp
-  package_php_extension "soap"
-  package_php_extension "sockets"
-  package_php_extension "xsl"
-  package_php_extension "zlib"
 
-  # put package_php_extension_args in quotes and join them with whitespace
-  <% external_extensions.each do |extension| %>
-    package_php_extension <%= extension.package_php_extension_args.map(&:inspect).join(' ') %>
-  <% end %>
+  package_php_extension "$APP_DIR/librmq-$RABBITMQ_C_VERSION/lib/librabbitmq.so.1"
+  package_php_extension "libicui18n.so.52" "libicuuc.so.52" "libicudata.so.52" "libicuio.so.52"
+  package_php_extension "libmemcached.so.10"
+  package_php_extension "$APP_DIR/hiredis-$HIREDIS_VERSION/lib/libhiredis.so.0.10"
 
-  # remove packaged files
-  rm php/lib/lib*
-  rm php/lib/php/extensions/no-debug-non-zts-$ZTS_VERSION/*
   cd "$APP_DIR"
 }
 
@@ -159,24 +131,10 @@ build_external_extensions
 # Remove unused files
 rm "$APP_DIR/php/etc/php-fpm.conf.default"
 rm -rf "$APP_DIR/php/include"
-rm -rf "$APP_DIR/php/php/man"
+rm -rf "$APP_DIR/php/php"
 rm -rf "$APP_DIR/php/lib/php/build"
 
 # Build binaries - one for PHP, one for FPM and one for each module
 package_php_extensions
-package_php_fpm
-package_php_cgi
-package_php_cli
-package_php_pear
-package_php
-
-# Move packages to the output directory
-output_dir="${INSTALLATION_DIR}/php-${PHP_VERSION}"
-mkdir -p $output_dir
-mv $APP_DIR/php-*.gz $output_dir
-mv $APP_DIR/php-*.gz.sha1 $output_dir
-
-# Rename with correct postfix
-rename_with_postfix
 
 echo "Done!"
