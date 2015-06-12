@@ -2,11 +2,12 @@
 set -e
 
 INSTALLATION_DIR=$1
-NODE_DIR=$INSTALLATION_DIR/node-<%= binary_version %>-linux-x64
+BINARY_VERSION=v<%= binary_version %>
+NODE_DIR=$INSTALLATION_DIR/node-${BINARY_VERSION}-linux-x64
 
-curl http://nodejs.org/dist/<%= binary_version %>/node-<%= binary_version %>.tar.gz -s --fail -o - | tar xzf - 2>/dev/null
+curl http://nodejs.org/dist/${BINARY_VERSION}/node-${BINARY_VERSION}.tar.gz -s --fail -o - | tar xzf - 2>/dev/null
 
-cd node-<%= binary_version %>
+cd node-${BINARY_VERSION}
 
 if [[ `lsb_release -r` == *10.04* ]]; then
   ./configure --shared-openssl-libpath=/lib/ --prefix=/
