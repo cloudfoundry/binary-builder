@@ -24,21 +24,17 @@ module BinaryBuilder
       }
     }
 
-    class PHPExtension < Struct.new(:name, :version, :package_php_extension_args)
-      def package_php_extension_args
-        super || [ name ]
-      end
-    end
+    class PHPExtension < Struct.new(:name, :version); end
 
-    AMQPExtension = PHPExtension.new('amqp', '1.4.0', ['amqp', "$APP_DIR/librmq-$RABBITMQ_C_VERSION/lib/librabbitmq.so.1"])
-    IntlExtension = PHPExtension.new('intl', '3.0.0', ['intl', "libicui18n.so.52", "libicuuc.so.52", "libicudata.so.52", "libicuio.so.52"])
-    MemcachedExtension = PHPExtension.new('memcached', '2.2.0', ['memcached', "libmemcached.so.10"])
-    PHPIRedisExtension = PHPExtension.new('phpiredis', 'trunk', ['phpiredis', "$APP_DIR/hiredis-$HIREDIS_VERSION/lib/libhiredis.so.0.10"])
+    AMQPExtension = PHPExtension.new('amqp', '1.4.0')
+    IntlExtension = PHPExtension.new('intl', '3.0.0')
+    MemcachedExtension = PHPExtension.new('memcached')
+    PHPIRedisExtension = PHPExtension.new('phpiredis', 'trunk')
 
     EXTERNAL_EXTENSIONS = {
       '5.4' => [
         AMQPExtension, IntlExtension, MemcachedExtension, PHPIRedisExtension,
-        PHPExtension.new('APC', '3.1.9', ['apc']),
+        PHPExtension.new('APC', '3.1.9'),
         PHPExtension.new('apcu', '4.0.7'),
         PHPExtension.new('igbinary', '1.2.1'),
         PHPExtension.new('imagick', '3.1.2'),
@@ -59,7 +55,7 @@ module BinaryBuilder
         PHPExtension.new('xdebug', '2.3.1'),
         PHPExtension.new('xhprof', 'trunk'),
         PHPExtension.new('yaf', '2.2.9'),
-        PHPExtension.new('zendopcache', '7.0.4', ['opcache']),
+        PHPExtension.new('zendopcache', '7.0.4'),
         PHPExtension.new('zookeeper', '0.2.2')
       ],
       '5.5' => [

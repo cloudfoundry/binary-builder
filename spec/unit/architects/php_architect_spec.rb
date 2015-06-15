@@ -31,16 +31,33 @@ module BinaryBuilder
         it 'adds the module version values' do
           expect(architect.blueprint).to include %q{MODULES[amqp]="1.4.0"}
         end
-      end
-    end
 
-    context 'when building php 5.4' do
-      let(:binary_version) { '5.4.41' }
+        it 'packages third party dependencies for the imap extension' do
+          expect(architect.blueprint).to include 'package_php_extension "libc-client.so.2007e"'
+        end
 
-      describe 'blueprint' do
-        it 'does not include the zendopcache as a package_php_extension because the *.so is opcache.so' do
-          expect(architect.blueprint).to_not include 'package_php_extension "zendopcache"'
-          expect(architect.blueprint).to include 'package_php_extension "opcache"'
+        it 'packages third party dependencies for the mcrypt extension' do
+          expect(architect.blueprint).to include 'package_php_extension "libmcrypt.so.4"'
+        end
+
+        it 'packages third party dependencies for the pspell extension' do
+          expect(architect.blueprint).to include 'package_php_extension "libaspell.so.15" "libpspell.so.15"'
+        end
+
+        it 'packages third party dependencies for the amqp extension' do
+          expect(architect.blueprint).to include 'package_php_extension "$APP_DIR/librmq-$RABBITMQ_C_VERSION/lib/librabbitmq.so.1"'
+        end
+
+        it 'packages third party dependencies for the intl extension' do
+          expect(architect.blueprint).to include 'package_php_extension "libicui18n.so.52" "libicuuc.so.52" "libicudata.so.52" "libicuio.so.52"'
+        end
+
+        it 'packages third party dependencies for the memcached extension' do
+          expect(architect.blueprint).to include 'package_php_extension "libmemcached.so.10"'
+        end
+
+        it 'packages third party dependencies for the phpiredis extension' do
+          expect(architect.blueprint).to include 'package_php_extension "$APP_DIR/librmq-$RABBITMQ_C_VERSION/lib/librabbitmq.so.1"'
         end
       end
     end
