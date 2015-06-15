@@ -93,9 +93,6 @@ function build_php() {
   else
     cd "php-$PHP_VERSION"
   fi
-  # Fix path on phar.phar
-  sed 's|PHP_PHARCMD_BANG = `.*`|PHP_PHARCMD_BANG = /home/vcap/app/php/bin/php|' Makefile > Makefile.phar-fix
-  mv Makefile.phar-fix Makefile
   # Build
   make -j 3
   make install
