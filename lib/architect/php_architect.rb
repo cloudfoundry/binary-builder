@@ -28,7 +28,7 @@ module BinaryBuilder
 
     AMQPExtension = PHPExtension.new('amqp', '1.4.0')
     IntlExtension = PHPExtension.new('intl', '3.0.0')
-    MemcachedExtension = PHPExtension.new('memcached')
+    MemcachedExtension = PHPExtension.new('memcached', '2.2.0')
     PHPIRedisExtension = PHPExtension.new('phpiredis', 'trunk')
 
     EXTERNAL_EXTENSIONS = {
