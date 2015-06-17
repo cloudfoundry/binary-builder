@@ -3,3 +3,4 @@
 .rspec
 .bundle
 .ccache
+/logs
