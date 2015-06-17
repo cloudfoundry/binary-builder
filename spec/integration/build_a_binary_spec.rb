@@ -8,7 +8,7 @@ describe 'building a binary', :integration do
 
   context 'when node is specified', binary: 'node' do
     let(:binary_name) { 'node' }
-    let(:binary_version) { 'v0.12.2' }
+    let(:binary_version) { '0.12.2' }
 
     it 'builds the specified binary, tars it, and places it in your current working directory' do
       binary_tarball_location = File.join(Dir.pwd, 'node-v0.12.2-linux-x64.tar.gz')
