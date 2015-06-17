@@ -11,10 +11,10 @@ describe 'building a binary', :integration do
     let(:binary_version) { '0.12.2' }
 
     it 'builds the specified binary, tars it, and places it in your current working directory' do
-      binary_tarball_location = File.join(Dir.pwd, 'node-v0.12.2-linux-x64.tar.gz')
+      binary_tarball_location = File.join(Dir.pwd, 'node-0.12.2-linux-x64.tar.gz')
       expect(File).to exist(binary_tarball_location)
 
-      node_version_cmd = %q{./spec/assets/binary-exerciser.sh node-v0.12.2-linux-x64.tar.gz node-v0.12.2-linux-x64/bin/node -e 'console.log(process.version)'}
+      node_version_cmd = %q{./spec/assets/binary-exerciser.sh node-0.12.2-linux-x64.tar.gz node-v0.12.2-linux-x64/bin/node -e 'console.log(process.version)'}
       output, status = run(node_version_cmd)
 
       expect(status).to be_success
