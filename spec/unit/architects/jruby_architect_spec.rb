@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module BinaryBuilder
   describe JRubyArchitect do
-    subject(:architect) { JRubyArchitect.new(binary_version: 'ruby-2.0.0-jruby-1.7.19') }
+    subject(:architect) { JRubyArchitect.new(binary_version: '1.7.19+ruby-2.0.0') }
 
     describe '#new' do
       it 'sets the correct versions' do

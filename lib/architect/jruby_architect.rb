@@ -3,8 +3,8 @@ module BinaryBuilder
     attr_reader :jruby_version, :ruby_version
 
     def initialize(options)
-      match_data = options[:binary_version].match(/ruby-(.*)\.\d*-jruby-(.*)/)
-      @ruby_version, @jruby_version = match_data[1], match_data[2]
+      match_data = options[:binary_version].match(/(.*)\+ruby-(\d+\.\d).*/)
+      @jruby_version, @ruby_version = match_data[1], match_data[2]
     end
 
     def blueprint
