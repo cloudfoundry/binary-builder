@@ -89,7 +89,8 @@ function build_php() {
       --enable-mbregex \
       --enable-exif=shared \
       --with-openssl=shared \
-      --enable-fpm
+      --enable-fpm \
+      --enable-pcntl=shared
   else
     cd "php-$PHP_VERSION"
   fi
