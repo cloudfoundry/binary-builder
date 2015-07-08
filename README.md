@@ -9,8 +9,8 @@ This tool provides a mechanism for building binaries for the Cloud Foundry build
 * JRuby
 * Python
 * PHP
-* nginx
-* Apache HTTD Server
+* Nginx
+* Apache HTTPD Server
 
 # Usage
 
