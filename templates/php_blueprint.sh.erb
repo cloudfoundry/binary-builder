@@ -94,7 +94,7 @@ function build_php() {
     cd "php-$PHP_VERSION"
   fi
   # Build
-  make -j 3
+  make -j 8
   make install
   cd "$BUILD_DIR"
 }
