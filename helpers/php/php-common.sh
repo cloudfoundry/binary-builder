@@ -318,6 +318,7 @@ package_php_extension_snmp() {
        cd "$APP_DIR"
        NAME=snmp
        mkdir -p php/mibs
+       cp "/usr/lib/x86_64-linux-gnu/libnetsnmp.so.30" php/lib/
        # copy mibs that are packaged freely
        cp /usr/share/snmp/mibs/* php/mibs
        # copy mibs downloader & smistrip, will download un-free mibs
