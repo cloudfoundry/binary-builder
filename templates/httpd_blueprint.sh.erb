@@ -52,7 +52,7 @@ function build_required_libs() {
 }
 
 function build_httpd() {
-  curl -f -L -O "http://apache.osuosl.org/httpd/httpd-<%= binary_version %>.tar.bz2"
+  curl -f -L -O "http://ftp.wayne.edu/apache/httpd/httpd-<%= binary_version %>.tar.bz2"
   tar jxf "httpd-<%= binary_version %>.tar.bz2"
   pushd "httpd-<%= binary_version %>"
   ./configure \
