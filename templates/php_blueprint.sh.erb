@@ -130,6 +130,8 @@ rm "$APP_DIR/php/etc/php-fpm.conf.default"
 rm -rf "$APP_DIR/php/include"
 rm -rf "$APP_DIR/php/php"
 rm -rf "$APP_DIR/php/lib/php/build"
+rm "$APP_DIR/php/bin/php-cgi"
+find "$APP_DIR/php/lib/php/extensions" -name "*.a" -type f -delete
 
 # Build binaries - one for PHP, one for FPM and one for each module
 package_php_extensions
