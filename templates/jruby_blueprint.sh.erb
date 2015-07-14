@@ -4,12 +4,20 @@ set -e
 INSTALLATION_DIR=$1
 
 apt-get update
-apt-get -y install maven openjdk-7-jdk
+apt-get -y install openjdk-7-jdk
+
+curl -O http://www.gtlib.gatech.edu/pub/apache/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.tar.gz
+if [[  $(md5sum apache-maven-3.3.3-bin.tar.gz) != *"794b3b7961200c542a7292682d21ba36"* ]]; then
+  echo -e "\n\n The Maven tarball that was downloaded did not match the expected checksum! Exiting the build!"
+  exit 1
+fi
+
+tar xzvf apache-maven-3.3.3-bin.tar.gz
 
 curl https://s3.amazonaws.com/jruby.org/downloads/<%= jruby_version %>/jruby-src-<%= jruby_version %>.tar.gz -s --fail -o - | tar xzf - 2>/dev/null
 cd jruby-<%= jruby_version %>
 
-mvn -Djruby.default.ruby.version=<%= ruby_version %>
+../apache-maven-3.3.3/bin/mvn -Djruby.default.ruby.version=<%= ruby_version %>
 
 cp -r bin/ $INSTALLATION_DIR
 cp -r lib/ $INSTALLATION_DIR
