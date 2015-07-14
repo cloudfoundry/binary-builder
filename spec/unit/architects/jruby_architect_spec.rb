@@ -19,6 +19,21 @@ module BinaryBuilder
       it 'adds the default Ruby version' do
         expect(architect.blueprint).to include '2.0'
       end
+
+      context "maven version" do
+        before do
+          allow(architect).to receive(:maven_version).and_return('1.2.3')
+          allow(architect).to receive(:maven_md5).and_return('MyFakeMD5-789789789')
+        end
+
+        it 'specifies downloading the correct maven version' do
+          expect(architect.blueprint).to include "apache-maven-1.2.3-bin.tar.gz"
+        end
+
+        it 'specifies checking the downloaded maven tarball with the appropriate checksum' do
+          expect(architect.blueprint).to include '-bin.tar.gz) != *"MyFakeMD5-789789789"* ]]; then'
+        end
+      end
     end
   end
 end

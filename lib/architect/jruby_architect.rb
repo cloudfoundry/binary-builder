@@ -7,6 +7,14 @@ module BinaryBuilder
       @jruby_version, @ruby_version = match_data[1], match_data[2]
     end
 
+    def maven_version
+      '3.3.3'
+    end
+
+    def maven_md5
+      '794b3b7961200c542a7292682d21ba36'
+    end
+
     def blueprint
       JRubyTemplate.new(binding).result
     end

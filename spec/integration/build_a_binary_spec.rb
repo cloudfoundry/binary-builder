@@ -42,17 +42,17 @@ describe 'building a binary', :integration do
 
   context 'when jruby is specified', binary: 'jruby' do
     let(:binary_name) { 'jruby' }
-    let(:binary_version) { '9.0.0.0.pre1_ruby-2.2.0' }
+    let(:binary_version) { '9.0.0.0.rc2_ruby-2.2.0' }
 
     it 'builds the specified binary, tars it, and places it in your current working directory' do
-      binary_tarball_location = File.join(Dir.pwd, 'jruby-9.0.0.0.pre1_ruby-2.2.0-linux-x64.tgz')
+      binary_tarball_location = File.join(Dir.pwd, 'jruby-9.0.0.0.rc2_ruby-2.2.0-linux-x64.tgz')
       expect(File).to exist(binary_tarball_location)
 
       jruby_version_cmd = %q{./spec/assets/jruby-exerciser.sh}
       output, status = run(jruby_version_cmd)
 
       expect(status).to be_success
-      expect(output).to include('java 2.2.0')
+      expect(output).to include('java 2.2.2')
       FileUtils.rm(binary_tarball_location)
     end
   end

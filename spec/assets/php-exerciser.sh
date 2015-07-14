@@ -3,7 +3,7 @@ set +e
 
 php_version=$1; shift
 tar_name=php-$php_version-linux-x64.tgz
-mkdir /tmp/binary-exerciser
+mkdir -p /tmp/binary-exerciser
 current_dir=`pwd`
 cd /tmp/binary-exerciser
 

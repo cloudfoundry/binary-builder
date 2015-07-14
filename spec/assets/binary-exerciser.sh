@@ -3,7 +3,7 @@ set +e
 
 tar_name=$1; shift
 
-mkdir /tmp/binary-exerciser
+mkdir -p /tmp/binary-exerciser
 current_dir=`pwd`
 cd /tmp/binary-exerciser
 
