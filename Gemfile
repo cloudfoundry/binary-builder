@@ -5,3 +5,5 @@ group :test do
   gem 'rspec-instafail'
   gem 'pry'
 end
+
+ruby '2.2.2'
