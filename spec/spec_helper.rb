@@ -25,7 +25,7 @@ RSpec.configure do |config|
     cmd = "docker exec #{DOCKER_CONTAINER_NAME} #{cmd}" if RUBY_PLATFORM.include?('darwin')
 
     return exec_with_logs(cmd) if log
-    Open3.capture2e(cmd)
+    Bundler.with_clean_env { Open3.capture2e(cmd) }
   end
 
   def run_binary_builder(binary_name, binary_version, flags = '')
