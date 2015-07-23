@@ -326,7 +326,6 @@ package_php_extension_snmp() {
        cp /usr/bin/smistrip php/bin
        sed -i "s|^CONFDIR=/etc/snmp-mibs-downloader|CONFDIR=\$HOME/php/mibs/conf|" php/bin/download-mibs
        sed -i "s|^SMISTRIP=/usr/bin/smistrip|SMISTRIP=\$HOME/php/bin/smistrip|" php/bin/download-mibs
-       rm php/bin/download-mibs php/bin/smistrip
        # copy mibs download config
        cp -R /etc/snmp-mibs-downloader php/mibs/conf
        sed -i "s|^DIR=/usr/share/doc|DIR=\$HOME/php/mibs/originals|" php/mibs/conf/iana.conf
