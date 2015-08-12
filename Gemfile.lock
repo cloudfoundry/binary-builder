@@ -24,6 +24,7 @@ GEM
       rspec-support (~> 3.2.0)
     rspec-support (3.2.2)
     slop (3.6.0)
+    timecop (0.8.0)
 
 PLATFORMS
   ruby
@@ -32,6 +33,7 @@ DEPENDENCIES
   pry
   rspec
   rspec-instafail
+  timecop
 
 BUNDLED WITH
-   1.10.4
+   1.10.6
