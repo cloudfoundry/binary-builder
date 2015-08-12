@@ -64,8 +64,11 @@ module BinaryBuilder
     end
 
     def tarball_name
-      if binary_name == 'node'
+      case binary_name
+      when 'node'
         "#{binary_name}-#{binary_version}-linux-x64.tar.gz"
+      when 'php'
+        "#{binary_name}-#{binary_version}-linux-x64-#{Time.now.to_i}.tgz"
       else
         "#{binary_name}-#{binary_version}-linux-x64.tgz"
       end

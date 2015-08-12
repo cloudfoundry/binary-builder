@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'timecop'
 
 module BinaryBuilder
   describe Builder do
@@ -72,6 +73,22 @@ module BinaryBuilder
       it 'tars the remaining files from their directory' do
         expect(builder).to receive(:system).with("ls -A tmp_dir/installation | xargs tar czf node-v0.12.2-linux-x64.tar.gz -C tmp_dir/installation")
         builder.tar_installed_binary
+      end
+
+      context 'when the binary name is php' do
+        let(:options) do
+          {
+            binary_name: 'php',
+            binary_version: '5.6.11'
+          }
+        end
+
+        it 'tars up the directory to a file with a timestamp in the name' do
+          Timecop.freeze(Date.civil(2012, 12, 12)) do
+            expect(builder).to receive(:system).with("ls -A tmp_dir/installation | xargs tar czf php-5.6.11-linux-x64-1355288400.tgz -C tmp_dir/installation")
+            builder.tar_installed_binary
+          end
+        end
       end
     end
 
