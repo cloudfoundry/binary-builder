@@ -68,7 +68,7 @@ module BinaryBuilder
       when 'node'
         "#{binary_name}-#{binary_version}-linux-x64.tar.gz"
       when 'php'
-        "#{binary_name}-#{binary_version}-linux-x64-#{Time.now.to_i}.tgz"
+        "#{binary_name}-#{binary_version}-linux-x64-#{Time.now.utc.to_i}.tgz"
       else
         "#{binary_name}-#{binary_version}-linux-x64.tgz"
       end
