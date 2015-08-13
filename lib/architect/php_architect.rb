@@ -7,18 +7,21 @@ module BinaryBuilder
       '5.4' => {
         ZTS_VERSION:          "20100525",
         RABBITMQ_C_VERSION:   "0.5.2",
+        LIBMEMCACHED_VERSION: "1.0.18",
         HIREDIS_VERSION:      "0.11.0",
         LUA_VERSION:          "5.2.4"
       },
       '5.5' => {
         ZTS_VERSION:          "20121212",
         RABBITMQ_C_VERSION:   "0.5.2",
+        LIBMEMCACHED_VERSION: "1.0.18",
         HIREDIS_VERSION:      "0.11.0",
         LUA_VERSION:          "5.2.4"
       },
       '5.6' => {
         ZTS_VERSION:          "20131226",
         RABBITMQ_C_VERSION:   "0.5.2",
+        LIBMEMCACHED_VERSION: "1.0.18",
         HIREDIS_VERSION:      "0.11.0",
         LUA_VERSION:          "5.2.4"
       }

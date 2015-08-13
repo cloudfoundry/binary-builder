@@ -8,6 +8,24 @@
 #     Date:  11-17-2013
 #
 ##################################################################
+build_libmemcached() {
+	cd "$BUILD_DIR"
+	if [ ! -d "libmemcached-$LIBMEMCACHED_VERSION" ]; then
+		curl -L -O "https://launchpad.net/libmemcached/1.0/$LIBMEMCACHED_VERSION/+download/libmemcached-$LIBMEMCACHED_VERSION.tar.gz"
+                tar zxf "libmemcached-$LIBMEMCACHED_VERSION.tar.gz"
+                rm "libmemcached-$LIBMEMCACHED_VERSION.tar.gz"
+		cd "libmemcached-$LIBMEMCACHED_VERSION"
+		./configure --prefix="$APP_DIR/libmemcached-$LIBMEMCACHED_VERSION"
+		make -j 5
+	else
+		cd "libmemcached-$LIBMEMCACHED_VERSION"
+	fi
+	if [ ! -d "$APP_DIR/libmemcached-$LIBMEMCACHED_VERSION" ]; then
+		make install
+	fi
+	cd "$BUILD_DIR"
+}
+
 build_librabbit() {
 	cd "$BUILD_DIR"
 	if [ ! -d "rabbitmq-c-$RABBITMQ_C_VERSION" ]; then
@@ -229,6 +247,9 @@ build_external_extension() {
         build_ioncube $VERSION
         return # commercial, but redistributable
     fi
+	if [ "$NAME" == "memcached" ]; then
+		build_libmemcached
+	fi
 	if [ "$NAME" == "phalcon" ]; then
 		build_phpalcon $VERSION
 		return # has it's own build script, so we just run it and return
@@ -271,7 +292,8 @@ build_external_extension() {
 			./configure --with-php-config="$APP_DIR/php/bin/php-config" --with-librabbitmq-dir="$APP_DIR/librmq-$RABBITMQ_C_VERSION"
 		elif [ "$NAME" == "memcached" ]; then
 			./configure --with-php-config="$APP_DIR/php/bin/php-config" \
-                --disable-memcached-sasl \
+                --with-libmemcached-dir="$APP_DIR/libmemcached-$LIBMEMCACHED_VERSION" \
+                --enable-memcached-sasl \
 				--enable-memcached-msgpack \
 				--enable-memcached-igbinary \
 				--enable-memcached-json
