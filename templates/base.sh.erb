@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+download_verify_tar(){
+  curl $TAR_URL -s -f -L --retry 3 --connect-timeout 20 --retry-delay 1 -o $FILENAME
+  local length=$(echo -n "<%= checksum_value %>" | wc -c)
+  if [ "$length" -eq "64" ]; then
+    checksum=$(sha256sum $FILENAME | awk '{print $1}')
+  else
+    checksum=$(md5sum $FILENAME | awk '{print $1}')
+  fi
+
+  if [ "$checksum" != "<%= checksum_value %>" ]; then
+    echo "Checksum is not matching!"
+    exit 1
+  fi
+}
+
+extract_tar(){
+  mkdir -p $DEST_DIR
+  tar xf $FILENAME -C $DEST_DIR --strip 1
+  rm $FILENAME
+  cd $DEST_DIR
+}
+
+main() {
+  set -xe
+  set -o pipefail
+
+  download_verify_tar && extract_tar && template_steps
+  echo "Done!"
+}
+
+
+
+

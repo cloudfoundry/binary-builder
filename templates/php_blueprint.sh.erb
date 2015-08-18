@@ -1,4 +1,3 @@
-#!/bin/bash
 #
 ##################################################################
 #
@@ -33,19 +32,13 @@ declare -A MODULES
 MODULES[<%= extension.name %>]="<%= extension.version %>"
 <% end %>
 # location where files are built
-BUILD_DIR=`pwd`/build
+FILENAME=php-$PHP_VERSION.tar.bz2
+TAR_URL=https://php.net/get/php-$PHP_VERSION.tar.bz2/from/this/mirror
+DEST_DIR=$INSTALLATION_DIR/build
+BUILD_DIR=$DEST_DIR
 
-##################################################################
-set -e
-
-function build_php() {
-  cd "$BUILD_DIR"
-  if [ ! -d "php-$PHP_VERSION" ]; then
-    curl -L -o "php-$PHP_VERSION.tar.bz2" "http://us1.php.net/get/php-$PHP_VERSION.tar.bz2/from/us2.php.net/mirror"
-    tar jxf "php-$PHP_VERSION.tar.bz2"
-    rm "php-$PHP_VERSION.tar.bz2"
-    cd "php-$PHP_VERSION"
-    LIBS=-lz ./configure \
+template_steps() {
+   LIBS=-lz ./configure \
       --prefix="$APP_DIR/php" \
       --disable-static \
       --enable-shared \
@@ -92,13 +85,25 @@ function build_php() {
       --enable-fpm \
       --enable-pcntl=shared \
       --with-readline=shared
-  else
-    cd "php-$PHP_VERSION"
-  fi
   # Build
   make -j 8
   make install
-  cd "$BUILD_DIR"
+
+  echo "PHP build is successful"
+
+  build_external_extensions
+  package_php_extensions
+  cleanup
+}
+
+cleanup(){
+  # Remove unused files
+  rm "$APP_DIR/php/etc/php-fpm.conf.default"
+  rm -rf "$APP_DIR/php/include"
+  rm -rf "$APP_DIR/php/php"
+  rm -rf "$APP_DIR/php/lib/php/build"
+  rm "$APP_DIR/php/bin/php-cgi"
+  find "$APP_DIR/php/lib/php/extensions" -name "*.a" -type f -delete
 }
 
 package_php_extensions() {
@@ -118,24 +123,4 @@ package_php_extensions() {
   cd "$APP_DIR"
 }
 
-# setup build directory
-if [ ! -d "$BUILD_DIR" ]; then
-  mkdir "$BUILD_DIR"
-fi
-
-# build and install php
-build_php
-build_external_extensions
-
-# Remove unused files
-rm "$APP_DIR/php/etc/php-fpm.conf.default"
-rm -rf "$APP_DIR/php/include"
-rm -rf "$APP_DIR/php/php"
-rm -rf "$APP_DIR/php/lib/php/build"
-rm "$APP_DIR/php/bin/php-cgi"
-find "$APP_DIR/php/lib/php/extensions" -name "*.a" -type f -delete
-
-# Build binaries - one for PHP, one for FPM and one for each module
-package_php_extensions
-
-echo "Done!"
+main "$@"

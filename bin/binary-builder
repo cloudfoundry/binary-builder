@@ -6,14 +6,16 @@ require 'builder'
 
 USAGE_MESSAGE = "USAGE: binary-builder [binary name] [binary version]"
 
-unless ARGV[0] && ARGV[1]
+# e.g. node 0.12.7 md5-value (SHA/PGP/MD5)
+unless ARGV[0] && ARGV[1] && ARGV[2]
   puts USAGE_MESSAGE
   exit 1
 end
 
 options = {
   binary_name: ARGV[0],
-  binary_version: ARGV[1]
+  binary_version: ARGV[1],
+  checksum_value: ARGV[2]
 }
 
 BinaryBuilder::Builder.build(options)

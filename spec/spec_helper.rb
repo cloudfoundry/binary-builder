@@ -28,9 +28,9 @@ RSpec.configure do |config|
     Bundler.with_clean_env { Open3.capture2e(cmd) }
   end
 
-  def run_binary_builder(binary_name, binary_version, flags = '')
-    binary_builder_cmd = "#{File.join('./bin', 'binary-builder')} #{binary_name} #{binary_version} #{flags}"
-    run(binary_builder_cmd, true)[0]
+  def run_binary_builder(binary_name, binary_version, checksum)
+    binary_builder_cmd = "#{File.join('./bin', 'binary-builder')} #{binary_name} #{binary_version} #{checksum}"
+    run(binary_builder_cmd, true)
   end
 
   private

@@ -1,9 +1,10 @@
 module BinaryBuilder
   class Architect
-    attr_reader :binary_version
+    attr_reader :binary_version, :checksum_value
 
     def initialize(options)
       @binary_version = options[:binary_version]
+      @checksum_value = options[:checksum_value]
     end
 
     def minor_version
@@ -15,13 +16,15 @@ module BinaryBuilder
   class Template
     def initialize(architect_binding)
       @architect_binding = architect_binding
-      @erb = ERB.new(read_template)
+      base_template = File.expand_path('../../../templates/base.sh.erb', __FILE__)
+      @base_erb = ERB.new(read_template(base_template))
+      @erb = ERB.new(read_template(template_path))
     end
 
     attr_reader :binary_version
 
     def result
-      @erb.result(@architect_binding)
+      @base_erb.result(@architect_binding) + @erb.result(@architect_binding)
     end
 
     def template_path
@@ -29,8 +32,8 @@ module BinaryBuilder
     end
 
     private
-    def read_template
-      @read_template ||= File.open(template_path).read
+    def read_template(file_path)
+      File.open(file_path).read
     end
   end
 end

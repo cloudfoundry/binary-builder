@@ -3,6 +3,7 @@ module BinaryBuilder
     attr_reader :jruby_version, :ruby_version
 
     def initialize(options)
+      super
       match_data = options[:binary_version].match(/(.*)_ruby-(\d+\.\d).*/)
       @jruby_version, @ruby_version = match_data[1], match_data[2]
     end

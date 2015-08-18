@@ -8,7 +8,8 @@ module BinaryBuilder
     let(:options) do
       {
         binary_name: 'node',
-        binary_version: 'v0.12.2'
+        binary_version: 'v0.12.2',
+        checksum_value: 'checksum'
       }
     end
     let (:foundation_dir) { 'tmp_dir' }
@@ -20,13 +21,17 @@ module BinaryBuilder
 
     describe '#new' do
       context 'for a node binary' do
-        it 'sets binary_name, binary_version, and docker_image values' do
+        it 'sets binary_name, binary_version, and checksum values' do
           expect(builder.binary_name).to eq('node')
           expect(builder.binary_version).to eq('v0.12.2')
+          expect(builder.checksum_value).to eq('checksum')
         end
 
         it 'creates a node architect' do
-          expect(NodeArchitect).to receive(:new).with({binary_version: 'v0.12.2'}).and_return(node_architect)
+          expect(NodeArchitect).to receive(:new).with({
+            binary_version: 'v0.12.2',
+            checksum_value: 'checksum'
+          }).and_return(node_architect)
           builder
         end
       end

@@ -1,8 +1,9 @@
-#!/usr/bin/env bash
-set -e
-
 STAGING_DIR="/tmp/staged/app"
 INSTALLATION_DIR=$1
+BINARY_VERSION=<%= binary_version %>
+DEST_DIR=$INSTALLATION_DIR/httpd-${BINARY_VERSION}
+FILENAME=httpd-${BINARY_VERSION}.tar.bz2
+TAR_URL=https://archive.apache.org/dist/httpd//$FILENAME
 
 function build_apr() {
   curl -f -L -O --retry 3 --connect-timeout 20 --retry-delay 1 "http://apache.mirrors.tds.net/apr/apr-<%= BUILD_VERSIONS[:apr_version] %>.tar.gz"
@@ -51,10 +52,11 @@ function build_required_libs() {
   build_apr_util
 }
 
-function build_httpd() {
-  curl -vvv -f -L -O --retry 3 --connect-timeout 20 --retry-delay 1 "http://archive.apache.org/dist/httpd//httpd-<%= binary_version %>.tar.bz2"
-  tar jxf "httpd-<%= binary_version %>.tar.bz2"
-  pushd "httpd-<%= binary_version %>"
+template_steps() {
+  # build required libs & httpd
+  apt-get -y install libpcre3-dev
+  build_required_libs
+
   ./configure \
     --prefix="/app/httpd" \
     --with-apr="$STAGING_DIR/libapr-<%= BUILD_VERSIONS[:apr_version] %>" \
@@ -66,23 +68,17 @@ function build_httpd() {
     --disable-dialup
   make -j 3
   make install prefix=$INSTALLATION_DIR/httpd
-  popd
+
+  # Remove unnecessary files and config
+  cd $INSTALLATION_DIR/httpd
+  rm -rf build/ cgi-bin/ error/ icons/ include/ man/ manual/ htdocs/
+  rm -rf conf/extra/* conf/httpd.conf conf/httpd.conf.bak conf/magic conf/original
+
+  # Install required libraries
+  mkdir $INSTALLATION_DIR/httpd/lib
+  cp "$STAGING_DIR/libapr-<%= BUILD_VERSIONS[:apr_version] %>/lib/libapr-1.so.0" $INSTALLATION_DIR/httpd/lib
+  cp "$STAGING_DIR/libapr-util-<%= BUILD_VERSIONS[:apr_util_version] %>/lib/libaprutil-1.so.0" $INSTALLATION_DIR/httpd/lib
+  cp "$STAGING_DIR/libapr-iconv-<%= BUILD_VERSIONS[:apr_iconv_version] %>/lib/libapriconv-1.so.0" $INSTALLATION_DIR/httpd/lib
 }
 
-# build required libs & httpd
-apt-get -y install libpcre3-dev
-build_required_libs
-build_httpd
-
-# Remove unnecessary files and config
-cd $INSTALLATION_DIR/httpd
-rm -rf build/ cgi-bin/ error/ icons/ include/ man/ manual/ htdocs/
-rm -rf conf/extra/* conf/httpd.conf conf/httpd.conf.bak conf/magic conf/original
-
-# Install required libraries
-mkdir $INSTALLATION_DIR/httpd/lib
-cp "$STAGING_DIR/libapr-<%= BUILD_VERSIONS[:apr_version] %>/lib/libapr-1.so.0" $INSTALLATION_DIR/httpd/lib
-cp "$STAGING_DIR/libapr-util-<%= BUILD_VERSIONS[:apr_util_version] %>/lib/libaprutil-1.so.0" $INSTALLATION_DIR/httpd/lib
-cp "$STAGING_DIR/libapr-iconv-<%= BUILD_VERSIONS[:apr_iconv_version] %>/lib/libapriconv-1.so.0" $INSTALLATION_DIR/httpd/lib
-
-echo "Done!"
+main "$@"

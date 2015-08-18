@@ -1,23 +1,24 @@
-#!/usr/bin/env bash
-set -e
-
 INSTALLATION_DIR=$1
+BINARY_VERSION=<%= jruby_version %>
+DEST_DIR=$INSTALLATION_DIR/jruby-${BINARY_VERSION}
+FILENAME=jruby-src-${BINARY_VERSION}.tar.gz
+TAR_URL=https://s3.amazonaws.com/jruby.org/downloads/<%= jruby_version %>/$FILENAME
 
-apt-get update
-apt-get -y install openjdk-7-jdk
+template_steps(){
+  apt-get update
+  apt-get -y install openjdk-7-jdk
 
-curl -O http://www.gtlib.gatech.edu/pub/apache/maven/maven-3/<%= maven_version %>/binaries/apache-maven-<%= maven_version %>-bin.tar.gz
-if [[  $(md5sum apache-maven-<%= maven_version %>-bin.tar.gz) != *"<%= maven_md5 %>"* ]]; then
-  echo -e "\n\n The Maven tarball that was downloaded did not match the expected checksum! Exiting the build!"
-  exit 1
-fi
+  curl -O http://www.gtlib.gatech.edu/pub/apache/maven/maven-3/<%= maven_version %>/binaries/apache-maven-<%= maven_version %>-bin.tar.gz
+  if [[  $(md5sum apache-maven-<%= maven_version %>-bin.tar.gz) != *"<%= maven_md5 %>"* ]]; then
+    echo -e "\n\n The Maven tarball that was downloaded did not match the expected checksum! Exiting the build!"
+    exit 1
+  fi
 
-tar xzvf apache-maven-<%= maven_version %>-bin.tar.gz
+  tar xzvf apache-maven-<%= maven_version %>-bin.tar.gz
+  ./apache-maven-<%= maven_version %>/bin/mvn -Djruby.default.ruby.version=<%= ruby_version %>
 
-curl https://s3.amazonaws.com/jruby.org/downloads/<%= jruby_version %>/jruby-src-<%= jruby_version %>.tar.gz -s --fail -o - | tar xzf - 2>/dev/null
-cd jruby-<%= jruby_version %>
+  cp -r bin/ $INSTALLATION_DIR
+  cp -r lib/ $INSTALLATION_DIR
+}
 
-../apache-maven-<%= maven_version %>/bin/mvn -Djruby.default.ruby.version=<%= ruby_version %>
-
-cp -r bin/ $INSTALLATION_DIR
-cp -r lib/ $INSTALLATION_DIR
+main "$@"

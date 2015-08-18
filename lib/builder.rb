@@ -4,7 +4,7 @@ require 'tmpdir'
 
 module BinaryBuilder
   class Builder
-    attr_reader :binary_name, :binary_version, :architect
+    attr_reader :binary_name, :binary_version, :checksum_value, :architect
 
     def self.build(options)
       builder = self.new(options)
@@ -15,8 +15,8 @@ module BinaryBuilder
     end
 
     def initialize(options)
-      @binary_name, @binary_version = options[:binary_name], options[:binary_version]
-      @architect = architect_for_binary(binary_name).new(binary_version: @binary_version)
+      @binary_name, @binary_version, @checksum_value = options[:binary_name], options[:binary_version], options[:checksum_value]
+      @architect = architect_for_binary(binary_name).new(binary_version: @binary_version, checksum_value: @checksum_value)
     end
 
     def set_foundation

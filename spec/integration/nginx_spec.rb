@@ -3,7 +3,7 @@ require 'spec_helper'
 describe 'building a binary', :integration do
   context 'when nginx is specified', binary: 'nginx' do
     before do
-      run_binary_builder('nginx', '1.7.10')
+      run_binary_builder('nginx', '1.7.10', 'dontcare')
     end
 
     it 'builds the specified binary, tars it, and places it in your current working directory' do

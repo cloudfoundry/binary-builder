@@ -1,14 +1,16 @@
-#!/usr/bin/env bash
-set -e
-
 INSTALLATION_DIR=$1
+BINARY_VERSION=<%= binary_version %>
+DEST_DIR=$INSTALLATION_DIR/ruby-${BINARY_VERSION}
+FILENAME=ruby-${BINARY_VERSION}.tar.gz
+TAR_URL=https://cache.ruby-lang.org/pub/ruby/<%= minor_version %>/$FILENAME
 PREFIX='/app/vendor/ruby-<%= patchless_version %>'
 
-mkdir -p /app/vendor
-ln -s $INSTALLATION_DIR $PREFIX
+template_steps() {
+  mkdir -p /app/vendor
+  ln -s $INSTALLATION_DIR $PREFIX
 
-curl http://cache.ruby-lang.org/pub/ruby/<%= minor_version %>/ruby-<%= binary_version %>.tar.gz -s --fail -o - | tar xzf - 2>/dev/null
-cd ruby-<%= binary_version %>
+  ./configure --prefix=${PREFIX} --enable-load-relative --disable-install-doc debugflags="-g"
+  make -j 3 install
+}
 
-./configure --prefix=${PREFIX} --enable-load-relative --disable-install-doc debugflags="-g"
-make -j 3 install
+main "$@"
