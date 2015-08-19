@@ -22,7 +22,7 @@ To run `binary-builder` from within the cflinuxfs2 rootfs, use [Docker](https://
 
 ```bash
 docker run -w /binary-builder -v `pwd`:/binary-builder -it cloudfoundry/cflinuxfs2 bash
-./bin/binary-builder [binary_name] [binary_version]
+./bin/binary-builder [binary_name] [binary_version] [checksum_value(MD5|SHA256)]
 ```
 
 This generates a gzipped tarball in the binary-builder directory with the filename format `binary_name-binary_version-linux-x64`.
@@ -30,9 +30,9 @@ This generates a gzipped tarball in the binary-builder directory with the filena
 For example, if you were building nginx 1.7.11, you'd run the following commands:
 
 ```bash
-$ docker run -w /binary-builder -v `pwd`:/binary-builder -it cloudfoundry/cflinuxfs2 ./bin/binary-builder nginx 1.7.11
+$ docker run -w /binary-builder -v `pwd`:/binary-builder -it cloudfoundry/cflinuxfs2 ./bin/binary-builder ruby 2.2.3 150a5efc5f5d8a8011f30aa2594a7654 
 $ ls
-nginx-1.7.11-linux-x64.tar.gz
+ruby-2.2.3-linux-x64.tgz
 ```
 
 # Contributing
