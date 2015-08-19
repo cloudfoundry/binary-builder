@@ -1,6 +1,6 @@
 INSTALLATION_DIR=$1
 BINARY_VERSION=<%= jruby_version %>
-DEST_DIR=$INSTALLATION_DIR/jruby-${BINARY_VERSION}
+DEST_DIR=`pwd`/jruby-${BINARY_VERSION}
 FILENAME=jruby-src-${BINARY_VERSION}.tar.gz
 TAR_URL=https://s3.amazonaws.com/jruby.org/downloads/<%= jruby_version %>/$FILENAME
 

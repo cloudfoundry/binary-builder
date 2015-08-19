@@ -34,7 +34,7 @@ MODULES[<%= extension.name %>]="<%= extension.version %>"
 # location where files are built
 FILENAME=php-$PHP_VERSION.tar.bz2
 TAR_URL=https://php.net/get/php-$PHP_VERSION.tar.bz2/from/this/mirror
-DEST_DIR=$INSTALLATION_DIR/build
+DEST_DIR=`pwd`/build
 BUILD_DIR=$DEST_DIR
 
 template_steps() {

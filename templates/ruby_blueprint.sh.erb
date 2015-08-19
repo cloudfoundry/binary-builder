@@ -1,6 +1,6 @@
 INSTALLATION_DIR=$1
 BINARY_VERSION=<%= binary_version %>
-DEST_DIR=$INSTALLATION_DIR/ruby-${BINARY_VERSION}
+DEST_DIR=`pwd`/ruby-${BINARY_VERSION}
 FILENAME=ruby-${BINARY_VERSION}.tar.gz
 TAR_URL=https://cache.ruby-lang.org/pub/ruby/<%= minor_version %>/$FILENAME
 PREFIX='/app/vendor/ruby-<%= patchless_version %>'

@@ -1,7 +1,7 @@
 STAGING_DIR="/tmp/staged/app"
 INSTALLATION_DIR=$1
 BINARY_VERSION=<%= binary_version %>
-DEST_DIR=$INSTALLATION_DIR/httpd-${BINARY_VERSION}
+DEST_DIR=`pwd`/httpd-${BINARY_VERSION}
 FILENAME=httpd-${BINARY_VERSION}.tar.bz2
 TAR_URL=https://archive.apache.org/dist/httpd//$FILENAME
 
