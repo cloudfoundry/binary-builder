@@ -3,7 +3,7 @@ require 'fileutils'
 
 
 describe 'building a binary', :integration do
-  context 'when php is specified', binary: 'php' do
+  context 'when php is specified' do
     before do
       run_binary_builder('php', '5.6.9', '561f37377833772ace776143c5687884')
     end

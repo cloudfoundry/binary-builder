@@ -3,7 +3,7 @@ require 'fileutils'
 
 
 describe 'building a binary', :integration do
-  context 'when jruby is specified', binary: 'jruby' do
+  context 'when jruby is specified' do
     before do
       output, _ = run_binary_builder('jruby', '9.0.0.0_ruby-2.2.0', 'cef101e4265b65e2c729eba97838546c8e08123d8ee18f0e12fd0dd8d0db16b6')
     end

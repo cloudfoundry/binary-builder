@@ -3,7 +3,7 @@ require 'fileutils'
 
 
 describe 'building a binary', :integration do
-  context 'when node is specified', binary: 'node' do
+  context 'when node is specified' do
     before do
       run_binary_builder('node', '0.12.2', 'dontcare')
     end

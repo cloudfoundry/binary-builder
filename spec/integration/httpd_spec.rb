@@ -3,7 +3,7 @@ require 'fileutils'
 
 
 describe 'building a binary', :integration do
-  context 'when httpd is specified', binary: 'httpd' do
+  context 'when httpd is specified' do
     before do
       output, _ = run_binary_builder('httpd', '2.4.12', 'b8dc8367a57a8d548a9b4ce16d264a13')
     end

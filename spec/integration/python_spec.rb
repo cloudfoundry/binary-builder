@@ -3,7 +3,7 @@ require 'fileutils'
 
 
 describe 'building a binary', :integration do
-  context 'when python is specified', binary: 'python' do
+  context 'when python is specified' do
     before do
       run_binary_builder('python', '3.4.3', 'dontcare')
     end
