@@ -1,10 +1,9 @@
 #!/usr/bin/env ruby
 
 $LOAD_PATH.unshift(File.expand_path('../../lib', __FILE__))
-require 'optparse'
 require 'builder'
 
-USAGE_MESSAGE = "USAGE: binary-builder [binary name] [binary version]"
+USAGE_MESSAGE = "USAGE: binary-builder [binary name] [binary version] [checksum value]"
 
 # e.g. node 0.12.7 md5-value (SHA/PGP/MD5)
 unless ARGV[0] && ARGV[1] && ARGV[2]
