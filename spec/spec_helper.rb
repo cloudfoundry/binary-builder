@@ -29,7 +29,7 @@ RSpec.configure do |config|
   end
 
   def run_binary_builder(binary_name, binary_version, checksum)
-    binary_builder_cmd = "#{File.join('./bin', 'binary-builder')} #{binary_name} #{binary_version} #{checksum}"
+    binary_builder_cmd = "#{File.join('./bin', 'binary-builder')} --name #{binary_name} --version #{binary_version} --checksum #{checksum}"
     run(binary_builder_cmd, true)
   end
 
