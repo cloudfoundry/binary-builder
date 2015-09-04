@@ -4,7 +4,7 @@ require 'tmpdir'
 
 module BinaryBuilder
   class Builder
-    attr_reader :binary_name, :binary_version, :checksum_value, :architect
+    attr_reader :binary_name, :binary_version, :checksum_value, :checksum_type, :architect
 
     def self.build(options)
       builder = self.new(options)
@@ -15,8 +15,27 @@ module BinaryBuilder
     end
 
     def initialize(options)
-      @binary_name, @binary_version, @checksum_value = options[:binary_name], options[:binary_version], options[:checksum_value]
-      @architect = architect_for_binary(binary_name).new(binary_version: @binary_version, checksum_value: @checksum_value)
+      @binary_name, @binary_version = options[:binary_name], options[:binary_version]
+      parse_checksum(options)
+      @architect = architect_for_binary(binary_name).new(
+        binary_version: @binary_version,
+        checksum_value: @checksum_value, checksum_type: @checksum_type)
+    end
+
+    def parse_checksum(options)
+      options.each_pair do |key, value|
+        case key
+        when :md5
+          @checksum_value = { key: value }
+          @checksum_type = "MD5"
+        when :sha256
+          @checksum_value = { key: value }
+          @checksum_type = "SHA256"
+        when 'gpg-key'.to_sym
+          @checksum_value = { key: value, rsa_key_id: options['gpg-rsa-key-id'.to_sym]}
+          @checksum_type = "GPG"
+        end
+      end
     end
 
     def set_foundation

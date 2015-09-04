@@ -5,7 +5,7 @@ require 'fileutils'
 describe 'building a binary', :integration do
   context 'when php is specified' do
     before do
-      run_binary_builder('php', '5.6.9', '561f37377833772ace776143c5687884')
+      run_binary_builder('php', '5.6.9', '--md5=561f37377833772ace776143c5687884')
     end
 
     it 'builds the specified binary, tars it, and places it in your current working directory' do

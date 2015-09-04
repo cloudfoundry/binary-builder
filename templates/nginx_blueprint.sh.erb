@@ -1,13 +1,10 @@
-#!/usr/bin/env bash
-set -e
-
 INSTALLATION_DIR=$1
+BINARY_VERSION=<%= binary_version %>
+DEST_DIR=`pwd`/nginx-${BINARY_VERSION}
+FILENAME=nginx-$BINARY_VERSION.tar.gz
+TAR_URL=http://nginx.org/download/$FILENAME
 
-function build_nginx() {
-  curl -f -L -O "http://nginx.org/download/nginx-<%= binary_version %>.tar.gz"
-  tar zxf "nginx-<%= binary_version %>.tar.gz"
-
-  cd "nginx-<%= binary_version %>"
+template_steps() {
   ./configure \
     --prefix="/" \
     --error-log-path=stderr \
@@ -24,13 +21,9 @@ function build_nginx() {
     --with-pcre \
     --with-pcre-jit
   make -j 3 install DESTDIR=$INSTALLATION_DIR/nginx
+  # Remove unnecessary files and config
+  cd $INSTALLATION_DIR
+  rm -rf nginx/html/ nginx/conf/*
 }
 
-# build required libs & httpd
-build_nginx
-
-# Remove unnecessary files and config
-cd $INSTALLATION_DIR
-rm -rf nginx/html/ nginx/conf/*
-
-echo "Done!"
+main "$@"

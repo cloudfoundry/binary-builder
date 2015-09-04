@@ -7,20 +7,36 @@ require 'optparse'
 
 options = {}
 optparser = OptionParser.new do |opts|
-  opts.banner = "USAGE: binary-builder [options]"
+  opts.banner = "USAGE: binary-builder [options] (A checksum method is required)"
 
-  opts.on("-nNAME","--name=NAME", "Name of the binary e.g. nginx",:REQUIRED) do |n|
+  opts.on("-nNAME","--name=NAME", "Name of the binary e.g. nginx") do |n|
     options[:binary_name] = n
   end
-  opts.on( "-vVERSION","--version=VERSION", "Version of the binary e.g. 1.7.11",:REQUIRED) do |n|
+  opts.on( "-vVERSION","--version=VERSION", "Version of the binary e.g. 1.7.11") do |n|
     options[:binary_version] = n
   end
-  opts.on("-cCHECKSUM","--checksum=CHECKSUM", "Checksum of the binary e.g. abc123",:REQUIRED) do |n|
-    options[:checksum_value] = n
+  opts.on("--sha256=SHA256", "SHA256 of the binary ") do |n|
+    options[:sha256] = n
+  end
+  opts.on("--md5=MD5", "MD5 of the binary ") do |n|
+    options[:md5] = n
+  end
+  opts.on("--gpg-rsa-key-id=RSA_KEY_ID", "RSA Key Id e.g. 10FDE075") do |n|
+    options['gpg-rsa-key-id'.to_sym] = n
+  end
+  opts.on("--gpg-key=ASC_KEY", "content of the .asc file") do |n|
+    options['gpg-key'.to_sym] = n
   end
 end
 optparser.parse!
 
-raise optparser.help unless options.keys.sort == [:binary_name, :binary_version, :checksum_value]
+
+unless options[:binary_name] && options[:binary_version] && (
+    options[:sha256] ||
+    options[:md5] ||
+    (options['gpg-rsa-key-id'.to_sym] && options['gpg-key'.to_sym])
+)
+  raise optparser.help
+end
 
 BinaryBuilder::Builder.build(options)

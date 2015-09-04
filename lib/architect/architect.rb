@@ -1,9 +1,10 @@
 module BinaryBuilder
   class Architect
-    attr_reader :binary_version, :checksum_value
+    attr_reader :binary_version, :checksum_value, :checksum_type
 
     def initialize(options)
       @binary_version = options[:binary_version]
+      @checksum_type = options[:checksum_type]
       @checksum_value = options[:checksum_value]
     end
 
