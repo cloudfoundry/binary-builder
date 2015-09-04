@@ -8,8 +8,8 @@ module BinaryBuilder
     let(:options) do
       {
         binary_name: 'node',
-        binary_version: 'v0.12.2',
-        checksum_value: 'checksum'
+        binary_version: '0.12.2',
+        md5: 'checksum'
       }
     end
     let (:foundation_dir) { 'tmp_dir' }
@@ -23,14 +23,16 @@ module BinaryBuilder
       context 'for a node binary' do
         it 'sets binary_name, binary_version, and checksum values' do
           expect(builder.binary_name).to eq('node')
-          expect(builder.binary_version).to eq('v0.12.2')
-          expect(builder.checksum_value).to eq('checksum')
+          expect(builder.binary_version).to eq('0.12.2')
+          expect(builder.checksum_type).to eq('MD5')
+          expect(builder.checksum_value).to eq({ key: 'checksum' })
         end
 
         it 'creates a node architect' do
           expect(NodeArchitect).to receive(:new).with({
-            binary_version: 'v0.12.2',
-            checksum_value: 'checksum'
+            binary_version: '0.12.2',
+            checksum_type: 'MD5',
+            checksum_value: {key: 'checksum'}
           }).and_return(node_architect)
           builder
         end
@@ -76,7 +78,7 @@ module BinaryBuilder
       end
 
       it 'tars the remaining files from their directory' do
-        expect(builder).to receive(:system).with("ls -A tmp_dir/installation | xargs tar czf node-v0.12.2-linux-x64.tar.gz -C tmp_dir/installation")
+        expect(builder).to receive(:system).with("ls -A tmp_dir/installation | xargs tar czf node-0.12.2-linux-x64.tar.gz -C tmp_dir/installation")
         builder.tar_installed_binary
       end
 
