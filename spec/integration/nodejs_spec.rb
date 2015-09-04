@@ -5,7 +5,7 @@ require 'fileutils'
 describe 'building a binary', :integration do
   context 'when node is specified' do
     before do
-      run_binary_builder('node', '0.12.2', 'dontcare')
+      run_binary_builder('node', '0.12.2', '--sha256=ac7e78ade93e633e7ed628532bb8e650caba0c9c33af33581957f3382e2a772d')
     end
 
     it 'builds the specified binary, tars it, and places it in your current working directory' do

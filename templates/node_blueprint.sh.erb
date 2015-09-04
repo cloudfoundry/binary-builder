@@ -1,19 +1,15 @@
-#!/usr/bin/env bash
-set -e
-
 INSTALLATION_DIR=$1
 BINARY_VERSION=v<%= binary_version %>
+DEST_DIR=`pwd`/node-${BINARY_VERSION}
+FILENAME=node-$BINARY_VERSION.tar.gz
+TAR_URL=http://nodejs.org/dist/${BINARY_VERSION}/$FILENAME
 NODE_DIR=$INSTALLATION_DIR/node-${BINARY_VERSION}-linux-x64
 
-curl http://nodejs.org/dist/${BINARY_VERSION}/node-${BINARY_VERSION}.tar.gz -s --fail -o - | tar xzf - 2>/dev/null
+template_steps() {
 
-cd node-${BINARY_VERSION}
-
-if [[ `lsb_release -r` == *10.04* ]]; then
-  ./configure --shared-openssl-libpath=/lib/ --prefix=/
-elif [[ `lsb_release -r` == *14.04* ]]; then
   ./configure --shared-openssl --prefix=/
-fi
+  make -j 3 install DESTDIR=$NODE_DIR PORTABLE=1
+  cp LICENSE $NODE_DIR
+}
 
-make -j 3 install DESTDIR=$NODE_DIR PORTABLE=1
-cp LICENSE $NODE_DIR
+main "$@"
