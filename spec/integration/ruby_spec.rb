@@ -1,7 +1,6 @@
 require 'spec_helper'
 require 'fileutils'
 
-
 describe 'building a binary', :integration do
   context 'when ruby is specified' do
     before do

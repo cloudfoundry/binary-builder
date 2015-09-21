@@ -1,6 +1,5 @@
 require 'open3'
 require 'fileutils'
-require 'builder'
 
 RSpec.configure do |config|
   if RUBY_PLATFORM.include?('darwin')
@@ -24,7 +23,7 @@ RSpec.configure do |config|
   def run(cmd, log = false)
     cmd = "docker exec #{DOCKER_CONTAINER_NAME} #{cmd}" if RUBY_PLATFORM.include?('darwin')
 
-    return exec_with_logs(cmd) if log
+    return exec_with_logs(cmd)  if log
     Bundler.with_clean_env { Open3.capture2e(cmd) }
   end
 
@@ -46,6 +45,7 @@ RSpec.configure do |config|
       File.open(file_location, 'w') do |f|
         while line = io.gets
           f.write(line)
+          puts line
           output << line
         end
       end

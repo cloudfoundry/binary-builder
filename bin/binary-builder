@@ -1,9 +1,8 @@
 #!/usr/bin/env ruby
 
-$LOAD_PATH.unshift(File.expand_path('../../lib', __FILE__))
-require 'builder'
+require 'bundler'
 require 'optparse'
-
+require_relative '../recipe/ruby'
 
 options = {}
 optparser = OptionParser.new do |opts|
@@ -22,10 +21,12 @@ optparser = OptionParser.new do |opts|
     options[:md5] = n
   end
   opts.on("--gpg-rsa-key-id=RSA_KEY_ID", "RSA Key Id e.g. 10FDE075") do |n|
-    options['gpg-rsa-key-id'.to_sym] = n
+    options[:gpg] ||= {}
+    options[:gpg][:key_id] = n
   end
-  opts.on("--gpg-key=ASC_KEY", "content of the .asc file") do |n|
-    options['gpg-key'.to_sym] = n
+  opts.on("--gpg-signature=ASC_KEY", "content of the .asc file") do |n|
+    options[:gpg] ||= {}
+    options[:gpg][:signature] = n
   end
 end
 optparser.parse!
@@ -34,9 +35,17 @@ optparser.parse!
 unless options[:binary_name] && options[:binary_version] && (
     options[:sha256] ||
     options[:md5] ||
-    (options['gpg-rsa-key-id'.to_sym] && options['gpg-key'.to_sym])
+    (options[:gpg][:signature] && options[:gpg][:key_id])
 )
   raise optparser.help
 end
 
-BinaryBuilder::Builder.build(options)
+recipe = RubyRecipe.new('ruby', options[:binary_version])
+
+checksum = ([:md5, :sha256, :gpg] & options.keys).first
+
+recipe.files << {
+  url: recipe.url,
+  checksum => options[checksum]
+}
+Bundler.with_clean_env { recipe.cook }

@@ -1,8 +1,0 @@
-require_relative 'architect'
-require_relative 'node_architect'
-require_relative 'ruby_architect'
-require_relative 'jruby_architect'
-require_relative 'python_architect'
-require_relative 'httpd_architect'
-require_relative 'php_architect'
-require_relative 'nginx_architect'
