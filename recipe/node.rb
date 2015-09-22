@@ -1,25 +1,29 @@
 require 'mini_portile'
+require_relative 'base'
 
-class NodeRecipe < MiniPortile
-  def configure_options
+class NodeRecipe < BaseRecipe
+  def computed_options
     [
       '--shared-openssl',
       '--prefix=/'
     ]
   end
 
-  def compile
-    execute('compile', [make_cmd, "DESTDIR=/tmp/node-#{version}-linux-x64", 'PORTABLE=1'])
+  def install
+    execute('install', [make_cmd, "install", "DESTDIR=#{dest_dir}", 'PORTABLE=1'])
   end
 
-  def cook
-    super
-    system "cp #{work_path}/LICENSE /tmp/node-#{version}-linux-x64"
-    system "ls -A /tmp/node-#{version}-linux-x64 | xargs tar czf node-#{version}-linux-x64.tgz -C #{port_path}"
+  def tar
+    system "cp #{work_path}/LICENSE #{dest_dir}"
+    system "ls -A /tmp | xargs tar czf node-#{version}-linux-x64.tgz -C /tmp"
   end
 
   def url
     "https://nodejs.org/dist/v#{version}/node-v#{version}.tar.gz"
+  end
+
+  def dest_dir
+    "/tmp/node-v#{version}-linux-x64"
   end
 
   def configure

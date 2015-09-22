@@ -45,7 +45,7 @@ RSpec.configure do |config|
       File.open(file_location, 'w') do |f|
         while line = io.gets
           f.write(line)
-          puts line
+          puts line if $DEBUG
           output << line
         end
       end

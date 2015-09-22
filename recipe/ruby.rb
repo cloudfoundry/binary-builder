@@ -1,15 +1,17 @@
 require 'mini_portile'
+require_relative 'base'
 
-class RubyRecipe < MiniPortile
-  def configure_options
+class RubyRecipe < BaseRecipe
+  def computed_options
     [
       '--enable-load-relative',
       '--disable-install-doc',
-      'debugflags=-g'
+      'debugflags=-g',
+      "prefix=#{prefix_path}"
     ]
   end
 
-  def port_path
+  def prefix_path
     "/app/vendor/ruby-#{version}"
   end
 
@@ -17,9 +19,8 @@ class RubyRecipe < MiniPortile
     version.match(/(\d+\.\d+)\./)[1]
   end
 
-  def cook
-    super
-    system "ls -A #{port_path} | xargs tar czf ruby-#{version}-linux-x64.tgz -C #{port_path}"
+  def tar
+    system "ls -A #{prefix_path} | xargs tar czf ruby-#{version}-linux-x64.tgz -C #{prefix_path}"
   end
 
   def url
