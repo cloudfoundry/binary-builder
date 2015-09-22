@@ -3,6 +3,7 @@
 require 'bundler'
 require 'optparse'
 require_relative '../recipe/ruby'
+require_relative '../recipe/node'
 
 options = {}
 optparser = OptionParser.new do |opts|
@@ -40,7 +41,13 @@ unless options[:binary_name] && options[:binary_version] && (
   raise optparser.help
 end
 
-recipe = RubyRecipe.new('ruby', options[:binary_version])
+recipe  = nil
+case options[:binary_name]
+when "ruby"
+ recipe = RubyRecipe.new('ruby', options[:binary_version])
+when "node"
+ recipe = NodeRecipe.new('node', options[:binary_version])
+end
 
 checksum = ([:md5, :sha256, :gpg] & options.keys).first
 

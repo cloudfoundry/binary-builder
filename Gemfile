@@ -7,6 +7,4 @@ gem 'mini_portile', '0.7.0.rc4'
 group :test do
   gem 'rspec'
   gem 'rspec-instafail'
-  gem 'timecop'
-  gem 'pry'
 end

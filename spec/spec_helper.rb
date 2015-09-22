@@ -15,8 +15,8 @@ RSpec.configure do |config|
     end
 
     config.after(:all, :integration) do
-      `docker stop #{DOCKER_CONTAINER_NAME}`
-      `docker rm #{DOCKER_CONTAINER_NAME}`
+      # `docker stop #{DOCKER_CONTAINER_NAME}`
+      # `docker rm #{DOCKER_CONTAINER_NAME}`
     end
   end
 
