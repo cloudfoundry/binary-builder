@@ -4,6 +4,7 @@ require 'bundler'
 require 'optparse'
 require_relative '../recipe/ruby'
 require_relative '../recipe/node'
+require_relative '../recipe/httpd'
 
 options = {}
 optparser = OptionParser.new do |opts|
@@ -47,6 +48,8 @@ when "ruby"
  recipe = RubyRecipe.new('ruby', options[:binary_version])
 when "node"
  recipe = NodeRecipe.new('node', options[:binary_version])
+when "httpd"
+ recipe = HttpdRecipe.new('httpd', options[:binary_version])
 end
 
 checksum = ([:md5, :sha256, :gpg] & options.keys).first
