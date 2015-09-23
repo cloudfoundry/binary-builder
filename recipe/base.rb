@@ -1,3 +1,5 @@
+require 'mini_portile'
+
 class BaseRecipe < MiniPortile
   def compile
     execute('compile', [make_cmd, '-j4'])

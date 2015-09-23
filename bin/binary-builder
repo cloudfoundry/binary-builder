@@ -2,19 +2,23 @@
 
 require 'bundler'
 require 'optparse'
+<<<<<<< 274bb63b529a2904f5758370a173210ba0de562d
 require_relative '../recipe/ruby'
 require_relative '../recipe/node'
 require_relative '../recipe/httpd'
+=======
+Dir['recipe/*.rb'].each { |f| puts File.expand_path(f); require File.expand_path(f) }
+>>>>>>> WIP: JRuby
 
 options = {}
 optparser = OptionParser.new do |opts|
   opts.banner = "USAGE: binary-builder [options] (A checksum method is required)"
 
   opts.on("-nNAME","--name=NAME", "Name of the binary e.g. nginx") do |n|
-    options[:binary_name] = n
+    options[:name] = n
   end
   opts.on( "-vVERSION","--version=VERSION", "Version of the binary e.g. 1.7.11") do |n|
-    options[:binary_version] = n
+    options[:version] = n
   end
   opts.on("--sha256=SHA256", "SHA256 of the binary ") do |n|
     options[:sha256] = n
@@ -34,7 +38,7 @@ end
 optparser.parse!
 
 
-unless options[:binary_name] && options[:binary_version] && (
+unless options[:name] && options[:version] && (
     options[:sha256] ||
     options[:md5] ||
     (options[:gpg][:signature] && options[:gpg][:key_id])
@@ -42,20 +46,29 @@ unless options[:binary_name] && options[:binary_version] && (
   raise optparser.help
 end
 
-recipe  = nil
-case options[:binary_name]
-when "ruby"
- recipe = RubyRecipe.new('ruby', options[:binary_version])
-when "node"
- recipe = NodeRecipe.new('node', options[:binary_version])
-when "httpd"
- recipe = HttpdRecipe.new('httpd', options[:binary_version])
+def composed_recipe(klass, options = {})
+  checksum_type = ([:md5, :sha256, :gpg] & options.keys).first
+  recipe = klass.new(options[:name], options[:version])
+  recipe.files << {
+    url: recipe.url,
+    checksum_type => options[checksum_type]
+  }
+  Bundler.with_clean_env { recipe.cook }
+  recipe
 end
 
-checksum = ([:md5, :sha256, :gpg] & options.keys).first
+case options[:name]
+  when "ruby"
+    composed_recipe(RubyRecipe, options)
+  when "node"
+    composed_recipe(NodeRecipe, options)
+  when "jruby"
+    OpenJDK7Recipe.new('openjdk', '7').cook
+    maven = composed_recipe(MavenRecipe, {name: 'maven', version: '3.3.3', md5: '794b3b7961200c542a7292682d21ba36'})
+    maven.activate
+    composed_recipe(JRubyRecipe, options)
+  when "httpd"
+    composed_recipe(HttpdRecipe, options)
+end
 
-recipe.files << {
-  url: recipe.url,
-  checksum => options[checksum]
-}
-Bundler.with_clean_env { recipe.cook }
+
