@@ -12,7 +12,7 @@ describe 'building a binary', :integration do
       expect(File).to exist(binary_tarball_location)
 
       ruby_version_cmd = %q{./spec/assets/binary-exerciser.sh ruby-2.2.3-linux-x64.tgz ./bin/ruby -e 'puts RUBY_VERSION'}
-      output, status = run(ruby_version_cmd)
+      output, status = run(ruby_version_cmd, true)
 
       expect(status).to be_success
       expect(output).to include('2.2.3')

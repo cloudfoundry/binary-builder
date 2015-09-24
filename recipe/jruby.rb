@@ -2,9 +2,13 @@ require 'mini_portile'
 require_relative 'base'
 
 class JRubyRecipe < BaseRecipe
-  def tar
-    system "ls -A #{port_path}/bin #{port_path}/lib | xargs tar czf ruby-#{version}-linux-x64.tgz -C #{port_path}"
+  def archive_files
+    [
+      "#{work_path}/bin",
+      "#{work_path}/lib"
+    ]
   end
+
 
   def url
     "https://s3.amazonaws.com/jruby.org/downloads/#{jruby_version}/jruby-src-#{jruby_version}.tar.gz"

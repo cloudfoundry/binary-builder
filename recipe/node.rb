@@ -1,4 +1,5 @@
 require 'mini_portile'
+require 'fileutils'
 require_relative 'base'
 
 class NodeRecipe < BaseRecipe
@@ -13,9 +14,16 @@ class NodeRecipe < BaseRecipe
     execute('install', [make_cmd, "install", "DESTDIR=#{dest_dir}", 'PORTABLE=1'])
   end
 
+  def archive_files
+    [ dest_dir ]
+  end
+
   def tar
-    system "cp #{work_path}/LICENSE #{dest_dir}"
-    system "ls -A /tmp | xargs tar czf node-#{version}-linux-x64.tgz -C /tmp"
+    FileUtils.cp(
+      "#{work_path}/LICENSE",
+      dest_dir
+    )
+    super
   end
 
   def url

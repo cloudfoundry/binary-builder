@@ -46,29 +46,17 @@ unless options[:name] && options[:version] && (
   raise optparser.help
 end
 
-def composed_recipe(klass, options = {})
-  checksum_type = ([:md5, :sha256, :gpg] & options.keys).first
-  recipe = klass.new(options[:name], options[:version])
-  recipe.files << {
-    url: recipe.url,
-    checksum_type => options[checksum_type]
-  }
-  Bundler.with_clean_env { recipe.cook }
-  recipe
+recipe = case options[:name]
+  when "ruby" then RubyRecipe
+  when "node" then NodeRecipe
+  when "jruby" then JRubyMeal
+  when "httpd" then HttpdRecipe
 end
 
-case options[:name]
-  when "ruby"
-    composed_recipe(RubyRecipe, options)
-  when "node"
-    composed_recipe(NodeRecipe, options)
-  when "jruby"
-    OpenJDK7Recipe.new('openjdk', '7').cook
-    maven = composed_recipe(MavenRecipe, {name: 'maven', version: '3.3.3', md5: '794b3b7961200c542a7292682d21ba36'})
-    maven.activate
-    composed_recipe(JRubyRecipe, options)
-  when "httpd"
-    composed_recipe(HttpdRecipe, options)
-end
-
-
+checksum_type = ([:md5, :sha256, :gpg] & options.keys).first
+recipe = recipe.new(options[:name], options[:version])
+recipe.files << {
+  url: recipe.url,
+  checksum_type => options[checksum_type]
+}
+Bundler.with_clean_env { recipe.cook }

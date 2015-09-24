@@ -15,8 +15,8 @@ RSpec.configure do |config|
     end
 
     config.after(:all, :integration) do
-      # `docker stop #{DOCKER_CONTAINER_NAME}`
-      # `docker rm #{DOCKER_CONTAINER_NAME}`
+      `docker stop #{DOCKER_CONTAINER_NAME}`
+      `docker rm #{DOCKER_CONTAINER_NAME}`
     end
   end
 
@@ -45,7 +45,7 @@ RSpec.configure do |config|
       File.open(file_location, 'w') do |f|
         while line = io.gets
           f.write(line)
-          puts line if $DEBUG
+          puts line if true
           output << line
         end
       end

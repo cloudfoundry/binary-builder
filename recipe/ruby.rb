@@ -7,7 +7,7 @@ class RubyRecipe < BaseRecipe
       '--enable-load-relative',
       '--disable-install-doc',
       'debugflags=-g',
-      "prefix=#{prefix_path}"
+      "--prefix=#{prefix_path}"
     ]
   end
 
@@ -19,8 +19,8 @@ class RubyRecipe < BaseRecipe
     version.match(/(\d+\.\d+)\./)[1]
   end
 
-  def tar
-    system "ls -A #{prefix_path} | xargs tar czf ruby-#{version}-linux-x64.tgz -C #{prefix_path}"
+  def archive_files
+    [ "#{prefix_path}/*" ]
   end
 
   def url
