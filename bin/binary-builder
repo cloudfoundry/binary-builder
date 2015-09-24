@@ -44,7 +44,7 @@ recipe = case options[:name]
   when "ruby" then RubyRecipe
   when "node" then NodeRecipe
   when "jruby" then JRubyMeal
-  when "httpd" then HttpdRecipe
+  when "httpd" then HTTPdMeal
 end
 
 checksum_type = ([:md5, :sha256, :gpg] & options.keys).first

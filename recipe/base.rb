@@ -15,6 +15,10 @@ class BaseRecipe < MiniPortile
     tar
   end
 
+  def archive_files
+    []
+  end
+
   def tar
     Dir.mktmpdir do |dir|
       archive_files.each do |glob|
