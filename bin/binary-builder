@@ -2,13 +2,7 @@
 
 require 'bundler'
 require 'optparse'
-<<<<<<< 274bb63b529a2904f5758370a173210ba0de562d
-require_relative '../recipe/ruby'
-require_relative '../recipe/node'
-require_relative '../recipe/httpd'
-=======
 Dir['recipe/*.rb'].each { |f| puts File.expand_path(f); require File.expand_path(f) }
->>>>>>> WIP: JRuby
 
 options = {}
 optparser = OptionParser.new do |opts|
