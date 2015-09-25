@@ -2,7 +2,7 @@
 
 require 'bundler'
 require 'optparse'
-Dir['recipe/*.rb'].each { |f| puts File.expand_path(f); require File.expand_path(f) }
+Dir['recipe/*.rb'].each { |f| require File.expand_path(f) }
 
 options = {}
 optparser = OptionParser.new do |opts|
@@ -45,7 +45,10 @@ recipe = case options[:name]
   when "node" then NodeRecipe
   when "jruby" then JRubyMeal
   when "httpd" then HTTPdMeal
+  when "python" then PythonRecipe
 end
+
+raise "Unsupported #{options[:name]}" unless recipe
 
 checksum_type = ([:md5, :sha256, :gpg] & options.keys).first
 recipe = recipe.new(options[:name], options[:version])

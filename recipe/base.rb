@@ -27,5 +27,12 @@ class BaseRecipe < MiniPortile
       system "ls -A #{dir} | xargs tar czf #{archive_filename} -C #{dir}"
     end
   end
+
+  private
+
+  # NOTE: https://www.virtualbox.org/ticket/10085
+  def tmp_path
+    "/tmp/#{@host}/ports/#{@name}/#{@version}"
+  end
 end
 
