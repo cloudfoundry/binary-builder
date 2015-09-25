@@ -75,7 +75,7 @@ class HTTPdRecipe < BaseRecipe
   end
 
   def archive_files
-    [ path ]
+    [ File.join(path,"../httpd") ]
   end
 
   def tar
@@ -89,6 +89,7 @@ class HTTPdRecipe < BaseRecipe
       cp "#{@apr_path}/lib/libapr-1.so.0" ./lib
       cp "#{@apr_util_path}/lib/libaprutil-1.so.0" ./lib
       cp "#{@apr_iconv_path}/lib/libapriconv-1.so.0" ./lib
+      cp -r "#{self.path}" ../httpd
     eof
     super
   end
@@ -125,12 +126,6 @@ class HTTPdMeal
     httpd_recipe.files = self.files
     httpd_recipe.cook
 
-  end
-
-  def archive_files
-    [
-      "#{httpd_recipe.path}/httpd"
-    ]
   end
 
   def url
