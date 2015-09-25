@@ -46,6 +46,7 @@ recipe = case options[:name]
   when "jruby" then JRubyMeal
   when "httpd" then HTTPdMeal
   when "python" then PythonRecipe
+  when "php" then PhpMeal
 end
 
 raise "Unsupported #{options[:name]}" unless recipe

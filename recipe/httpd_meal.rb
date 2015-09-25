@@ -1,8 +1,4 @@
 class AprRecipe < BaseRecipe
-  def configure_options
-    []
-  end
-
   def url
     "http://apache.mirrors.tds.net/apr/apr-#{version}.tar.gz"
   end
@@ -75,7 +71,11 @@ class HTTPdRecipe < BaseRecipe
   end
 
   def archive_files
-    [ File.join(path,"../httpd") ]
+    [ "#{path}/*" ]
+  end
+
+  def archive_path_name
+    "httpd"
   end
 
   def tar
@@ -89,7 +89,6 @@ class HTTPdRecipe < BaseRecipe
       cp "#{@apr_path}/lib/libapr-1.so.0" ./lib
       cp "#{@apr_util_path}/lib/libaprutil-1.so.0" ./lib
       cp "#{@apr_iconv_path}/lib/libapriconv-1.so.0" ./lib
-      cp -r "#{self.path}" ../httpd
     eof
     super
   end

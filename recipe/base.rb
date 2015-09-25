@@ -1,7 +1,20 @@
 require 'mini_portile'
 require 'tmpdir'
+require 'fileutils'
 
 class BaseRecipe < MiniPortile
+  def initialize(name, version, options = {})
+    super name, version
+
+    options.each do |key, value|
+      instance_variable_set("@#{key}", value)
+    end
+  end
+
+  def configure_options
+    []
+  end
+
   def compile
     execute('compile', [make_cmd, '-j4'])
   end
@@ -19,10 +32,17 @@ class BaseRecipe < MiniPortile
     []
   end
 
+  def archive_path_name
+    ""
+  end
+
   def tar
     Dir.mktmpdir do |dir|
+      archive_path = File.join(dir, archive_path_name)
+      FileUtils.mkdir_p(archive_path)
+
       archive_files.each do |glob|
-        `cp -r #{glob} #{dir}`
+        `cp -r #{glob} #{archive_path}`
       end
       system "ls -A #{dir} | xargs tar czf #{archive_filename} -C #{dir}"
     end
