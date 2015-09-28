@@ -50,6 +50,21 @@ class LuaRecipe < ChecksumRecipe
   end
 end
 
+class IonCubeRecipe < ChecksumRecipe
+  # NOTE: not a versioned URL, will always be the lastest support version
+  def url
+    "http://downloads3.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz"
+  end
+
+  def configure; end
+  def compile; end
+  def install; end
+
+  def path
+    work_path
+  end
+end
+
 class HiredisRecipe < ChecksumRecipe
   def url
     "https://github.com/redis/hiredis/archive/v#{version}.tar.gz"
@@ -171,10 +186,19 @@ class PhpRecipe < BaseRecipe
     execute('configure',["bash","-c","LIBS=-lz ./configure #{computed_options.join ' '}"])
   end
 
+  def major_version
+    @major_version ||= self.version.match(/^(\d+\.\d+)/)[1]
+  end
+
+  def zts_path
+    Dir["#{self.path}/lib/php/extensions/no-debug-non-zts-*"].first
+  end
+
   def tar
     system <<-eof
       cp #{@rabbitmq_path}/lib/librabbitmq.so.1 #{self.path}/lib/
       cp #{@hiredis_path}/lib/libhiredis.so.0.10 #{self.path}/lib/
+      cp #{@ioncube_path}/ioncube_loader_lin_#{major_version}.so #{zts_path}/ioncube.so
     eof
     super
   end
@@ -221,6 +245,8 @@ class PhpMeal
       sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap_r.so /usr/lib/libldap_r.so
     eof
 
+    ioncube_recipe.cook
+
     php_recipe.files = self.files
     php_recipe.cook
     php_recipe.activate
@@ -245,7 +271,8 @@ class PhpMeal
   def php_recipe
     @php_recipe ||= PhpRecipe.new(@name, @version,
                                   rabbitmq_path: rabbitmq_recipe.path,
-                                  hiredis_path: hiredis_recipe.path
+                                  hiredis_path: hiredis_recipe.path,
+                                  ioncube_path: ioncube_recipe.path
                                  )
   end
 
@@ -289,6 +316,12 @@ class PhpMeal
                                           php_path: php_recipe.path,
                                           hiredis_path: hiredis_recipe.path
                                          )
+  end
+
+  def ioncube_recipe
+    @ioncube ||= IonCubeRecipe.new('ioncube', '5.0.17',
+                                   md5: '4e112856ff4d253fe747d1756a09b0a8'
+                                  )
   end
 end
 
