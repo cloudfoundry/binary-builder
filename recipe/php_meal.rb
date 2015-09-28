@@ -112,6 +112,18 @@ class LuaPeclRecipe < PeclRecipe
   end
 end
 
+class PHPProtobufPeclRecipe < PeclRecipe
+  def configure_options
+    [
+      "--with-php-config=#{@php_path}/bin/php-config"
+    ]
+  end
+
+  def url
+    "https://github.com/allegro/php-protobuf/archive/#{version}.tar.gz"
+  end
+end
+
 class PhpRecipe < BaseRecipe
   def configure_options
     [
@@ -257,6 +269,7 @@ class PhpMeal
     luapecl_recipe.cook
     hiredis_recipe.cook
     phpiredis_recipe.cook
+    phpprotobufpecl_recipe.cook
 
     php_recipe.tar
   end
@@ -315,6 +328,13 @@ class PhpMeal
                                           md5: '1ea635f3712aa1b80245eeed2d570a0e',
                                           php_path: php_recipe.path,
                                           hiredis_path: hiredis_recipe.path
+                                         )
+  end
+
+  def phpprotobufpecl_recipe
+    @phpprotobufpecl_recipe ||= PHPProtobufPeclRecipe.new('phpprotobuf', 'd792f5b8e0',
+                                          md5: '32d0febec95218348b34b74ede028d18',
+                                          php_path: php_recipe.path
                                          )
   end
 
