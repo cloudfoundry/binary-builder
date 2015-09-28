@@ -19,6 +19,12 @@ class PeclRecipe < ChecksumRecipe
     "http://pecl.php.net/get/#{name}-#{version}.tgz"
   end
 
+  def configure_options
+    [
+      "--with-php-config=#{@php_path}/bin/php-config"
+    ]
+  end
+
   def configure
     return if configured?
 
@@ -113,12 +119,6 @@ class LuaPeclRecipe < PeclRecipe
 end
 
 class PHPProtobufPeclRecipe < PeclRecipe
-  def configure_options
-    [
-      "--with-php-config=#{@php_path}/bin/php-config"
-    ]
-  end
-
   def url
     "https://github.com/allegro/php-protobuf/archive/#{version}.tar.gz"
   end
@@ -133,7 +133,7 @@ class PhalconPeclRecipe < PeclRecipe
   end
 
   def work_path
-    "#{tmp_path}/cphalcon-phalcon-v#{version}/build/64bits"
+    "#{super}/build/64bits"
   end
 
   def url
@@ -142,14 +142,18 @@ class PhalconPeclRecipe < PeclRecipe
 end
 
 class SuhosinPeclRecipe < PeclRecipe
-  def configure_options
-    [
-      "--with-php-config=#{@php_path}/bin/php-config"
-    ]
-  end
-
   def url
     "http://download.suhosin.org/suhosin-#{version}.tar.gz"
+  end
+end
+
+class TwigPeclRecipe < PeclRecipe
+  def url
+    "https://github.com/twigphp/Twig/archive/v#{version}.tar.gz"
+  end
+
+  def work_path
+    "#{super}/ext/twig"
   end
 end
 
@@ -301,6 +305,7 @@ class PhpMeal
     phpprotobufpecl_recipe.cook
     phalconpecl_recipe.cook
     suhosinpecl_recipe.cook
+    twigpecl_recipe.cook
 
     php_recipe.tar
   end
@@ -385,6 +390,13 @@ class PhpMeal
   def suhosinpecl_recipe
     @suhosinpecl_recipe ||= SuhosinPeclRecipe.new('suhosin', '0.9.37.1',
                                           md5: '8d1c37e62ff712638b5d3847d94bfab3',
+                                          php_path: php_recipe.path
+                                         )
+  end
+
+  def twigpecl_recipe
+    @twigpecl_recipe ||= TwigPeclRecipe.new('twig', '1.18.0',
+                                          md5: '294f9606acc7170decfad27575fa1d00',
                                           php_path: php_recipe.path
                                          )
   end
