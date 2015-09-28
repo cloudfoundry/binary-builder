@@ -141,6 +141,18 @@ class PhalconPeclRecipe < PeclRecipe
   end
 end
 
+class SuhosinPeclRecipe < PeclRecipe
+  def configure_options
+    [
+      "--with-php-config=#{@php_path}/bin/php-config"
+    ]
+  end
+
+  def url
+    "http://download.suhosin.org/suhosin-#{version}.tar.gz"
+  end
+end
+
 class PhpRecipe < BaseRecipe
   def configure_options
     [
@@ -288,6 +300,7 @@ class PhpMeal
     phpiredis_recipe.cook
     phpprotobufpecl_recipe.cook
     phalconpecl_recipe.cook
+    suhosinpecl_recipe.cook
 
     php_recipe.tar
   end
@@ -367,6 +380,13 @@ class PhpMeal
                                                   md5: '36ec688a6fb710ce4b1e34c00bf24748',
                                                   php_path: php_recipe.path
                                                  )
+  end
+
+  def suhosinpecl_recipe
+    @suhosinpecl_recipe ||= SuhosinPeclRecipe.new('suhosin', '0.9.37.1',
+                                          md5: '8d1c37e62ff712638b5d3847d94bfab3',
+                                          php_path: php_recipe.path
+                                         )
   end
 end
 
