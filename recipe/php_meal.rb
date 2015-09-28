@@ -50,6 +50,15 @@ class LuaRecipe < ChecksumRecipe
   end
 end
 
+class AmqpPeclRecipe < PeclRecipe
+  def configure_options
+    [
+      "--with-php-config=#{@php_path}/bin/php-config",
+      "--with-librabbitmq-dir=#{@rabbitmq_path}"
+    ]
+  end
+end
+
 class LuaPeclRecipe < PeclRecipe
   def configure_options
     [
@@ -193,6 +202,7 @@ class PhpMeal
     php_recipe.activate
 
     rabbitmq_recipe.cook
+    amqppecl_recipe.cook
     lua_recipe.cook
     luapecl_recipe.cook
 
@@ -213,15 +223,31 @@ class PhpMeal
   end
 
   def rabbitmq_recipe
-    @rabbitmq_recipe ||= RabbitMQRecipe.new('rabbitmq', '0.5.2', md5: 'aa8d4d0b949f508c0da25a9c20bd7da7')
+    @rabbitmq_recipe ||= RabbitMQRecipe.new('rabbitmq', '0.5.2',
+                                            md5: 'aa8d4d0b949f508c0da25a9c20bd7da7'
+                                           )
   end
 
   def lua_recipe
-    @lua_recipe ||= LuaRecipe.new('lua', '5.2.4', md5: '913fdb32207046b273fdb17aad70be13')
+    @lua_recipe ||= LuaRecipe.new('lua', '5.2.4',
+                                  md5: '913fdb32207046b273fdb17aad70be13'
+                                 )
   end
 
   def luapecl_recipe
-    @luapecl_recipe ||= LuaPeclRecipe.new('lua', '1.1.0', md5: '58bd532957473f2ac87f1032c4aa12b5', php_path: php_recipe.path, lua_path: lua_recipe.path)
+    @luapecl_recipe ||= LuaPeclRecipe.new('lua', '1.1.0',
+                                          md5: '58bd532957473f2ac87f1032c4aa12b5',
+                                          php_path: php_recipe.path,
+                                          lua_path: lua_recipe.path
+                                         )
+  end
+
+  def amqppecl_recipe
+    @amqppecl_recipe ||= AmqpPeclRecipe.new('amqp', '1.4.0',
+                                            md5: 'e7fefbd5c87eaad40c29e2ad5de7bd30',
+                                            php_path: php_recipe.path,
+                                            rabbitmq_path: rabbitmq_recipe.path
+                                           )
   end
 end
 
