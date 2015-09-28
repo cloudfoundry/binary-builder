@@ -50,6 +50,35 @@ class LuaRecipe < ChecksumRecipe
   end
 end
 
+class HiredisRecipe < ChecksumRecipe
+  def url
+    "https://github.com/redis/hiredis/archive/v#{version}.tar.gz"
+  end
+
+  def configure
+  end
+
+  def install
+    return if installed?
+
+    execute('install', ['bash', '-c', "LIBRARY_PATH=lib PREFIX='#{path}' #{make_cmd} install"])
+  end
+end
+
+class PHPIRedisRecipe < PeclRecipe
+  def configure_options
+    [
+      "--with-php-config=#{@php_path}/bin/php-config",
+      "--enable-phpiredis",
+      "--with-hiredis-dir=#{@hiredis_path}"
+    ]
+  end
+
+  def url
+    "https://github.com/nrk/phpiredis/archive/#{version}.tar.gz"
+  end
+end
+
 class AmqpPeclRecipe < PeclRecipe
   def configure_options
     [
@@ -69,12 +98,6 @@ class LuaPeclRecipe < PeclRecipe
 end
 
 class PhpRecipe < BaseRecipe
-  def initialize(name, version, options={})
-    super name, version
-
-    @rabbitmq_path = options[:rabbitmq_path]
-  end
-
   def configure_options
     [
       "--disable-static",
@@ -151,6 +174,7 @@ class PhpRecipe < BaseRecipe
   def tar
     system <<-eof
       cp #{@rabbitmq_path}/lib/librabbitmq.so.1 #{self.path}/lib/
+      cp #{@hiredis_path}/lib/libhiredis.so.0.10 #{self.path}/lib/
     eof
     super
   end
@@ -205,6 +229,8 @@ class PhpMeal
     amqppecl_recipe.cook
     lua_recipe.cook
     luapecl_recipe.cook
+    hiredis_recipe.cook
+    phpiredis_recipe.cook
 
     php_recipe.tar
   end
@@ -218,7 +244,8 @@ class PhpMeal
 
   def php_recipe
     @php_recipe ||= PhpRecipe.new(@name, @version,
-                                  rabbitmq_path: rabbitmq_recipe.path
+                                  rabbitmq_path: rabbitmq_recipe.path,
+                                  hiredis_path: hiredis_recipe.path
                                  )
   end
 
@@ -248,6 +275,20 @@ class PhpMeal
                                             php_path: php_recipe.path,
                                             rabbitmq_path: rabbitmq_recipe.path
                                            )
+  end
+
+  def hiredis_recipe
+    @hiredis_recipe ||= HiredisRecipe.new('hiredis', '0.11.0',
+                                          md5: 'e2ac29509823ccc96990b6fe765b5d46'
+                                         )
+  end
+
+  def phpiredis_recipe
+    @phpiredis_recipe ||= PHPIRedisRecipe.new('phpiredis', '704c08c7b',
+                                          md5: '1ea635f3712aa1b80245eeed2d570a0e',
+                                          php_path: php_recipe.path,
+                                          hiredis_path: hiredis_recipe.path
+                                         )
   end
 end
 
