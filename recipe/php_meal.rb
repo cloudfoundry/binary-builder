@@ -157,6 +157,12 @@ class TwigPeclRecipe < PeclRecipe
   end
 end
 
+class XcachePeclRecipe < PeclRecipe
+  def url
+    "http://xcache.lighttpd.net/pub/Releases/#{version}/xcache-#{version}.tar.gz"
+  end
+end
+
 class PhpRecipe < BaseRecipe
   def configure_options
     [
@@ -306,6 +312,7 @@ class PhpMeal
     phalconpecl_recipe.cook
     suhosinpecl_recipe.cook
     twigpecl_recipe.cook
+    xcachepecl_recipe.cook
 
     php_recipe.tar
   end
@@ -397,6 +404,13 @@ class PhpMeal
   def twigpecl_recipe
     @twigpecl_recipe ||= TwigPeclRecipe.new('twig', '1.18.0',
                                           md5: '294f9606acc7170decfad27575fa1d00',
+                                          php_path: php_recipe.path
+                                         )
+  end
+
+  def xcachepecl_recipe
+    @xcachepecl_recipe ||= XcachePeclRecipe.new('xcache', '3.2.0',
+                                          md5: '8b0a6f27de630c4714ca261480f34cda',
                                           php_path: php_recipe.path
                                          )
   end
