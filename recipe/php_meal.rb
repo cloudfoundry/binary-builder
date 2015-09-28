@@ -124,6 +124,23 @@ class PHPProtobufPeclRecipe < PeclRecipe
   end
 end
 
+class PhalconPeclRecipe < PeclRecipe
+  def configure_options
+    [
+      "--with-php-config=#{@php_path}/bin/php-config",
+      "--enable-phalcon"
+    ]
+  end
+
+  def work_path
+    "#{tmp_path}/cphalcon-phalcon-v#{version}/build/64bits"
+  end
+
+  def url
+    "https://github.com/phalcon/cphalcon/archive/phalcon-v#{version}.tar.gz"
+  end
+end
+
 class PhpRecipe < BaseRecipe
   def configure_options
     [
@@ -270,6 +287,7 @@ class PhpMeal
     hiredis_recipe.cook
     phpiredis_recipe.cook
     phpprotobufpecl_recipe.cook
+    phalconpecl_recipe.cook
 
     php_recipe.tar
   end
@@ -342,6 +360,13 @@ class PhpMeal
     @ioncube ||= IonCubeRecipe.new('ioncube', '5.0.17',
                                    md5: '4e112856ff4d253fe747d1756a09b0a8'
                                   )
+  end
+
+  def phalconpecl_recipe
+    @phalconpecl_recipe ||= PhalconPeclRecipe.new('phalcon', '1.3.4',
+                                                  md5: '36ec688a6fb710ce4b1e34c00bf24748',
+                                                  php_path: php_recipe.path
+                                                 )
   end
 end
 
