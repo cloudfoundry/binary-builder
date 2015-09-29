@@ -141,6 +141,18 @@ class PhalconPeclRecipe < PeclRecipe
   end
 end
 
+class MemcachedPeclRecipe < PeclRecipe
+  def configure_options
+    [
+      "--with-php-config=#{@php_path}/bin/php-config",
+      "--disable-memcached-sasl",
+      "--enable-memcached-msgpack",
+      "--enable-memcached-igbinary",
+      "--enable-memcached-json"
+    ]
+  end
+end
+
 class SuhosinPeclRecipe < PeclRecipe
   def url
     "http://download.suhosin.org/suhosin-#{version}.tar.gz"
@@ -170,6 +182,40 @@ class XhprofPeclRecipe < PeclRecipe
 
   def work_path
     "#{super}/extension"
+  end
+end
+
+class SnmpRecipe
+  def initialize(php_path)
+    @php_path = php_path
+  end
+
+  def cook
+    system <<-eof
+      cd #{@php_path}
+      mkdir -p mibs
+      cp "/usr/lib/x86_64-linux-gnu/libnetsnmp.so.30" lib/
+      # copy mibs that are packaged freely
+      cp /usr/share/snmp/mibs/* mibs
+      # copy mibs downloader & smistrip, will download un-free mibs
+      cp /usr/bin/download-mibs bin
+      cp /usr/bin/smistrip bin
+      sed -i "s|^CONFDIR=/etc/snmp-mibs-downloader|CONFDIR=\$HOME/php/mibs/conf|" bin/download-mibs
+      sed -i "s|^SMISTRIP=/usr/bin/smistrip|SMISTRIP=\$HOME/php/bin/smistrip|" bin/download-mibs
+      # copy mibs download config
+      cp -R /etc/snmp-mibs-downloader mibs/conf
+      sed -i "s|^DIR=/usr/share/doc|DIR=\$HOME/php/mibs/originals|" mibs/conf/iana.conf
+      sed -i "s|^DEST=iana|DEST=|" mibs/conf/iana.conf
+      sed -i "s|^DIR=/usr/share/doc|DIR=\$HOME/php/mibs/originals|" mibs/conf/ianarfc.conf
+      sed -i "s|^DEST=iana|DEST=|" mibs/conf/ianarfc.conf
+      sed -i "s|^DIR=/usr/share/doc|DIR=\$HOME/php/mibs/originals|" mibs/conf/rfc.conf
+      sed -i "s|^DEST=ietf|DEST=|" mibs/conf/rfc.conf
+      sed -i "s|^BASEDIR=/var/lib/mibs|BASEDIR=\$HOME/php/mibs|" mibs/conf/snmp-mibs-downloader.conf
+      # copy data files
+      mkdir mibs/originals
+      cp -R /usr/share/doc/mibiana mibs/originals
+      cp -R /usr/share/doc/mibrfcs mibs/originals
+    eof
   end
 end
 
@@ -260,6 +306,19 @@ class PhpRecipe < BaseRecipe
       cp #{@rabbitmq_path}/lib/librabbitmq.so.1 #{self.path}/lib/
       cp #{@hiredis_path}/lib/libhiredis.so.0.10 #{self.path}/lib/
       cp #{@ioncube_path}/ioncube_loader_lin_#{major_version}.so #{zts_path}/ioncube.so
+      cp /usr/lib/libc-client.so.2007e #{self.path}/lib/
+      cp /usr/lib/libmcrypt.so.4 #{self.path}/lib
+      cp /usr/lib/libaspell.so.15 #{self.path}/lib
+      cp /usr/lib/libpspell.so.15 #{self.path}/lib
+      cp /usr/lib/x86_64-linux-gnu/libmemcached.so.10 #{self.path}/lib
+
+      # Remove unused files
+      rm "#{self.path}/etc/php-fpm.conf.default"
+      rm -rf "#{self.path}/include"
+      rm -rf "#{self.path}/php"
+      rm -rf "#{self.path}/lib/php/build"
+      rm "#{self.path}/bin/php-cgi"
+      find "#{self.path}/lib/php/extensions" -name "*.a" -type f -delete
     eof
     super
   end
@@ -312,6 +371,19 @@ class PhpMeal
     php_recipe.cook
     php_recipe.activate
 
+    standard_pecl('intl', '3.0.0')
+    standard_pecl('igbinary', '1.2.1')
+    standard_pecl('imagick', '3.1.2')
+    standard_pecl('mailparse', '2.1.6')
+    standard_pecl('memcache', '2.2.7')
+    standard_pecl('mongo', '1.6.5')
+    standard_pecl('msgpack', '0.5.5')
+    standard_pecl('protocolbuffers', '0.2.6')
+    standard_pecl('redis', '2.2.7')
+    standard_pecl('sundown', '0.3.11')
+    standard_pecl('xdebug', '2.3.1')
+    standard_pecl('yaf', '2.3.3')
+
     rabbitmq_recipe.cook
     amqppecl_recipe.cook
     lua_recipe.cook
@@ -324,6 +396,8 @@ class PhpMeal
     twigpecl_recipe.cook
     xcachepecl_recipe.cook
     xhprofpecl_recipe.cook
+    memcachedpecl_recipe.cook
+    snmp_recipe.cook
 
     php_recipe.tar
   end
@@ -334,6 +408,20 @@ class PhpMeal
 
 
   private
+
+  def standard_pecl(name, version)
+    PeclRecipe.new(name, version, php_path: php_recipe.path).cook
+  end
+
+  def snmp_recipe
+    SnmpRecipe.new(php_recipe.path)
+  end
+
+  def memcachedpecl_recipe
+    @memcachedpecl_recipe ||= MemcachedPeclRecipe.new('memcached', '2.2.0',
+                                                      php_path: php_recipe.path
+                                                     )
+  end
 
   def php_recipe
     @php_recipe ||= PhpRecipe.new(@name, @version,
