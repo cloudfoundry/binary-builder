@@ -23,11 +23,6 @@ class BaseRecipe < MiniPortile
     "#{name}-#{version}-linux-x64.tgz"
   end
 
-  def cook
-    super
-    tar
-  end
-
   def archive_files
     []
   end

@@ -57,4 +57,7 @@ recipe.files << {
   url: recipe.url,
   checksum_type => options[checksum_type]
 }
-Bundler.with_clean_env { recipe.cook }
+Bundler.with_clean_env do
+  recipe.cook
+  recipe.tar
+end

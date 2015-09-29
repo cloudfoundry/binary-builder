@@ -131,6 +131,10 @@ class HTTPdMeal
     httpd_recipe.url
   end
 
+  def tar
+    httpd_recipe.tar
+  end
+
   private
 
   def httpd_recipe

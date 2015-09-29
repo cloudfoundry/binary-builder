@@ -32,6 +32,10 @@ class JRubyMeal
     jruby.url
   end
 
+  def tar
+    jruby.tar
+  end
+
   private
 
   def jruby

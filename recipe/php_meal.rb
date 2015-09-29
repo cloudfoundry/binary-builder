@@ -271,7 +271,7 @@ class PhpRecipe < BaseRecipe
   end
 
   def url
-    "https://php.net/get/php-#{version}.tar.gz/from/this/mirror"
+    "https://php.net/distributions/php-#{version}.tar.gz"
   end
 
   def archive_files
@@ -299,6 +299,10 @@ class PhpRecipe < BaseRecipe
 
   def zts_path
     Dir["#{self.path}/lib/php/extensions/no-debug-non-zts-*"].first
+  end
+
+  def archive_filename
+    "#{name}-#{version}-linux-x64-#{Time.now.utc.to_i}.tgz"
   end
 
   def tar
@@ -403,9 +407,12 @@ class PhpMeal
   end
 
   def url
-   php_recipe.url
+    php_recipe.url
   end
 
+  def tar
+    php_recipe.tar
+  end
 
   private
 
