@@ -402,8 +402,6 @@ class PhpMeal
     xhprofpecl_recipe.cook
     memcachedpecl_recipe.cook
     snmp_recipe.cook
-
-    php_recipe.tar
   end
 
   def url
