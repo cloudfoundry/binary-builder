@@ -375,18 +375,18 @@ class PhpMeal
     php_recipe.cook
     php_recipe.activate
 
-    standard_pecl('intl', '3.0.0')
-    standard_pecl('igbinary', '1.2.1')
-    standard_pecl('imagick', '3.1.2')
-    standard_pecl('mailparse', '2.1.6')
-    standard_pecl('memcache', '2.2.7')
-    standard_pecl('mongo', '1.6.5')
-    standard_pecl('msgpack', '0.5.5')
-    standard_pecl('protocolbuffers', '0.2.6')
-    standard_pecl('redis', '2.2.7')
-    standard_pecl('sundown', '0.3.11')
-    standard_pecl('xdebug', '2.3.1')
-    standard_pecl('yaf', '2.3.3')
+    standard_pecl('intl', '3.0.0', 'a6029b9e7b1d0fcdb6e8bfad49e59ae9')
+    standard_pecl('igbinary', '1.2.1', '04a2474ff5eb99c7d0007bf9f4e8a6ec')
+    standard_pecl('imagick', '3.1.2', 'f2fd71b026debe056e0ec8d76c2ffe94')
+    standard_pecl('mailparse', '2.1.6', '0f84e1da1d074a4915a9bcfe2319ce84')
+    standard_pecl('memcache', '2.2.7', '171e3f51a9afe18b76348ddf1c952141')
+    standard_pecl('mongo', '1.6.5', '058b5d76c95e1b12267cf1b449118acc')
+    standard_pecl('msgpack', '0.5.5', 'adc8d9ea5088bdb83e7cc7c2f535d858')
+    standard_pecl('protocolbuffers', '0.2.6', 'a304ca632b0d7c5710d5590ac06248a9')
+    standard_pecl('redis', '2.2.7', 'c55839465b2c435fd091ac50923f2d96')
+    standard_pecl('sundown', '0.3.11', 'c1397e9d3312226ec6c84e8e34c717a6')
+    standard_pecl('xdebug', '2.3.1', '117d8e54d84b1cb7e07a646377007bd5')
+    standard_pecl('yaf', '2.3.3', '942dc4109ad965fa7f09fddfc784f335')
 
     rabbitmq_recipe.cook
     amqppecl_recipe.cook
@@ -416,8 +416,11 @@ class PhpMeal
 
   private
 
-  def standard_pecl(name, version)
-    PeclRecipe.new(name, version, php_path: php_recipe.path).cook
+  def standard_pecl(name, version, md5)
+    PeclRecipe.new(name, version,
+                   md5: md5,
+                   php_path: php_recipe.path
+                  ).cook
   end
 
   def snmp_recipe
