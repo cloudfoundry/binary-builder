@@ -163,6 +163,16 @@ class XcachePeclRecipe < PeclRecipe
   end
 end
 
+class XhprofPeclRecipe < PeclRecipe
+  def url
+    "https://github.com/phacility/xhprof/archive/#{version}.tar.gz"
+  end
+
+  def work_path
+    "#{super}/extension"
+  end
+end
+
 class PhpRecipe < BaseRecipe
   def configure_options
     [
@@ -215,7 +225,7 @@ class PhpRecipe < BaseRecipe
   end
 
   def url
-    "https://php.net/get/php-#{version}.tar.bz2/from/this/mirror"
+    "https://php.net/get/php-#{version}.tar.gz/from/this/mirror"
   end
 
   def archive_files
@@ -313,6 +323,7 @@ class PhpMeal
     suhosinpecl_recipe.cook
     twigpecl_recipe.cook
     xcachepecl_recipe.cook
+    xhprofpecl_recipe.cook
 
     php_recipe.tar
   end
@@ -411,6 +422,13 @@ class PhpMeal
   def xcachepecl_recipe
     @xcachepecl_recipe ||= XcachePeclRecipe.new('xcache', '3.2.0',
                                           md5: '8b0a6f27de630c4714ca261480f34cda',
+                                          php_path: php_recipe.path
+                                         )
+  end
+
+  def xhprofpecl_recipe
+    @xhprofpecl_recipe ||= XhprofPeclRecipe.new('xhprof', '0bbf2a2ac3',
+                                          md5: '1df4aebf1cb24e7cf369b3af357106fc',
                                           php_path: php_recipe.path
                                          )
   end
