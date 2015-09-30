@@ -18,7 +18,6 @@ class JRubyRecipe < BaseRecipe
     download unless downloaded?
     extract
     compile
-    tar
   end
 
   def compile
