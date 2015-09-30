@@ -1,6 +1,6 @@
-require 'mini_portile'
+require_relative 'base'
 
-class MavenRecipe < MiniPortile
+class MavenRecipe < BaseRecipe
   def url
     "http://www.gtlib.gatech.edu/pub/apache/maven/maven-3/#{version}/binaries/apache-maven-#{version}-bin.tar.gz"
   end
