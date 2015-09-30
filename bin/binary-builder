@@ -52,12 +52,11 @@ end
 
 raise "Unsupported #{options[:name]}" unless recipe
 
-checksum_type = ([:md5, :sha256, :gpg] & options.keys).first
-recipe = recipe.new(options[:name], options[:version])
-recipe.files << {
-  url: recipe.url,
-  checksum_type => options[checksum_type]
-}
+recipe = recipe.new(
+  options[:name],
+  options[:version],
+  DetermineChecksum.new(options).to_h
+)
 Bundler.with_clean_env do
   recipe.cook
   recipe.tar

@@ -1,6 +1,7 @@
 require 'mini_portile'
 require 'tmpdir'
 require 'fileutils'
+require_relative 'determine_checksum'
 
 class BaseRecipe < MiniPortile
   def initialize(name, version, options = {})
@@ -9,6 +10,10 @@ class BaseRecipe < MiniPortile
     options.each do |key, value|
       instance_variable_set("@#{key}", value)
     end
+
+    @files = [{
+      url: self.url,
+    }.merge(DetermineChecksum.new(options).to_h)]
   end
 
   def configure_options

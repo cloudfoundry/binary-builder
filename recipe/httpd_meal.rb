@@ -97,34 +97,18 @@ end
 class HTTPdMeal
   attr_accessor :files
 
-  def initialize(name, version)
+  def initialize(name, version, options={})
     @name    = name
     @version = version
-    @files   = []
+    @options = options
   end
 
   def cook
-    apr_recipe.files << {
-      url: apr_recipe.url,
-      md5: '98492e965963f852ab29f9e61b2ad700'
-    }
     apr_recipe.cook
-
-    apr_iconv_recipe.files << {
-      url: apr_iconv_recipe.url,
-      md5: '4a27a1480e6862543396e59c4ffcdeb4'
-    }
     apr_iconv_recipe.cook
-
-    apr_util_recipe.files << {
-      url: apr_util_recipe.url,
-      md5: '866825c04da827c6e5f53daff5569f42'
-    }
     apr_util_recipe.cook
 
-    httpd_recipe.files = self.files
     httpd_recipe.cook
-
   end
 
   def url
@@ -138,22 +122,31 @@ class HTTPdMeal
   private
 
   def httpd_recipe
-    @http_recipe ||= HTTPdRecipe.new(@name, @version,
-                                     apr_path: apr_recipe.path,
-                                     apr_util_path: apr_util_recipe.path,
-                                     apr_iconv_path: apr_iconv_recipe.path
-                                    )
+    @http_recipe ||= HTTPdRecipe.new(@name, @version, {
+      apr_path: apr_recipe.path,
+      apr_util_path: apr_util_recipe.path,
+      apr_iconv_path: apr_iconv_recipe.path
+    }.merge(DetermineChecksum.new(@options).to_h))
   end
 
   def apr_util_recipe
-    @apr_util_recipe ||= AprUtilRecipe.new('apr-util', '1.5.4', apr_path: apr_recipe.path, apr_iconv_path: apr_iconv_recipe.path)
+    @apr_util_recipe ||= AprUtilRecipe.new('apr-util', '1.5.4', {
+      apr_path: apr_recipe.path,
+      apr_iconv_path: apr_iconv_recipe.path,
+      md5: '866825c04da827c6e5f53daff5569f42'
+    })
   end
 
   def apr_iconv_recipe
-    @apr_iconv_recipe ||= AprIconvRecipe.new('apr-iconv', '1.2.1', apr_path: apr_recipe.path)
+    @apr_iconv_recipe ||= AprIconvRecipe.new('apr-iconv', '1.2.1', {
+      apr_path: apr_recipe.path,
+      md5: '4a27a1480e6862543396e59c4ffcdeb4'
+    })
   end
 
   def apr_recipe
-    @apr_recipe ||= AprRecipe.new('apr', '1.5.2')
+    @apr_recipe ||= AprRecipe.new('apr', '1.5.2',{
+      md5: '98492e965963f852ab29f9e61b2ad700'
+    })
   end
 end

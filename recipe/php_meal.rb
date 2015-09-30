@@ -1,20 +1,10 @@
-class ChecksumRecipe < BaseRecipe
-  def initialize(*)
-    super
-    @files = [{
-      url: self.url,
-      md5: @md5
-    }]
-  end
-end
-
-class RabbitMQRecipe < ChecksumRecipe
+class RabbitMQRecipe < BaseRecipe
   def url
     "https://github.com/alanxz/rabbitmq-c/releases/download/v#{version}/rabbitmq-c-#{version}.tar.gz"
   end
 end
 
-class PeclRecipe < ChecksumRecipe
+class PeclRecipe < BaseRecipe
   def url
     "http://pecl.php.net/get/#{name}-#{version}.tgz"
   end
@@ -37,7 +27,7 @@ class PeclRecipe < ChecksumRecipe
   end
 end
 
-class LuaRecipe < ChecksumRecipe
+class LuaRecipe < BaseRecipe
   def url
     "http://www.lua.org/ftp/lua-#{version}.tar.gz"
   end
@@ -56,7 +46,7 @@ class LuaRecipe < ChecksumRecipe
   end
 end
 
-class IonCubeRecipe < ChecksumRecipe
+class IonCubeRecipe < BaseRecipe
   # NOTE: not a versioned URL, will always be the lastest support version
   def url
     "http://downloads3.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz"
@@ -71,7 +61,7 @@ class IonCubeRecipe < ChecksumRecipe
   end
 end
 
-class HiredisRecipe < ChecksumRecipe
+class HiredisRecipe < BaseRecipe
   def url
     "https://github.com/redis/hiredis/archive/v#{version}.tar.gz"
   end
@@ -329,12 +319,10 @@ class PhpRecipe < BaseRecipe
 end
 
 class PhpMeal
-  attr_accessor :files
-
-  def initialize(name, version)
+  def initialize(name, version, options)
     @name    = name
     @version = version
-    @files   = []
+    @options = options
   end
 
   def cook
@@ -371,7 +359,6 @@ class PhpMeal
 
     ioncube_recipe.cook
 
-    php_recipe.files = self.files
     php_recipe.cook
     php_recipe.activate
 
@@ -415,10 +402,10 @@ class PhpMeal
   private
 
   def standard_pecl(name, version, md5)
-    PeclRecipe.new(name, version,
-                   md5: md5,
-                   php_path: php_recipe.path
-                  ).cook
+    PeclRecipe.new(name, version, {
+      md5: md5,
+      php_path: php_recipe.path
+    }).cook
   end
 
   def snmp_recipe
@@ -426,107 +413,107 @@ class PhpMeal
   end
 
   def memcachedpecl_recipe
-    @memcachedpecl_recipe ||= MemcachedPeclRecipe.new('memcached', '2.2.0',
-                                                      php_path: php_recipe.path
-                                                     )
+    @memcachedpecl_recipe ||= MemcachedPeclRecipe.new('memcached', '2.2.0', {
+      php_path: php_recipe.path
+    })
   end
 
   def php_recipe
-    @php_recipe ||= PhpRecipe.new(@name, @version,
-                                  rabbitmq_path: rabbitmq_recipe.path,
-                                  hiredis_path: hiredis_recipe.path,
-                                  ioncube_path: ioncube_recipe.path
-                                 )
+    @php_recipe ||= PhpRecipe.new(@name, @version, {
+      rabbitmq_path: rabbitmq_recipe.path,
+      hiredis_path: hiredis_recipe.path,
+      ioncube_path: ioncube_recipe.path
+    }.merge(DetermineChecksum.new(@options).to_h))
   end
 
   def rabbitmq_recipe
-    @rabbitmq_recipe ||= RabbitMQRecipe.new('rabbitmq', '0.5.2',
-                                            md5: 'aa8d4d0b949f508c0da25a9c20bd7da7'
-                                           )
+    @rabbitmq_recipe ||= RabbitMQRecipe.new('rabbitmq', '0.5.2', {
+      md5: 'aa8d4d0b949f508c0da25a9c20bd7da7'
+    })
   end
 
   def lua_recipe
-    @lua_recipe ||= LuaRecipe.new('lua', '5.2.4',
-                                  md5: '913fdb32207046b273fdb17aad70be13'
-                                 )
+    @lua_recipe ||= LuaRecipe.new('lua', '5.2.4',{
+      md5: '913fdb32207046b273fdb17aad70be13'
+    })
   end
 
   def luapecl_recipe
-    @luapecl_recipe ||= LuaPeclRecipe.new('lua', '1.1.0',
-                                          md5: '58bd532957473f2ac87f1032c4aa12b5',
-                                          php_path: php_recipe.path,
-                                          lua_path: lua_recipe.path
-                                         )
+    @luapecl_recipe ||= LuaPeclRecipe.new('lua', '1.1.0', {
+      md5: '58bd532957473f2ac87f1032c4aa12b5',
+      php_path: php_recipe.path,
+      lua_path: lua_recipe.path
+    })
   end
 
   def amqppecl_recipe
-    @amqppecl_recipe ||= AmqpPeclRecipe.new('amqp', '1.4.0',
-                                            md5: 'e7fefbd5c87eaad40c29e2ad5de7bd30',
-                                            php_path: php_recipe.path,
-                                            rabbitmq_path: rabbitmq_recipe.path
-                                           )
+    @amqppecl_recipe ||= AmqpPeclRecipe.new('amqp', '1.4.0', {
+      md5: 'e7fefbd5c87eaad40c29e2ad5de7bd30',
+      php_path: php_recipe.path,
+      rabbitmq_path: rabbitmq_recipe.path
+    })
   end
 
   def hiredis_recipe
-    @hiredis_recipe ||= HiredisRecipe.new('hiredis', '0.11.0',
-                                          md5: 'e2ac29509823ccc96990b6fe765b5d46'
-                                         )
+    @hiredis_recipe ||= HiredisRecipe.new('hiredis', '0.11.0', {
+      md5: 'e2ac29509823ccc96990b6fe765b5d46'
+    })
   end
 
   def phpiredis_recipe
-    @phpiredis_recipe ||= PHPIRedisRecipe.new('phpiredis', '704c08c7b',
-                                          md5: '1ea635f3712aa1b80245eeed2d570a0e',
-                                          php_path: php_recipe.path,
-                                          hiredis_path: hiredis_recipe.path
-                                         )
+    @phpiredis_recipe ||= PHPIRedisRecipe.new('phpiredis', '704c08c7b', {
+      md5: '1ea635f3712aa1b80245eeed2d570a0e',
+      php_path: php_recipe.path,
+      hiredis_path: hiredis_recipe.path
+    })
   end
 
   def phpprotobufpecl_recipe
-    @phpprotobufpecl_recipe ||= PHPProtobufPeclRecipe.new('phpprotobuf', 'd792f5b8e0',
-                                          md5: '32d0febec95218348b34b74ede028d18',
-                                          php_path: php_recipe.path
-                                         )
+    @phpprotobufpecl_recipe ||= PHPProtobufPeclRecipe.new('phpprotobuf', 'd792f5b8e0', {
+      md5: '32d0febec95218348b34b74ede028d18',
+      php_path: php_recipe.path
+    })
   end
 
   def ioncube_recipe
-    @ioncube ||= IonCubeRecipe.new('ioncube', '5.0.17',
-                                   md5: '4e112856ff4d253fe747d1756a09b0a8'
-                                  )
+    @ioncube ||= IonCubeRecipe.new('ioncube', '5.0.17', {
+      md5: '4e112856ff4d253fe747d1756a09b0a8'
+    })
   end
 
   def phalconpecl_recipe
-    @phalconpecl_recipe ||= PhalconPeclRecipe.new('phalcon', '1.3.4',
-                                                  md5: '36ec688a6fb710ce4b1e34c00bf24748',
-                                                  php_path: php_recipe.path
-                                                 )
+    @phalconpecl_recipe ||= PhalconPeclRecipe.new('phalcon', '1.3.4', {
+      md5: '36ec688a6fb710ce4b1e34c00bf24748',
+      php_path: php_recipe.path
+    })
   end
 
   def suhosinpecl_recipe
-    @suhosinpecl_recipe ||= SuhosinPeclRecipe.new('suhosin', '0.9.37.1',
-                                          md5: '8d1c37e62ff712638b5d3847d94bfab3',
-                                          php_path: php_recipe.path
-                                         )
+    @suhosinpecl_recipe ||= SuhosinPeclRecipe.new('suhosin', '0.9.37.1', {
+      md5: '8d1c37e62ff712638b5d3847d94bfab3',
+      php_path: php_recipe.path
+    })
   end
 
   def twigpecl_recipe
-    @twigpecl_recipe ||= TwigPeclRecipe.new('twig', '1.18.0',
-                                          md5: '294f9606acc7170decfad27575fa1d00',
-                                          php_path: php_recipe.path
-                                         )
+    @twigpecl_recipe ||= TwigPeclRecipe.new('twig', '1.18.0', {
+      md5: '294f9606acc7170decfad27575fa1d00',
+      php_path: php_recipe.path
+    })
   end
 
   def xcachepecl_recipe
-    @xcachepecl_recipe ||= XcachePeclRecipe.new('xcache', '3.2.0',
-                                          md5: '8b0a6f27de630c4714ca261480f34cda',
-                                          php_path: php_recipe.path
-                                         )
+    @xcachepecl_recipe ||= XcachePeclRecipe.new('xcache', '3.2.0', {
+      md5: '8b0a6f27de630c4714ca261480f34cda',
+      php_path: php_recipe.path
+    })
   end
 
   def xhprofpecl_recipe
-    @xhprofpecl_recipe ||= XhprofPeclRecipe.new('xhprof', '0bbf2a2ac3',
-                                          md5: '1df4aebf1cb24e7cf369b3af357106fc',
-                                          php_path: php_recipe.path
-                                         )
+    @xhprofpecl_recipe ||= XhprofPeclRecipe.new('xhprof', '0bbf2a2ac3', {
+      md5: '1df4aebf1cb24e7cf369b3af357106fc',
+      php_path: php_recipe.path
+    })
   end
 end
 
