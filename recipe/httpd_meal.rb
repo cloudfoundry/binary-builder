@@ -54,8 +54,9 @@ class HTTPdRecipe < BaseRecipe
     @apr_util_path = options[:apr_util_path]
   end
 
-  def configure_options
+  def computed_options
     [
+      "--prefix=/app/httpd",
       "--with-apr=#{@apr_path}" ,
       "--with-apr-util=#{@apr_util_path}" ,
       "--enable-mpms-shared=worker event" ,
@@ -64,6 +65,11 @@ class HTTPdRecipe < BaseRecipe
       "--disable-dav" ,
       "--disable-dialup"
     ]
+  end
+
+  def install
+    return if installed?
+    execute('install', [make_cmd, 'install', "prefix=#{path}"])
   end
 
   def url
