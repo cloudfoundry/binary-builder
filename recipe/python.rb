@@ -16,7 +16,7 @@ class PythonRecipe < BaseRecipe
 
   def tar
     unless File.exist?("#{prefix_path}/bin/python")
-      File.symlink("#{prefix_path}/bin/python3", "#{prefix_path}/bin/python")
+      File.symlink("./python3", "#{prefix_path}/bin/python")
     end
     super
   end
