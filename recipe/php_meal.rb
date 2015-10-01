@@ -401,11 +401,31 @@ class PhpMeal
 
   private
 
+  def files_hashs
+    rabbitmq_recipe.send(:files_hashs) +
+    amqppecl_recipe.send(:files_hashs) +
+    lua_recipe.send(:files_hashs) +
+    luapecl_recipe.send(:files_hashs) +
+    hiredis_recipe.send(:files_hashs) +
+    phpiredis_recipe.send(:files_hashs) +
+    phpprotobufpecl_recipe.send(:files_hashs) +
+    phalconpecl_recipe.send(:files_hashs) +
+    suhosinpecl_recipe.send(:files_hashs) +
+    twigpecl_recipe.send(:files_hashs) +
+    xcachepecl_recipe.send(:files_hashs) +
+    xhprofpecl_recipe.send(:files_hashs) +
+    memcachedpecl_recipe.send(:files_hashs) +
+    @pecl_recipes.collect{|r| r.send(:files_hashs) }.flatten
+  end
+
   def standard_pecl(name, version, md5)
-    PeclRecipe.new(name, version, {
+    @pecl_recipes ||= []
+    recipe = PeclRecipe.new(name, version, {
       md5: md5,
       php_path: php_recipe.path
-    }).cook
+    })
+    recipe.cook
+    @pecl_recipes << recipe
   end
 
   def snmp_recipe

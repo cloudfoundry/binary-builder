@@ -127,6 +127,13 @@ class HTTPdMeal
 
   private
 
+  def files_hashs
+    httpd_recipe.send(:files_hashs)     +
+    apr_recipe.send(:files_hashs)       +
+    apr_iconv_recipe.send(:files_hashs) +
+    apr_util_recipe.send(:files_hashs)
+  end
+
   def httpd_recipe
     @http_recipe ||= HTTPdRecipe.new(@name, @version, {
       apr_path: apr_recipe.path,

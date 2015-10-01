@@ -20,37 +20,18 @@ RSpec.configure do |config|
     end
   end
 
-  def run(cmd, log = false)
+  def run(cmd)
     cmd = "docker exec #{DOCKER_CONTAINER_NAME} #{cmd}" if RUBY_PLATFORM.include?('darwin')
 
-    return exec_with_logs(cmd)  if log
-    Bundler.with_clean_env { Open3.capture2e(cmd) }
+    Bundler.with_clean_env do
+      Open3.capture2e(cmd).tap do |output, status|
+        expect(status).to be_success
+      end
+    end
   end
 
   def run_binary_builder(binary_name, binary_version, flags)
     binary_builder_cmd = "bundle exec ./bin/binary-builder --name=#{binary_name} --version=#{binary_version} #{flags}"
-    run(binary_builder_cmd, true)
-  end
-
-  private
-  def exec_with_logs(cmd)
-    cmd = "#{cmd} 2>&1"
-    output = ''
-    FileUtils.mkdir_p('logs')
-
-    IO.popen(cmd) do |io|
-      file_location = File.join(Dir.pwd, 'logs', "build-#{Time.now.strftime('%Y%m%d%H%M%S')}.log")
-
-      puts "Writing output from `#{cmd}` to #{file_location}"
-      File.open(file_location, 'w') do |f|
-        while line = io.gets
-          f.write(line)
-          puts line if true
-          output << line
-        end
-      end
-    end
-
-    [output, $?]
+    run(binary_builder_cmd)
   end
 end
