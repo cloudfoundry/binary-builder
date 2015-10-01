@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/jtarchie/mini_portile
-  revision: 2aa88ed10482c99e1a42e582ffb6dfe20f028b8b
+  revision: 8ea580fc338543a1db41d5e15c0b33c5d82faa60
   specs:
     mini_portile (0.7.0.rc4)
 
