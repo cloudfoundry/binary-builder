@@ -84,7 +84,7 @@ class HTTPdRecipe < BaseRecipe
     "httpd"
   end
 
-  def tar
+  def setup_tar
     system  <<-eof
       cd #{self.path}
 
@@ -96,12 +96,11 @@ class HTTPdRecipe < BaseRecipe
       cp "#{@apr_util_path}/lib/libaprutil-1.so.0" ./lib
       cp "#{@apr_iconv_path}/lib/libapriconv-1.so.0" ./lib
     eof
-    super
   end
 end
 
 class HTTPdMeal
-  attr_accessor :files
+  attr_reader :name, :version
 
   def initialize(name, version, options={})
     @name    = name
@@ -121,8 +120,16 @@ class HTTPdMeal
     httpd_recipe.url
   end
 
-  def tar
-    httpd_recipe.tar
+  def archive_files
+    httpd_recipe.archive_files
+  end
+
+  def archive_path_name
+    httpd_recipe.archive_path_name
+  end
+
+  def archive_filename
+    httpd_recipe.archive_filename
   end
 
   private

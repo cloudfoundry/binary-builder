@@ -4,6 +4,8 @@ require_relative 'jruby'
 
 
 class JRubyMeal
+  attr_reader :name, :version
+
   def initialize(name, version, options={})
     @name    = name
     @version = version
@@ -23,8 +25,16 @@ class JRubyMeal
     jruby.url
   end
 
-  def tar
-    jruby.tar
+  def archive_files
+    jruby.archive_files
+  end
+
+  def archive_path_name
+    jruby.archive_path_name
+  end
+
+  def archive_filename
+    jruby.archive_filename
   end
 
   private

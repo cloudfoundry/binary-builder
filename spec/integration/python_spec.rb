@@ -4,7 +4,7 @@ require 'fileutils'
 describe 'building a binary', :integration do
   context 'when python is specified' do
     before do
-      run_binary_builder('python', '3.4.3', '--md5=4281ff86778db65892c05151d5de738d --source-yaml')
+      run_binary_builder('python', '3.4.3', '--md5=4281ff86778db65892c05151d5de738d')
     end
 
     it 'builds the specified binary, tars it, and places it in your current working directory' do

@@ -2,6 +2,7 @@ require 'mini_portile'
 require 'tmpdir'
 require 'fileutils'
 require_relative 'determine_checksum'
+require_relative '../lib/yaml_presenter'
 
 class BaseRecipe < MiniPortile
   def initialize(name, version, options = {})
@@ -34,21 +35,6 @@ class BaseRecipe < MiniPortile
 
   def archive_path_name
     ""
-  end
-
-  def tar
-    return if archive_files.empty?
-
-    Dir.mktmpdir do |dir|
-      archive_path = File.join(dir, archive_path_name)
-      FileUtils.mkdir_p(archive_path)
-
-      archive_files.each do |glob|
-        `cp -r #{glob} #{archive_path}`
-      end
-
-      execute('archiving', ['bash', '-c', "ls -A #{dir} | xargs tar czf #{archive_filename} -C #{dir}"], cd: Dir.pwd)
-    end
   end
 
   private

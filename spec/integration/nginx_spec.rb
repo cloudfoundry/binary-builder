@@ -13,7 +13,7 @@ zAZ014ADQ5yfH+Ma40K997AxZeCVGU+A5IEHGoZ2i8pyqx0Jhh6cbpC18yHu5ciN
 0o4E4cLSFFckYB3FnUpDowRonBDNUpDRJVKMo5cvvskc/GWVUVomPuWyNGFPPmMJ
 aySUQcOvO67Z14d9E9ziX/E24KWl6xRymmy9VhzawgSmf//3yZVaD6C/8om3qMw=
 =zjw3
------END PGP SIGNATURE-----" --source-yaml')
+-----END PGP SIGNATURE-----"')
     end
 
     it 'builds the specified binary, tars it, and places it in your current working directory' do

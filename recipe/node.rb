@@ -18,12 +18,11 @@ class NodeRecipe < BaseRecipe
     [ dest_dir ]
   end
 
-  def tar
+  def setup_tar
     FileUtils.cp(
       "#{work_path}/LICENSE",
       dest_dir
     )
-    super
   end
 
   def url

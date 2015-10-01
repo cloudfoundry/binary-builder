@@ -14,11 +14,10 @@ class PythonRecipe < BaseRecipe
     [ "#{prefix_path}/*" ]
   end
 
-  def tar
+  def setup_tar
     unless File.exist?("#{prefix_path}/bin/python")
       File.symlink("./python3", "#{prefix_path}/bin/python")
     end
-    super
   end
 
   def url

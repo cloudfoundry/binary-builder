@@ -295,7 +295,7 @@ class PhpRecipe < BaseRecipe
     "#{name}-#{version}-linux-x64-#{Time.now.utc.to_i}.tgz"
   end
 
-  def tar
+  def setup_tar
     system <<-eof
       cp #{@rabbitmq_path}/lib/librabbitmq.so.1 #{self.path}/lib/
       cp #{@hiredis_path}/lib/libhiredis.so.0.10 #{self.path}/lib/
@@ -314,11 +314,12 @@ class PhpRecipe < BaseRecipe
       rm "#{self.path}/bin/php-cgi"
       find "#{self.path}/lib/php/extensions" -name "*.a" -type f -delete
     eof
-    super
   end
 end
 
 class PhpMeal
+  attr_reader :name, :version
+
   def initialize(name, version, options)
     @name    = name
     @version = version
@@ -395,8 +396,16 @@ class PhpMeal
     php_recipe.url
   end
 
-  def tar
-    php_recipe.tar
+  def archive_files
+    php_recipe.archive_files
+  end
+
+  def archive_path_name
+    php_recipe.archive_path_name
+  end
+
+  def archive_filename
+    php_recipe.archive_filename
   end
 
   private

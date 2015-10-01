@@ -3,6 +3,7 @@
 require 'bundler'
 require 'optparse'
 require_relative '../lib/yaml_presenter'
+require_relative '../lib/archive_recipe'
 Dir['recipe/*.rb'].each { |f| require File.expand_path(f) }
 
 options = {}
@@ -28,9 +29,6 @@ optparser = OptionParser.new do |opts|
   opts.on("--gpg-signature=ASC_KEY", "content of the .asc file") do |n|
     options[:gpg] ||= {}
     options[:gpg][:signature] = n
-  end
-  opts.on("--source-yaml", "display YAML of the source tarballs and SHA sums") do |n|
-    options[:source_yaml] = true
   end
 end
 optparser.parse!
@@ -63,9 +61,8 @@ recipe = recipe.new(
 )
 Bundler.with_clean_env do
   recipe.cook
-  recipe.tar
-  if options[:source_yaml]
-    puts 'Source YAML:'
-    puts YAMLPresenter.new(recipe).to_yaml
-  end
+  ArchiveRecipe.new(recipe).tar!
+
+  puts 'Source YAML:'
+  puts YAMLPresenter.new(recipe).to_yaml
 end

@@ -33,9 +33,8 @@ class NginxRecipe < BaseRecipe
     'nginx'
   end
 
-  def tar
+  def setup_tar
     `rm -Rf #{path}/html/ #{path}/conf/*`
-    super
   end
 
   def url
