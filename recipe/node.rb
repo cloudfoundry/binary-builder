@@ -11,6 +11,8 @@ class NodeRecipe < BaseRecipe
   end
 
   def install
+    test_result=`cd #{work_path} && make test > /tmp/out || cat /tmp/out`
+    message "#{test_result}"
     execute('install', [make_cmd, "install", "DESTDIR=#{dest_dir}", 'PORTABLE=1'])
   end
 
