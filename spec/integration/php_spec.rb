@@ -5,8 +5,8 @@ require 'fileutils'
 describe 'building a binary', :integration do
   context 'when php is specified' do
     before(:all) do
-      @binary_tarball_location = Dir.glob(File.join(Dir.pwd, 'php-5.6.14-linux-x64-*.tgz')).first
       run_binary_builder('php', '5.6.14', '--md5=ae625e0cfcfdacea3e7a70a075e47155')
+      @binary_tarball_location = Dir.glob(File.join(Dir.pwd, 'php-5.6.14-linux-x64-*.tgz')).first
     end
 
     after(:all) do
