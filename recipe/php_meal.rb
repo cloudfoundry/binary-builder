@@ -315,6 +315,7 @@ class PhpRecipe < BaseRecipe
       find "#{self.path}/lib/php/extensions" -name "*.a" -type f -delete
     eof
   end
+
 end
 
 class PhpMeal
@@ -406,6 +407,10 @@ class PhpMeal
 
   def archive_filename
     php_recipe.archive_filename
+  end
+
+  def setup_tar
+    php_recipe.setup_tar
   end
 
   private

@@ -1,3 +1,6 @@
+require 'tmpdir'
+require_relative 'yaml_presenter'
+
 class ArchiveRecipe
   def initialize(recipe)
     @recipe = recipe
