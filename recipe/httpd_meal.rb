@@ -1,3 +1,5 @@
+require_relative 'base'
+
 class AprRecipe < BaseRecipe
   def url
     "http://apache.mirrors.tds.net/apr/apr-#{version}.tar.gz"
@@ -5,11 +7,6 @@ class AprRecipe < BaseRecipe
 end
 
 class AprIconvRecipe < BaseRecipe
-  def initialize(name, version, options={})
-    super name, version
-    @apr_path = options[:apr_path]
-  end
-
   def configure_options
     [
       "--with-apr=#{@apr_path}/bin/apr-1-config"
@@ -22,12 +19,6 @@ class AprIconvRecipe < BaseRecipe
 end
 
 class AprUtilRecipe < BaseRecipe
-  def initialize(name, version, options={})
-    super name, version
-    @apr_path = options[:apr_path]
-    @apr_iconv_path = options[:apr_iconv_path]
-  end
-
   def configure_options
     [
       "--with-apr=#{@apr_path}",
@@ -47,13 +38,6 @@ class AprUtilRecipe < BaseRecipe
 end
 
 class HTTPdRecipe < BaseRecipe
-  def initialize(name, version, options={})
-    super name, version
-    @apr_path = options[:apr_path]
-    @apr_iconv_path = options[:apr_iconv_path]
-    @apr_util_path = options[:apr_util_path]
-  end
-
   def computed_options
     [
       "--prefix=/app/httpd",
