@@ -51,6 +51,7 @@ recipe = case options[:name]
   when "python" then PythonRecipe
   when "php" then PhpMeal
   when "nginx" then NginxRecipe
+  when "godep" then GodepMeal
 end
 
 raise "Unsupported #{options[:name]}" unless recipe
