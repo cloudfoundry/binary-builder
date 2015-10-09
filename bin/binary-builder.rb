@@ -45,7 +45,6 @@ end
 recipe = case options[:name]
   when "ruby" then RubyRecipe
   when "node" then NodeRecipe
-  when "node-test" then NodeTestRecipe
   when "jruby" then JRubyMeal
   when "httpd" then HTTPdMeal
   when "python" then PythonRecipe
