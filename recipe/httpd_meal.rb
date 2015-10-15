@@ -116,6 +116,10 @@ class HTTPdMeal
     httpd_recipe.archive_filename
   end
 
+  def setup_tar
+    httpd_recipe.setup_tar
+  end
+
   private
 
   def files_hashs
