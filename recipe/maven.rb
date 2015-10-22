@@ -2,7 +2,7 @@ require_relative 'base'
 
 class MavenRecipe < BaseRecipe
   def url
-    "http://www.gtlib.gatech.edu/pub/apache/maven/maven-3/#{version}/binaries/apache-maven-#{version}-bin.tar.gz"
+    "http://www.us.apache.org/dist/maven/maven-3/#{version}/source/apache-maven-#{version}-src.tar.gz"
   end
 
   def cook
