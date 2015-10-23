@@ -511,7 +511,7 @@ class PhpMeal
 
   def ioncube_recipe
     @ioncube ||= IonCubeRecipe.new('ioncube', '5.0.17', {
-      md5: '4e112856ff4d253fe747d1756a09b0a8'
+      md5: 'a5115a5f24f2e9c4d793c5feb78261f2'
     })
   end
 
