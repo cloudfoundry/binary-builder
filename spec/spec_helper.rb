@@ -25,7 +25,10 @@ RSpec.configure do |config|
 
     Bundler.with_clean_env do
       Open3.capture2e(cmd).tap do |output, status|
-        expect(status).to be_success
+        expect(status).to be_success, (lambda do
+          puts "command output: #{output}"
+          puts "expected command to return a success status code, got: #{status}"
+        end)
       end
     end
   end
