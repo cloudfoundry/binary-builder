@@ -13,6 +13,10 @@ class JRubyMeal
   end
 
   def cook
+    # NOTE: We compile against OpenJDK7 because trusty does not support
+    # OpenJDK8. Unable to use java-buildpack OpenJDK8 because it only contains
+    # the JRE, not the JDK.
+    # https://www.pivotaltracker.com/story/show/106836266
     openjdk.cook
 
     maven.cook
