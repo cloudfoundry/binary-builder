@@ -1,7 +1,7 @@
-require_relative 'openjdk7'
-require_relative 'maven'
+require_relative 'ant'
 require_relative 'jruby'
-
+require_relative 'maven'
+require_relative 'openjdk7'
 
 class JRubyMeal
   attr_reader :name, :version
@@ -18,6 +18,9 @@ class JRubyMeal
     # the JRE, not the JDK.
     # https://www.pivotaltracker.com/story/show/106836266
     openjdk.cook
+
+    ant.cook
+    ant.activate
 
     maven.cook
     maven.activate
@@ -44,6 +47,7 @@ class JRubyMeal
   private
 
   def files_hashs
+    ant.send(:files_hashs)   +
     maven.send(:files_hashs)   +
     jruby.send(:files_hashs)
   end
@@ -58,7 +62,13 @@ class JRubyMeal
 
   def maven
     @maven ||= MavenRecipe.new('maven', '3.3.3', {
-      md5: '794b3b7961200c542a7292682d21ba36'
+      md5: 'e1db3821aa39d4b98178f68467894342'
+    })
+  end
+
+  def ant
+    @ant ||= AntRecipe.new('ant', '1.9.6', {
+      md5: '29b7507c9053e301d2b85091f2aec6f0'
     })
   end
 end
