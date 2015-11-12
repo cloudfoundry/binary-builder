@@ -24,10 +24,6 @@ describe 'building a binary', :integration do
       expect(output).to include('5.6.14')
     end
 
-    def tar_contains_file(filename)
-      system("tar -tf #{@binary_tarball_location} #{filename} >/dev/null 2>&1")
-    end
-
     it 'copies in *.so files for some of the compiled extensions' do
       expect(tar_contains_file('php/lib/librabbitmq.so.1')).to eq true
       expect(tar_contains_file('php/lib/libhiredis.so.0.10')).to eq true

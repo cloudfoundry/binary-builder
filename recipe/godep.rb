@@ -27,12 +27,13 @@ class GodepMeal < BaseRecipe
     system <<-EOF
       mv #{tmp_path}/godep-* #{tmp_path}/godep
       cd #{tmp_path}/godep && GOPATH=$PWD/Godeps/_workspace:/tmp go install
+      mv #{tmp_path}/godep/License /tmp/License
     EOF
 
   end
 
    def archive_files
-     [ "/tmp/bin/*" ]
+     [ "/tmp/bin/*", "/tmp/License" ]
    end
 
   def archive_path_name

@@ -37,4 +37,8 @@ RSpec.configure do |config|
     binary_builder_cmd = "bundle exec ./bin/binary-builder --name=#{binary_name} --version=#{binary_version} #{flags}"
     run(binary_builder_cmd)
   end
+
+  def tar_contains_file(filename)
+    system("tar -tf #{@binary_tarball_location} #{filename} >/dev/null 2>&1")
+  end
 end
