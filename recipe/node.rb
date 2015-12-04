@@ -5,6 +5,7 @@ require_relative 'base'
 class NodeRecipe < BaseRecipe
   def computed_options
     [
+      '--shared-openssl',
       '--prefix=/'
     ]
   end
