@@ -48,7 +48,8 @@ recipe = case options[:name]
   when "jruby" then JRubyMeal
   when "httpd" then HTTPdMeal
   when "python" then PythonRecipe
-  when "php" then PhpMeal
+  when "php" then Php5Meal
+  when "php7" then Php7Meal
   when "nginx" then NginxRecipe
   when "godep" then GodepMeal
 end
