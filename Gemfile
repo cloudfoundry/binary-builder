@@ -9,3 +9,8 @@ group :test do
   gem 'rspec-instafail'
   gem 'pry'
 end
+
+group :development do
+  gem 'rubocop'
+  gem 'rubocop-rspec'
+end
