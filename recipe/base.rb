@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'mini_portile'
 require 'tmpdir'
 require 'fileutils'
@@ -13,7 +14,7 @@ class BaseRecipe < MiniPortile
     end
 
     @files = [{
-      url: self.url,
+      url: url
     }.merge(DetermineChecksum.new(options).to_h)]
   end
 
@@ -34,7 +35,7 @@ class BaseRecipe < MiniPortile
   end
 
   def archive_path_name
-    ""
+    ''
   end
 
   private
@@ -44,4 +45,3 @@ class BaseRecipe < MiniPortile
     "/tmp/#{@host}/ports/#{@name}/#{@version}"
   end
 end
-

@@ -1,14 +1,15 @@
+# encoding: utf-8
 require 'open3'
 require 'fileutils'
 
 RSpec.configure do |config|
   if RUBY_PLATFORM.include?('darwin')
-    DOCKER_CONTAINER_NAME = "test-suite-binary-builder-#{Time.now.to_i}"
+    DOCKER_CONTAINER_NAME = "test-suite-binary-builder-#{Time.now.to_i}".freeze
 
     config.before(:all, :integration) do
       docker_image = 'cloudfoundry/cflinuxfs2'
 
-      %x{docker run --name #{DOCKER_CONTAINER_NAME} -dit -v #{Dir.pwd}:/binary-builder -e CCACHE_DIR=/binary-builder/.ccache -w /binary-builder #{docker_image} sh -c 'env PATH=/usr/lib/ccache:$PATH bash'}
+      `docker run --name #{DOCKER_CONTAINER_NAME} -dit -v #{Dir.pwd}:/binary-builder -e CCACHE_DIR=/binary-builder/.ccache -w /binary-builder #{docker_image} sh -c 'env PATH=/usr/lib/ccache:$PATH bash'`
       `docker exec #{DOCKER_CONTAINER_NAME} apt-get -y install ccache`
       `docker exec #{DOCKER_CONTAINER_NAME} gem install bundler --no-ri --no-rdoc`
       `docker exec #{DOCKER_CONTAINER_NAME} bundle install -j4`

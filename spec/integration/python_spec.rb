@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'spec_helper'
 require 'fileutils'
 
@@ -11,7 +12,7 @@ describe 'building a binary', :integration do
       binary_tarball_location = File.join(Dir.pwd, 'python-3.4.3-linux-x64.tgz')
       expect(File).to exist(binary_tarball_location)
 
-      python_version_cmd = %q{env LD_LIBRARY_PATH=/tmp/binary-exerciser/lib ./spec/assets/binary-exerciser.sh python-3.4.3-linux-x64.tgz ./bin/python -c 'import sys;print(sys.version[:5])'}
+      python_version_cmd = "env LD_LIBRARY_PATH=/tmp/binary-exerciser/lib ./spec/assets/binary-exerciser.sh python-3.4.3-linux-x64.tgz ./bin/python -c 'import sys;print(sys.version[:5])'"
       output, status = run(python_version_cmd)
 
       expect(status).to be_success

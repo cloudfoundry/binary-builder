@@ -1,3 +1,4 @@
+# encoding: utf-8
 class DetermineChecksum
   def initialize(options)
     @options = options

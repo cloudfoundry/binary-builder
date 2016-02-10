@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'mini_portile'
 require_relative 'base'
 
@@ -20,11 +21,10 @@ class RubyRecipe < BaseRecipe
   end
 
   def archive_files
-    [ "#{prefix_path}/*" ]
+    ["#{prefix_path}/*"]
   end
 
   def url
     "https://cache.ruby-lang.org/pub/ruby/#{minor_version}/ruby-#{version}.tar.gz"
   end
 end
-

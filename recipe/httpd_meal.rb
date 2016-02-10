@@ -1,3 +1,4 @@
+# encoding: utf-8
 require_relative 'base'
 
 class AprRecipe < BaseRecipe
@@ -23,12 +24,12 @@ class AprUtilRecipe < BaseRecipe
     [
       "--with-apr=#{@apr_path}",
       "--with-iconv=#{@apr_iconv_path}",
-      "--with-crypto",
-      "--with-openssl",
-      "--with-mysql",
-      "--with-pgsql",
-      "--with-gdbm",
-      "--with-ldap"
+      '--with-crypto',
+      '--with-openssl',
+      '--with-mysql',
+      '--with-pgsql',
+      '--with-gdbm',
+      '--with-ldap'
     ]
   end
 
@@ -40,14 +41,14 @@ end
 class HTTPdRecipe < BaseRecipe
   def computed_options
     [
-      "--prefix=/app/httpd",
-      "--with-apr=#{@apr_path}" ,
-      "--with-apr-util=#{@apr_util_path}" ,
-      "--enable-mpms-shared=worker event" ,
-      "--enable-mods-shared=reallyall" ,
-      "--disable-isapi" ,
-      "--disable-dav" ,
-      "--disable-dialup"
+      '--prefix=/app/httpd',
+      "--with-apr=#{@apr_path}",
+      "--with-apr-util=#{@apr_util_path}",
+      '--enable-mpms-shared=worker event',
+      '--enable-mods-shared=reallyall',
+      '--disable-isapi',
+      '--disable-dav',
+      '--disable-dialup'
     ]
   end
 
@@ -61,16 +62,16 @@ class HTTPdRecipe < BaseRecipe
   end
 
   def archive_files
-    [ "#{path}/*" ]
+    ["#{path}/*"]
   end
 
   def archive_path_name
-    "httpd"
+    'httpd'
   end
 
   def setup_tar
-    system  <<-eof
-      cd #{self.path}
+    system <<-eof
+      cd #{path}
 
       rm -rf build/ cgi-bin/ error/ icons/ include/ man/ manual/ htdocs/
       rm -rf conf/extra/* conf/httpd.conf conf/httpd.conf.bak conf/magic conf/original
@@ -86,7 +87,7 @@ end
 class HTTPdMeal
   attr_reader :name, :version
 
-  def initialize(name, version, options={})
+  def initialize(name, version, options = {})
     @name    = name
     @version = version
     @options = options
@@ -123,10 +124,10 @@ class HTTPdMeal
   private
 
   def files_hashs
-    httpd_recipe.send(:files_hashs)     +
-    apr_recipe.send(:files_hashs)       +
-    apr_iconv_recipe.send(:files_hashs) +
-    apr_util_recipe.send(:files_hashs)
+    httpd_recipe.send(:files_hashs) +
+      apr_recipe.send(:files_hashs)       +
+      apr_iconv_recipe.send(:files_hashs) +
+      apr_util_recipe.send(:files_hashs)
   end
 
   def httpd_recipe
@@ -138,23 +139,17 @@ class HTTPdMeal
   end
 
   def apr_util_recipe
-    @apr_util_recipe ||= AprUtilRecipe.new('apr-util', '1.5.4', {
-      apr_path: apr_recipe.path,
-      apr_iconv_path: apr_iconv_recipe.path,
-      md5: '866825c04da827c6e5f53daff5569f42'
-    })
+    @apr_util_recipe ||= AprUtilRecipe.new('apr-util', '1.5.4', apr_path: apr_recipe.path,
+                                                                apr_iconv_path: apr_iconv_recipe.path,
+                                                                md5: '866825c04da827c6e5f53daff5569f42')
   end
 
   def apr_iconv_recipe
-    @apr_iconv_recipe ||= AprIconvRecipe.new('apr-iconv', '1.2.1', {
-      apr_path: apr_recipe.path,
-      md5: '4a27a1480e6862543396e59c4ffcdeb4'
-    })
+    @apr_iconv_recipe ||= AprIconvRecipe.new('apr-iconv', '1.2.1',                                                apr_path: apr_recipe.path,
+                                                                                                                  md5: '4a27a1480e6862543396e59c4ffcdeb4')
   end
 
   def apr_recipe
-    @apr_recipe ||= AprRecipe.new('apr', '1.5.2',{
-      md5: '98492e965963f852ab29f9e61b2ad700'
-    })
+    @apr_recipe ||= AprRecipe.new('apr', '1.5.2', md5: '98492e965963f852ab29f9e61b2ad700')
   end
 end

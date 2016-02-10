@@ -1,6 +1,6 @@
+# encoding: utf-8
 require 'spec_helper'
 require 'fileutils'
-
 
 describe 'building a binary', :integration do
   context 'when node is specified' do
@@ -12,7 +12,7 @@ describe 'building a binary', :integration do
       binary_tarball_location = File.join(Dir.pwd, 'node-0.12.2-linux-x64.tgz')
       expect(File).to exist(binary_tarball_location)
 
-      node_version_cmd = %q{./spec/assets/binary-exerciser.sh node-0.12.2-linux-x64.tgz node-v0.12.2-linux-x64/bin/node -e 'console.log(process.version)'}
+      node_version_cmd = "./spec/assets/binary-exerciser.sh node-0.12.2-linux-x64.tgz node-v0.12.2-linux-x64/bin/node -e 'console.log(process.version)'"
       output, status = run(node_version_cmd)
 
       expect(status).to be_success

@@ -1,3 +1,4 @@
+# encoding: utf-8
 class RabbitMQRecipe < BaseRecipe
   def url
     "https://github.com/alanxz/rabbitmq-c/releases/download/v#{version}/rabbitmq-c-#{version}.tar.gz"
@@ -20,7 +21,7 @@ class PeclRecipe < BaseRecipe
 
     md5_file = File.join(tmp_path, 'configure.md5')
     digest   = Digest::MD5.hexdigest(computed_options.to_s)
-    File.open(md5_file, "w") { |f| f.write digest }
+    File.open(md5_file, 'w') { |f| f.write digest }
 
     execute('configure', 'phpize')
     execute('configure', %w(sh configure) + computed_options)
@@ -42,18 +43,20 @@ class LuaRecipe < BaseRecipe
   def install
     return if installed?
 
-    execute('install', ['bash', '-c', "#{make_cmd} install INSTALL_TOP=#{self.path}"])
+    execute('install', ['bash', '-c', "#{make_cmd} install INSTALL_TOP=#{path}"])
   end
 end
 
 class IonCubeRecipe < BaseRecipe
   # NOTE: not a versioned URL, will always be the lastest support version
   def url
-    "http://downloads3.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz"
+    'http://downloads3.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz'
   end
 
   def configure; end
+
   def compile; end
+
   def install; end
 
   def path
@@ -80,7 +83,7 @@ class PHPIRedisRecipe < PeclRecipe
   def configure_options
     [
       "--with-php-config=#{@php_path}/bin/php-config",
-      "--enable-phpiredis",
+      '--enable-phpiredis',
       "--with-hiredis-dir=#{@hiredis_path}"
     ]
   end
@@ -118,7 +121,7 @@ class PhalconPeclRecipe < PeclRecipe
   def configure_options
     [
       "--with-php-config=#{@php_path}/bin/php-config",
-      "--enable-phalcon"
+      '--enable-phalcon'
     ]
   end
 
@@ -135,10 +138,10 @@ class MemcachedPeclRecipe < PeclRecipe
   def configure_options
     [
       "--with-php-config=#{@php_path}/bin/php-config",
-      "--disable-memcached-sasl",
-      "--enable-memcached-msgpack",
-      "--enable-memcached-igbinary",
-      "--enable-memcached-json"
+      '--disable-memcached-sasl',
+      '--enable-memcached-msgpack',
+      '--enable-memcached-igbinary',
+      '--enable-memcached-json'
     ]
   end
 end

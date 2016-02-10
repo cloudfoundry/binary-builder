@@ -1,6 +1,6 @@
+# encoding: utf-8
 require 'spec_helper'
 require 'fileutils'
-
 
 describe 'building a binary', :integration do
   context 'when godep is specified' do
@@ -17,7 +17,7 @@ describe 'building a binary', :integration do
       @binary_tarball_location = File.join(Dir.pwd, 'godep-v14-linux-x64.tgz')
       expect(File).to exist(@binary_tarball_location)
 
-      godep_version_cmd = "./spec/assets/binary-exerciser.sh godep-v14-linux-x64.tgz ./bin/godep version"
+      godep_version_cmd = './spec/assets/binary-exerciser.sh godep-v14-linux-x64.tgz ./bin/godep version'
       output, status = run(godep_version_cmd)
 
       expect(output).to include('v14')
@@ -28,4 +28,3 @@ describe 'building a binary', :integration do
     end
   end
 end
-

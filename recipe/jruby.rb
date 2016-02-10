@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'mini_portile'
 require_relative 'base'
 
@@ -8,7 +9,6 @@ class JRubyRecipe < BaseRecipe
       "#{work_path}/lib"
     ]
   end
-
 
   def url
     "https://s3.amazonaws.com/jruby.org/downloads/#{jruby_version}/jruby-src-#{jruby_version}.tar.gz"
@@ -32,4 +32,3 @@ class JRubyRecipe < BaseRecipe
     @jruby_version ||= version.match(/(.*)_ruby-\d+\.\d.*/)[1]
   end
 end
-

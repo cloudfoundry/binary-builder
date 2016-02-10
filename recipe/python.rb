@@ -1,22 +1,23 @@
+# encoding: utf-8
 require 'mini_portile'
 require_relative 'base'
 
 class PythonRecipe < BaseRecipe
   def computed_options
     [
-      "--enable-shared",
-      "--with-ensurepip=no",
+      '--enable-shared',
+      '--with-ensurepip=no',
       "--prefix=#{prefix_path}"
     ]
   end
 
   def archive_files
-    [ "#{prefix_path}/*" ]
+    ["#{prefix_path}/*"]
   end
 
   def setup_tar
     unless File.exist?("#{prefix_path}/bin/python")
-      File.symlink("./python3", "#{prefix_path}/bin/python")
+      File.symlink('./python3', "#{prefix_path}/bin/python")
     end
   end
 
@@ -28,4 +29,3 @@ class PythonRecipe < BaseRecipe
     '/app/.heroku/vendor'
   end
 end
-

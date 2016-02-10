@@ -1,7 +1,7 @@
+# encoding: utf-8
 require_relative 'base'
 
 class GoRecipe < MiniPortile
-
   def cook
     install
   end
@@ -12,7 +12,6 @@ class GoRecipe < MiniPortile
     execute('install', [which('apt-get'), 'update'], cd: Dir.pwd)
     execute('install', [which('apt-get'), '-y', 'install', 'golang'], cd: Dir.pwd)
   end
-
 end
 
 class GodepMeal < BaseRecipe
@@ -29,15 +28,14 @@ class GodepMeal < BaseRecipe
       cd #{tmp_path}/godep && GOPATH=$PWD/Godeps/_workspace:/tmp go install
       mv #{tmp_path}/godep/License /tmp/License
     EOF
-
   end
 
-   def archive_files
-     [ "/tmp/bin/*", "/tmp/License" ]
-   end
+  def archive_files
+    ['/tmp/bin/*', '/tmp/License']
+  end
 
   def archive_path_name
-    "bin"
+    'bin'
   end
 
   def url
@@ -49,7 +47,6 @@ class GodepMeal < BaseRecipe
   end
 
   def tmp_path
-    "/tmp/src/github.com/tools"
+    '/tmp/src/github.com/tools'
   end
-
 end

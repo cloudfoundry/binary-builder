@@ -1,6 +1,6 @@
+# encoding: utf-8
 require 'spec_helper'
 require 'fileutils'
-
 
 describe 'building a binary', :integration do
   context 'when httpd is specified' do
@@ -16,7 +16,7 @@ describe 'building a binary', :integration do
     it 'builds the specified binary, tars it, and places it in your current working directory' do
       expect(File).to exist(@binary_tarball_location)
 
-      httpd_version_cmd = %{env LD_LIBRARY_PATH=/tmp/binary-exerciser/lib ./spec/assets/binary-exerciser.sh #{File.basename(@binary_tarball_location)} ./httpd/bin/httpd -v}
+      httpd_version_cmd = %(env LD_LIBRARY_PATH=/tmp/binary-exerciser/lib ./spec/assets/binary-exerciser.sh #{File.basename(@binary_tarball_location)} ./httpd/bin/httpd -v)
 
       output, status = run(httpd_version_cmd)
 
@@ -31,4 +31,3 @@ describe 'building a binary', :integration do
     end
   end
 end
-

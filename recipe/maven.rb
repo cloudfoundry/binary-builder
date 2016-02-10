@@ -1,3 +1,4 @@
+# encoding: utf-8
 require_relative 'base'
 
 class MavenRecipe < BaseRecipe
@@ -13,12 +14,10 @@ class MavenRecipe < BaseRecipe
 
   def install
     FileUtils.rm_rf(path)
-    execute("install", [
-      'ant',
-      '-noinput',
-      "-Dmaven.home=#{path}"
-    ])
+    execute('install', [
+              'ant',
+              '-noinput',
+              "-Dmaven.home=#{path}"
+            ])
   end
 end
-
-

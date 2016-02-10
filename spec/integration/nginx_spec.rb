@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'spec_helper'
 
 describe 'building a binary', :integration do
@@ -20,14 +21,12 @@ aySUQcOvO67Z14d9E9ziX/E24KWl6xRymmy9VhzawgSmf//3yZVaD6C/8om3qMw=
       binary_tarball_location = File.join(Dir.pwd, 'nginx-1.9.4-linux-x64.tgz')
       expect(File).to exist(binary_tarball_location)
 
-      httpd_version_cmd = %q{./spec/assets/binary-exerciser.sh nginx-1.9.4-linux-x64.tgz ./nginx/sbin/nginx -v}
+      httpd_version_cmd = './spec/assets/binary-exerciser.sh nginx-1.9.4-linux-x64.tgz ./nginx/sbin/nginx -v'
       output, status = run(httpd_version_cmd)
 
       expect(status).to be_success
       expect(output).to include('1.9.4')
       FileUtils.rm(binary_tarball_location)
     end
-
-
   end
 end

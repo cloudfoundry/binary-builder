@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'tmpdir'
 require_relative 'yaml_presenter'
 
@@ -23,7 +24,7 @@ class ArchiveRecipe
 
       print "Running 'archive' for #{@recipe.name} #{@recipe.version}... "
       `ls -A #{dir} | xargs tar czf #{@recipe.archive_filename} -C #{dir}`
-      puts "OK"
+      puts 'OK'
     end
   end
 end

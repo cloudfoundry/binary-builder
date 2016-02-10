@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'mini_portile'
 require 'fileutils'
 require_relative 'base'
@@ -10,11 +11,11 @@ class NodeRecipe < BaseRecipe
   end
 
   def install
-    execute('install', [make_cmd, "install", "DESTDIR=#{dest_dir}", 'PORTABLE=1'])
+    execute('install', [make_cmd, 'install', "DESTDIR=#{dest_dir}", 'PORTABLE=1'])
   end
 
   def archive_files
-    [ dest_dir ]
+    [dest_dir]
   end
 
   def setup_tar
@@ -36,4 +37,3 @@ class NodeRecipe < BaseRecipe
     execute('configure', %w(python configure) + computed_options)
   end
 end
-

@@ -1,3 +1,4 @@
+# encoding: utf-8
 require_relative 'base'
 
 class AntRecipe < BaseRecipe
@@ -13,11 +14,11 @@ class AntRecipe < BaseRecipe
 
   def install
     FileUtils.mkdir_p(path)
-    execute("install", [
-      'env',
-      'JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-amd64/',
-      "ANT_HOME=#{path}",
-      'sh', 'build.sh', 'install-lite'
-    ])
+    execute('install', [
+              'env',
+              'JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-amd64/',
+              "ANT_HOME=#{path}",
+              'sh', 'build.sh', 'install-lite'
+            ])
   end
 end

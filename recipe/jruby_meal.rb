@@ -1,3 +1,4 @@
+# encoding: utf-8
 require_relative 'ant'
 require_relative 'jruby'
 require_relative 'maven'
@@ -6,7 +7,7 @@ require_relative 'openjdk7'
 class JRubyMeal
   attr_reader :name, :version
 
-  def initialize(name, version, options={})
+  def initialize(name, version, options = {})
     @name    = name
     @version = version
     @options = options
@@ -47,9 +48,9 @@ class JRubyMeal
   private
 
   def files_hashs
-    ant.send(:files_hashs)   +
-    maven.send(:files_hashs)   +
-    jruby.send(:files_hashs)
+    ant.send(:files_hashs) +
+      maven.send(:files_hashs) +
+      jruby.send(:files_hashs)
   end
 
   def jruby
@@ -61,14 +62,10 @@ class JRubyMeal
   end
 
   def maven
-    @maven ||= MavenRecipe.new('maven', '3.3.3', {
-      md5: 'e1db3821aa39d4b98178f68467894342'
-    })
+    @maven ||= MavenRecipe.new('maven', '3.3.3', md5: 'e1db3821aa39d4b98178f68467894342')
   end
 
   def ant
-    @ant ||= AntRecipe.new('ant', '1.9.6', {
-      md5: '29b7507c9053e301d2b85091f2aec6f0'
-    })
+    @ant ||= AntRecipe.new('ant', '1.9.6', md5: '29b7507c9053e301d2b85091f2aec6f0')
   end
 end
