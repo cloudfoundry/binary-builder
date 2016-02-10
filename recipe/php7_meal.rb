@@ -83,7 +83,7 @@ class Php7Recipe < BaseRecipe
   end
 
   def archive_filename
-    "php-#{version}-linux-x64-#{Time.now.utc.to_i}.tgz"
+    "php7-#{version}-linux-x64-#{Time.now.utc.to_i}.tgz"
   end
 
   def setup_tar

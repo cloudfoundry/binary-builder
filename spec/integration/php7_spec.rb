@@ -6,7 +6,7 @@ describe 'building a binary', :integration do
   context 'when php7 is specified' do
     before(:all) do
       run_binary_builder('php7', '7.0.3', '--md5=235b1217a9ec7bee6e0bd517e3636d45')
-      @binary_tarball_location = Dir.glob(File.join(Dir.pwd, 'php-7.0.3-linux-x64-*.tgz')).first
+      @binary_tarball_location = Dir.glob(File.join(Dir.pwd, 'php7-7.0.3-linux-x64-*.tgz')).first
     end
 
     after(:all) do
