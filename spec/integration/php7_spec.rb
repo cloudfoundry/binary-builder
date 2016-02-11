@@ -25,8 +25,6 @@ describe 'building a binary', :integration do
     end
 
     it 'copies in *.so files for some of the compiled extensions' do
-      expect(tar_contains_file('php/lib/librabbitmq.so.1')).to eq true
-      expect(tar_contains_file('php/lib/libhiredis.so.0.10')).to eq true
       expect(tar_contains_file('php/lib/libc-client.so.2007e')).to eq true
       expect(tar_contains_file('php/lib/libmcrypt.so.4')).to eq true
       expect(tar_contains_file('php/lib/libaspell.so.15')).to eq true
