@@ -281,7 +281,7 @@ class Php5Meal
   end
 
   def ioncube_recipe
-    @ioncube ||= IonCubeRecipe.new('ioncube', '5.0.22', md5: '3189324e05ec9ba4228ec06cbcc797b7')
+    @ioncube ||= IonCubeRecipe.new('ioncube', '5.0.22', md5: 'c165f53a817c0ada6d87003529e4a55d')
   end
 
   def phalconpecl_recipe
