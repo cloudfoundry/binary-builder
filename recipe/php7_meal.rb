@@ -12,6 +12,7 @@ class Php7Recipe < BaseRecipe
       '--enable-fileinfo=shared',
       '--enable-bcmath',
       '--enable-calendar',
+      '--enable-intl',
       '--with-kerberos',
       '--enable-zip=shared',
       '--with-bz2=shared',

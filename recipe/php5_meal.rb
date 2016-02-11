@@ -12,6 +12,7 @@ class Php5Recipe < BaseRecipe
       '--enable-fileinfo=shared',
       '--enable-bcmath',
       '--enable-calendar',
+      '--enable-intl',
       '--with-kerberos',
       '--enable-zip=shared',
       '--with-bz2=shared',
@@ -153,7 +154,6 @@ class Php5Meal
     php_recipe.cook
     php_recipe.activate
 
-    standard_pecl('intl', '3.0.0', 'a6029b9e7b1d0fcdb6e8bfad49e59ae9')
     standard_pecl('igbinary', '1.2.1', '04a2474ff5eb99c7d0007bf9f4e8a6ec')
     standard_pecl('imagick', '3.1.2', 'f2fd71b026debe056e0ec8d76c2ffe94')
     standard_pecl('mailparse', '2.1.6', '0f84e1da1d074a4915a9bcfe2319ce84')
