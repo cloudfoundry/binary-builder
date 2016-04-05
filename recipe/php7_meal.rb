@@ -152,6 +152,8 @@ class Php7Meal
     standard_pecl('mongodb', '1.1.2', '783e45a40e37d3d9f91cb7fbf95e924c')
     standard_pecl('msgpack', '2.0.0', 'fc50b1706abf9936dfbbd62f92c13b83')
     standard_pecl('yaf', '3.0.2', '565305869773386724cb251a4d3405b1')
+    standard_pecl('imagick', '3.4.1', 'cc4f119a5f27b582f0f10e61451e266f')
+    standard_pecl('xdebug', '2.4.0', 'f49fc01332468f8b753fb37115505fb5')
 
     lua_recipe.cook
     luapecl_recipe.cook
