@@ -28,6 +28,12 @@ class PeclRecipe < BaseRecipe
   end
 end
 
+class LibmemcachedRecipe < BaseRecipe
+  def url
+    "https://launchpad.net/libmemcached/1.0/#{version}/+download/libmemcached-#{version}.tar.gz"
+  end
+end
+
 class LuaRecipe < BaseRecipe
   def url
     "http://www.lua.org/ftp/lua-#{version}.tar.gz"
@@ -138,7 +144,8 @@ class MemcachedPeclRecipe < PeclRecipe
   def configure_options
     [
       "--with-php-config=#{@php_path}/bin/php-config",
-      '--disable-memcached-sasl',
+      "--with-libmemcached-dir=#{@libmemcached_path}",
+      '--enable-memcached-sasl',
       '--enable-memcached-msgpack',
       '--enable-memcached-igbinary',
       '--enable-memcached-json'

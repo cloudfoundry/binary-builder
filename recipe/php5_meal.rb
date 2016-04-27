@@ -93,11 +93,11 @@ class Php5Recipe < BaseRecipe
       cp #{@rabbitmq_path}/lib/librabbitmq.so.1 #{path}/lib/
       cp #{@hiredis_path}/lib/libhiredis.so.0.10 #{path}/lib/
       cp #{@ioncube_path}/ioncube_loader_lin_#{major_version}.so #{zts_path}/ioncube.so
+      cp #{@libmemcached_path}/lib/libmemcached.so.11 #{path}/lib/
       cp /usr/lib/libc-client.so.2007e #{path}/lib/
       cp /usr/lib/libmcrypt.so.4 #{path}/lib
       cp /usr/lib/libaspell.so.15 #{path}/lib
       cp /usr/lib/libpspell.so.15 #{path}/lib
-      cp /usr/lib/x86_64-linux-gnu/libmemcached.so.10 #{path}/lib
 
       # Remove unused files
       rm "#{path}/etc/php-fpm.conf.default"
@@ -133,7 +133,6 @@ class Php5Meal
         libjpeg-dev \
         libldap2-dev \
         libmcrypt-dev \
-        libmemcached-dev \
         libpng12-dev \
         libpspell-dev \
         libreadline-dev \
@@ -178,6 +177,7 @@ class Php5Meal
     twigpecl_recipe.cook
     xcachepecl_recipe.cook
     xhprofpecl_recipe.cook
+    libmemcached_recipe.cook
     memcachedpecl_recipe.cook
     snmp_recipe.cook
   end
@@ -217,6 +217,7 @@ class Php5Meal
       twigpecl_recipe.send(:files_hashs) +
       xcachepecl_recipe.send(:files_hashs) +
       xhprofpecl_recipe.send(:files_hashs) +
+      libmemcached_recipe.send(:files_hashs) +
       memcachedpecl_recipe.send(:files_hashs) +
       @pecl_recipes.collect { |r| r.send(:files_hashs) }.flatten
   end
@@ -233,14 +234,19 @@ class Php5Meal
     SnmpRecipe.new(php_recipe.path)
   end
 
+  def libmemcached_recipe
+    @libmemcached_recipe ||= LibmemcachedRecipe.new('libmemcached', '1.0.18')
+  end
+
   def memcachedpecl_recipe
-    @memcachedpecl_recipe ||= MemcachedPeclRecipe.new('memcached', '2.2.0', php_path: php_recipe.path)
+    @memcachedpecl_recipe ||= MemcachedPeclRecipe.new('memcached', '2.2.0', php_path: php_recipe.path, libmemcached_path: libmemcached_recipe.path)
   end
 
   def php_recipe
     @php_recipe ||= Php5Recipe.new(@name, @version, {
       rabbitmq_path: rabbitmq_recipe.path,
       hiredis_path: hiredis_recipe.path,
+      libmemcached_path: libmemcached_recipe.path,
       ioncube_path: ioncube_recipe.path
     }.merge(DetermineChecksum.new(@options).to_h))
   end

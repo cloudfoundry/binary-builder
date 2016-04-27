@@ -31,7 +31,7 @@ describe 'building a binary', :integration do
       expect(tar_contains_file('php/lib/libmcrypt.so.4')).to eq true
       expect(tar_contains_file('php/lib/libaspell.so.15')).to eq true
       expect(tar_contains_file('php/lib/libpspell.so.15')).to eq true
-      expect(tar_contains_file('php/lib/libmemcached.so.10')).to eq true
+      expect(tar_contains_file('php/lib/libmemcached.so.11')).to eq true
     end
   end
 end
