@@ -266,13 +266,13 @@ class Php5Meal
   end
 
   def amqppecl_recipe
-    @amqppecl_recipe ||= AmqpPeclRecipe.new('amqp', '1.4.0',                                               md5: 'e7fefbd5c87eaad40c29e2ad5de7bd30',
-                                                                                                           php_path: php_recipe.path,
-                                                                                                           rabbitmq_path: rabbitmq_recipe.path)
+    @amqppecl_recipe ||= AmqpPeclRecipe.new('amqp', '1.4.0', md5: 'e7fefbd5c87eaad40c29e2ad5de7bd30',
+                                                             php_path: php_recipe.path,
+                                                             rabbitmq_path: rabbitmq_recipe.path)
   end
 
   def hiredis_recipe
-    @hiredis_recipe ||= HiredisRecipe.new('hiredis', '0.11.0',                                             md5: 'e2ac29509823ccc96990b6fe765b5d46')
+    @hiredis_recipe ||= HiredisRecipe.new('hiredis', '0.11.0', md5: 'e2ac29509823ccc96990b6fe765b5d46')
   end
 
   def phpiredis_recipe
