@@ -66,6 +66,6 @@ class JRubyMeal
   end
 
   def ant
-    @ant ||= AntRecipe.new('ant', '1.9.6', md5: '29b7507c9053e301d2b85091f2aec6f0')
+    @ant ||= AntRecipe.new('ant', '1.9.7', md5: 'a2fd9458c76700b7be51ef12f07d4bb1')
   end
 end
