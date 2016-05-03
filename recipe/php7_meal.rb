@@ -149,7 +149,7 @@ class Php7Meal
     php_recipe.activate
 
     standard_pecl('mailparse', '3.0.1', '5ae0643a11159414c7e790c73a9e25ec')
-    standard_pecl('mongodb', '1.1.6', '19cd8bd94494f924ce8314f304fd83b6')
+    standard_pecl('mongodb', '1.1.6', '8618d27f2ac2dca5c0b39eed22b892af')
     standard_pecl('msgpack', '2.0.1', '4d1db4592ffa4101601aefc794191de5')
     standard_pecl('yaf', '3.0.2', '565305869773386724cb251a4d3405b1')
     standard_pecl('imagick', '3.4.1', 'cc4f119a5f27b582f0f10e61451e266f')
