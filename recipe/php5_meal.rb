@@ -154,16 +154,16 @@ class Php5Meal
     php_recipe.activate
 
     standard_pecl('igbinary', '1.2.1', '04a2474ff5eb99c7d0007bf9f4e8a6ec')
-    standard_pecl('imagick', '3.1.2', 'f2fd71b026debe056e0ec8d76c2ffe94')
+    standard_pecl('imagick', '3.4.1', 'cc4f119a5f27b582f0f10e61451e266f')
     standard_pecl('mailparse', '2.1.6', '0f84e1da1d074a4915a9bcfe2319ce84')
     standard_pecl('memcache', '2.2.7', '171e3f51a9afe18b76348ddf1c952141')
-    standard_pecl('mongo', '1.6.5', '058b5d76c95e1b12267cf1b449118acc')
-    standard_pecl('msgpack', '0.5.5', 'adc8d9ea5088bdb83e7cc7c2f535d858')
+    standard_pecl('mongo', '1.6.14', '19cd8bd94494f924ce8314f304fd83b6')
+    standard_pecl('msgpack', '0.5.7', 'b87b5c5e0dab9f41c824201abfbf363d')
     standard_pecl('protocolbuffers', '0.2.6', 'a304ca632b0d7c5710d5590ac06248a9')
     standard_pecl('redis', '2.2.7', 'c55839465b2c435fd091ac50923f2d96')
     standard_pecl('sundown', '0.3.11', 'c1397e9d3312226ec6c84e8e34c717a6')
-    standard_pecl('xdebug', '2.3.1', '117d8e54d84b1cb7e07a646377007bd5')
-    standard_pecl('yaf', '2.3.3', '942dc4109ad965fa7f09fddfc784f335')
+    standard_pecl('xdebug', '2.4.0', 'f49fc01332468f8b753fb37115505fb5')
+    standard_pecl('yaf', '2.3.5', '77d5d9d6c8471737395350966986bc2e')
 
     rabbitmq_recipe.cook
     amqppecl_recipe.cook
@@ -252,11 +252,11 @@ class Php5Meal
   end
 
   def rabbitmq_recipe
-    @rabbitmq_recipe ||= RabbitMQRecipe.new('rabbitmq', '0.5.2', md5: 'aa8d4d0b949f508c0da25a9c20bd7da7')
+    @rabbitmq_recipe ||= RabbitMQRecipe.new('rabbitmq', '0.7.1', md5: '6216c8876299a5efc4ff5ff84dc636d8')
   end
 
   def lua_recipe
-    @lua_recipe ||= LuaRecipe.new('lua', '5.2.4', md5: '913fdb32207046b273fdb17aad70be13')
+    @lua_recipe ||= LuaRecipe.new('lua', '5.3.2', md5: '33278c2ab5ee3c1a875be8d55c1ca2a1')
   end
 
   def luapecl_recipe
@@ -266,13 +266,13 @@ class Php5Meal
   end
 
   def amqppecl_recipe
-    @amqppecl_recipe ||= AmqpPeclRecipe.new('amqp', '1.4.0', md5: 'e7fefbd5c87eaad40c29e2ad5de7bd30',
+    @amqppecl_recipe ||= AmqpPeclRecipe.new('amqp', '1.7.0', md5: '5a701987a5c9d1f1b70b359e14d5162e',
                                                              php_path: php_recipe.path,
                                                              rabbitmq_path: rabbitmq_recipe.path)
   end
 
   def hiredis_recipe
-    @hiredis_recipe ||= HiredisRecipe.new('hiredis', '0.11.0', md5: 'e2ac29509823ccc96990b6fe765b5d46')
+    @hiredis_recipe ||= HiredisRecipe.new('hiredis', '0.13.3', md5: '43dca1445ec6d3b702821dba36000279')
   end
 
   def phpiredis_recipe
@@ -296,12 +296,12 @@ class Php5Meal
   end
 
   def suhosinpecl_recipe
-    @suhosinpecl_recipe ||= SuhosinPeclRecipe.new('suhosin', '0.9.37.1', md5: '8d1c37e62ff712638b5d3847d94bfab3',
+    @suhosinpecl_recipe ||= SuhosinPeclRecipe.new('suhosin', '0.9.38', md5: '0c26402752b0aff69e4b891f062a52bf',
                                                                          php_path: php_recipe.path)
   end
 
   def twigpecl_recipe
-    @twigpecl_recipe ||= TwigPeclRecipe.new('twig', '1.18.0', md5: '294f9606acc7170decfad27575fa1d00',
+    @twigpecl_recipe ||= TwigPeclRecipe.new('twig', '1.24.0', md5: 'ff6a06115a36975770e08d62992f5557',
                                                               php_path: php_recipe.path)
   end
 
@@ -311,7 +311,7 @@ class Php5Meal
   end
 
   def xhprofpecl_recipe
-    @xhprofpecl_recipe ||= XhprofPeclRecipe.new('xhprof', '0bbf2a2ac3',                                                   md5: '1df4aebf1cb24e7cf369b3af357106fc',
-                                                                                                                          php_path: php_recipe.path)
+    @xhprofpecl_recipe ||= XhprofPeclRecipe.new('xhprof', '0bbf2a2ac3', md5: '1df4aebf1cb24e7cf369b3af357106fc',
+                                                                        php_path: php_recipe.path)
   end
 end
