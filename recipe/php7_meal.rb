@@ -89,11 +89,11 @@ class Php7Recipe < BaseRecipe
 
   def setup_tar
     system <<-eof
-      cp /usr/lib/libc-client.so.2007e #{path}/lib/
-      cp /usr/lib/libmcrypt.so.4 #{path}/lib
-      cp /usr/lib/libaspell.so.15 #{path}/lib
-      cp /usr/lib/libpspell.so.15 #{path}/lib
-      cp /usr/lib/x86_64-linux-gnu/libmemcached.so.10 #{path}/lib
+      cp -a /usr/lib/libc-client.so* #{path}/lib/
+      cp -a /usr/lib/libmcrypt.so* #{path}/lib
+      cp -a /usr/lib/libaspell.so* #{path}/lib
+      cp -a /usr/lib/libpspell.so* #{path}/lib
+      cp -a /usr/lib/x86_64-linux-gnu/libmemcached.so* #{path}/lib
 
       # Remove unused files
       rm "#{path}/etc/php-fpm.conf.default"
