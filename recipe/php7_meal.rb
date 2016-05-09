@@ -148,16 +148,20 @@ class Php7Meal
     php_recipe.cook
     php_recipe.activate
 
+    # native dependencies
+    rabbitmq_recipe.cook
+    lua_recipe.cook
+    snmp_recipe.cook
+
+    # php extensions
+    standard_pecl('imagick', '3.4.1', 'cc4f119a5f27b582f0f10e61451e266f')
     standard_pecl('mailparse', '3.0.1', '5ae0643a11159414c7e790c73a9e25ec')
     standard_pecl('mongodb', '1.1.6', '8618d27f2ac2dca5c0b39eed22b892af')
     standard_pecl('msgpack', '2.0.1', '4d1db4592ffa4101601aefc794191de5')
-    standard_pecl('yaf', '3.0.2', '565305869773386724cb251a4d3405b1')
-    standard_pecl('imagick', '3.4.1', 'cc4f119a5f27b582f0f10e61451e266f')
     standard_pecl('xdebug', '2.4.0', 'f49fc01332468f8b753fb37115505fb5')
-
-    lua_recipe.cook
+    standard_pecl('yaf', '3.0.2', '565305869773386724cb251a4d3405b1')
+    amqppecl_recipe.cook
     luapecl_recipe.cook
-    snmp_recipe.cook
   end
 
   def url
@@ -183,8 +187,10 @@ class Php7Meal
   private
 
   def files_hashs
+    rabbitmq_recipe.send(:files_hashs) +
       lua_recipe.send(:files_hashs) +
       luapecl_recipe.send(:files_hashs) +
+      amqppecl_recipe.send(:files_hashs) +
       @pecl_recipes.collect { |r| r.send(:files_hashs) }.flatten
   end
 
@@ -205,6 +211,10 @@ class Php7Meal
     }.merge(DetermineChecksum.new(@options).to_h))
   end
 
+  def rabbitmq_recipe
+    @rabbitmq_recipe ||= RabbitMQRecipe.new('rabbitmq', '0.7.1', md5: '6216c8876299a5efc4ff5ff84dc636d8')
+  end
+
   def lua_recipe
     @lua_recipe ||= LuaRecipe.new('lua', '5.3.2', md5: '33278c2ab5ee3c1a875be8d55c1ca2a1')
   end
@@ -213,5 +223,11 @@ class Php7Meal
     @luapecl_recipe ||= LuaPeclRecipe.new('lua', '2.0.1', md5: '56924db266f3748a0432328e764b7782',
                                                           php_path: php_recipe.path,
                                                           lua_path: lua_recipe.path)
+  end
+
+  def amqppecl_recipe
+    @amqppecl_recipe ||= AmqpPeclRecipe.new('amqp', '1.7.0', md5: '5a701987a5c9d1f1b70b359e14d5162e',
+                                                             php_path: php_recipe.path,
+                                                             rabbitmq_path: rabbitmq_recipe.path)
   end
 end

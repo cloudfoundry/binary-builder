@@ -153,6 +153,15 @@ class Php5Meal
     php_recipe.cook
     php_recipe.activate
 
+    # native libraries
+    rabbitmq_recipe.cook
+    lua_recipe.cook
+    hiredis_recipe.cook
+    phpiredis_recipe.cook
+    snmp_recipe.cook
+    libmemcached_recipe.cook
+
+    # php extensions
     standard_pecl('igbinary', '1.2.1', '04a2474ff5eb99c7d0007bf9f4e8a6ec')
     standard_pecl('imagick', '3.4.1', 'cc4f119a5f27b582f0f10e61451e266f')
     standard_pecl('mailparse', '2.1.6', '0f84e1da1d074a4915a9bcfe2319ce84')
@@ -164,22 +173,15 @@ class Php5Meal
     standard_pecl('sundown', '0.3.11', 'c1397e9d3312226ec6c84e8e34c717a6')
     standard_pecl('xdebug', '2.4.0', 'f49fc01332468f8b753fb37115505fb5')
     standard_pecl('yaf', '2.3.5', '77d5d9d6c8471737395350966986bc2e')
-
-    rabbitmq_recipe.cook
     amqppecl_recipe.cook
-    lua_recipe.cook
     luapecl_recipe.cook
-    hiredis_recipe.cook
-    phpiredis_recipe.cook
     phpprotobufpecl_recipe.cook
     phalconpecl_recipe.cook
     suhosinpecl_recipe.cook
     twigpecl_recipe.cook
     xcachepecl_recipe.cook
     xhprofpecl_recipe.cook
-    libmemcached_recipe.cook
     memcachedpecl_recipe.cook
-    snmp_recipe.cook
   end
 
   def url
@@ -291,7 +293,7 @@ class Php5Meal
   end
 
   def phalconpecl_recipe
-    @phalconpecl_recipe ||= PhalconPeclRecipe.new('phalcon', '1.3.4', md5: '36ec688a6fb710ce4b1e34c00bf24748',
+    @phalconpecl_recipe ||= PhalconPeclRecipe.new('phalcon', '2.0.11', md5: 'b644ac4915e95b6cec7dd4834fd9e127',
                                                                       php_path: php_recipe.path)
   end
 
