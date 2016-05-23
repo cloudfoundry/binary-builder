@@ -253,24 +253,10 @@ class Php5Meal
     }.merge(DetermineChecksum.new(@options).to_h))
   end
 
-  def rabbitmq_recipe
-    @rabbitmq_recipe ||= RabbitMQRecipe.new('rabbitmq', '0.7.1', md5: '6216c8876299a5efc4ff5ff84dc636d8')
-  end
-
-  def lua_recipe
-    @lua_recipe ||= LuaRecipe.new('lua', '5.3.2', md5: '33278c2ab5ee3c1a875be8d55c1ca2a1')
-  end
-
   def luapecl_recipe
     @luapecl_recipe ||= LuaPeclRecipe.new('lua', '1.1.0', md5: '58bd532957473f2ac87f1032c4aa12b5',
                                                           php_path: php_recipe.path,
                                                           lua_path: lua_recipe.path)
-  end
-
-  def amqppecl_recipe
-    @amqppecl_recipe ||= AmqpPeclRecipe.new('amqp', '1.7.0', md5: '5a701987a5c9d1f1b70b359e14d5162e',
-                                                             php_path: php_recipe.path,
-                                                             rabbitmq_path: rabbitmq_recipe.path)
   end
 
   def hiredis_recipe

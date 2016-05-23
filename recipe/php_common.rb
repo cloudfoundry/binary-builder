@@ -218,3 +218,19 @@ class SnmpRecipe
     eof
   end
 end
+
+# PHP 5 and PHP 7 Common recipes
+
+def amqppecl_recipe
+  AmqpPeclRecipe.new('amqp', '1.7.0', md5: '5a701987a5c9d1f1b70b359e14d5162e',
+                                      php_path: php_recipe.path,
+                                      rabbitmq_path: rabbitmq_recipe.path)
+end
+
+def lua_recipe
+  LuaRecipe.new('lua', '5.3.2', md5: '33278c2ab5ee3c1a875be8d55c1ca2a1')
+end
+
+def rabbitmq_recipe
+  RabbitMQRecipe.new('rabbitmq', '0.7.1', md5: '6216c8876299a5efc4ff5ff84dc636d8')
+end
