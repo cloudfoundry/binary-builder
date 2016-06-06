@@ -23,19 +23,18 @@ class GodepMeal < BaseRecipe
     download unless downloaded?
     extract
 
-    godep_path = Dir.glob("#{tmp_path}/godep-*").first or "Could not find godep path"
-    Dir.chdir(godep_path) do
+    FileUtils.mv(Dir.glob("#{tmp_path}/godep-*").first, "#{tmp_path}/godep")
+    Dir.chdir("#{tmp_path}/godep") do
       system(
-        {"GOPATH" => "#{godep_path}/Godeps/_workspace:/tmp"},
+        {"GOPATH" => "#{tmp_path}/godep/Godeps/_workspace:/tmp"},
         "go get ./..."
       ) or raise "Could not install godep"
     end
-    FileUtils.mv(Dir.glob("/tmp/bin/godep-*").first, "/tmp/bin/godep")
-    FileUtils.mv("#{godep_path}/License", "/tmp/License")
+    FileUtils.mv("#{tmp_path}/godep/License", "/tmp/License")
   end
 
   def archive_files
-    ['/tmp/bin/*', '/tmp/License']
+    ['/tmp/bin/godep', '/tmp/License']
   end
 
   def archive_path_name
