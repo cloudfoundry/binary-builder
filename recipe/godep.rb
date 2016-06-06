@@ -23,11 +23,15 @@ class GodepMeal < BaseRecipe
     download unless downloaded?
     extract
 
-    system <<-EOF
-      mv #{tmp_path}/godep-* #{tmp_path}/godep
-      cd #{tmp_path}/godep && GOPATH=$PWD/Godeps/_workspace:/tmp go install
-      mv #{tmp_path}/godep/License /tmp/License
-    EOF
+    godep_path = Dir.glob("#{tmp_path}/godep-*").first or "Could not find godep path"
+    Dir.chdir(godep_path) do
+      system(
+        {"GOPATH" => "#{godep_path}/Godeps/_workspace:/tmp"},
+        "go get ./..."
+      ) or raise "Could not install godep"
+    end
+    FileUtils.mv(Dir.glob("/tmp/bin/godep-*").first, "/tmp/bin/godep")
+    FileUtils.mv("#{godep_path}/License", "/tmp/License")
   end
 
   def archive_files
