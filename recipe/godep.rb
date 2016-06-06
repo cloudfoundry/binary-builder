@@ -23,6 +23,7 @@ class GodepMeal < BaseRecipe
     download unless downloaded?
     extract
 
+    FileUtils.rm_rf("#{tmp_path}/godep")
     FileUtils.mv(Dir.glob("#{tmp_path}/godep-*").first, "#{tmp_path}/godep")
     Dir.chdir("#{tmp_path}/godep") do
       system(
