@@ -1,4 +1,6 @@
 # encoding: utf-8
+require_relative 'base'
+
 class RabbitMQRecipe < BaseRecipe
   def url
     "https://github.com/alanxz/rabbitmq-c/releases/download/v#{version}/rabbitmq-c-#{version}.tar.gz"

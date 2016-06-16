@@ -137,6 +137,7 @@ class Php7Meal
         libsnmp-dev \
         libsqlite3-dev \
         libssl-dev \
+        libxml2-dev \
         libzip-dev \
         libzookeeper-mt-dev \
         snmp-mibs-downloader
@@ -158,6 +159,7 @@ class Php7Meal
     standard_pecl('mailparse', '3.0.1', '5ae0643a11159414c7e790c73a9e25ec')
     standard_pecl('mongodb', '1.1.6', '8618d27f2ac2dca5c0b39eed22b892af')
     standard_pecl('msgpack', '2.0.1', '4d1db4592ffa4101601aefc794191de5')
+    standard_pecl('solr', '2.4.0', '2c9accf66681a3daaaf371bc07e44902')
     standard_pecl('xdebug', '2.4.0', 'f49fc01332468f8b753fb37115505fb5')
     standard_pecl('yaf', '3.0.2', '565305869773386724cb251a4d3405b1')
     amqppecl_recipe.cook

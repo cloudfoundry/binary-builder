@@ -140,6 +140,7 @@ class Php5Meal
         libsnmp-dev \
         libsqlite3-dev \
         libssl-dev \
+        libxml2-dev \
         libzip-dev \
         libzookeeper-mt-dev \
         snmp-mibs-downloader
@@ -170,6 +171,7 @@ class Php5Meal
     standard_pecl('msgpack', '0.5.7', 'b87b5c5e0dab9f41c824201abfbf363d')
     standard_pecl('protocolbuffers', '0.2.6', 'a304ca632b0d7c5710d5590ac06248a9')
     standard_pecl('redis', '2.2.7', 'c55839465b2c435fd091ac50923f2d96')
+    standard_pecl('solr', '2.4.0', '2c9accf66681a3daaaf371bc07e44902')
     standard_pecl('sundown', '0.3.11', 'c1397e9d3312226ec6c84e8e34c717a6')
     standard_pecl('xdebug', '2.4.0', 'f49fc01332468f8b753fb37115505fb5')
     standard_pecl('yaf', '2.3.5', '77d5d9d6c8471737395350966986bc2e')
