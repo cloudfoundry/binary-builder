@@ -129,6 +129,7 @@ class Php5Meal
         libcurl4-openssl-dev \
         libexpat1-dev \
         libgdbm-dev \
+        libgearman-dev \
         libgmp-dev \
         libjpeg-dev \
         libldap2-dev \
@@ -165,6 +166,7 @@ class Php5Meal
     # php extensions
     standard_pecl('igbinary', '1.2.1', '04a2474ff5eb99c7d0007bf9f4e8a6ec')
     standard_pecl('imagick', '3.4.1', 'cc4f119a5f27b582f0f10e61451e266f')
+    standard_pecl('gearman', '1.1.2', 'fb3bc8df2d017048726d5654459e8433')
     standard_pecl('mailparse', '2.1.6', '0f84e1da1d074a4915a9bcfe2319ce84')
     standard_pecl('memcache', '2.2.7', '171e3f51a9afe18b76348ddf1c952141')
     standard_pecl('mongo', '1.6.14', '19cd8bd94494f924ce8314f304fd83b6')
