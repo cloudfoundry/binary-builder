@@ -1,22 +1,27 @@
 # encoding: utf-8
 require_relative 'base'
-require_relative 'go'
 
 class GodepMeal < BaseRecipe
   attr_reader :name, :version
 
   def cook
-    go_recipe.cook
-
     download unless downloaded?
     extract
 
     FileUtils.rm_rf("#{tmp_path}/godep")
     FileUtils.mv(Dir.glob("#{tmp_path}/godep-*").first, "#{tmp_path}/godep")
+
+    Dir.chdir("/usr/local") do
+      go_download = "https://storage.googleapis.com/golang/go1.6.2.linux-amd64.tar.gz"
+      go_tar = "go.tar.gz"
+      system("curl -L #{go_download} -o #{go_tar}")
+      system("tar xf #{go_tar}")
+    end
+
     Dir.chdir("#{tmp_path}/godep") do
       system(
         {"GOPATH" => "#{tmp_path}/godep/Godeps/_workspace:/tmp"},
-        "go get ./..."
+        "/usr/local/go/bin/go get ./..."
       ) or raise "Could not install godep"
     end
     FileUtils.mv("#{tmp_path}/godep/License", "/tmp/License")
