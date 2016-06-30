@@ -14,7 +14,6 @@ describe 'building a binary', :integration do
     end
 
     it 'builds the specified binary, tars it, and places it in your current working directory' do
-      @binary_tarball_location = File.join(Dir.pwd, 'godep-v14-linux-x64.tgz')
       expect(File).to exist(@binary_tarball_location)
 
       godep_version_cmd = './spec/assets/binary-exerciser.sh godep-v14-linux-x64.tgz ./bin/godep version'
