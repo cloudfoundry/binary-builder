@@ -1,7 +1,7 @@
 # encoding: utf-8
 require_relative 'base'
 
-class GodepMeal < BaseRecipe
+class GlideRecipe < BaseRecipe
   attr_reader :name, :version
 
   def cook
@@ -16,19 +16,22 @@ class GodepMeal < BaseRecipe
       system("tar xf #{go_tar}")
     end
 
-    FileUtils.rm_rf("#{tmp_path}/godep")
-    FileUtils.mv(Dir.glob("#{tmp_path}/godep-*").first, "#{tmp_path}/godep")
-    Dir.chdir("#{tmp_path}/godep") do
+    FileUtils.rm_rf("#{tmp_path}/glide")
+    FileUtils.mv(Dir.glob("#{tmp_path}/glide-*").first, "#{tmp_path}/glide")
+    Dir.chdir("#{tmp_path}/glide") do
       system(
-        {"GOPATH" => "#{tmp_path}/godep/Godeps/_workspace:/tmp"},
-        "/usr/local/go/bin/go get ./..."
-      ) or raise "Could not install godep"
+        {"GOPATH" => "/tmp",
+         "PATH" => "#{ENV["PATH"]}:/usr/local/go/bin"},
+        "/usr/local/go/bin/go build"
+      ) or raise "Could not install glide"
     end
-    FileUtils.mv("#{tmp_path}/godep/License", "/tmp/License")
+
+    FileUtils.mv("#{tmp_path}/glide/glide", "/tmp/glide")
+    FileUtils.mv("#{tmp_path}/glide/LICENSE", "/tmp/LICENSE")
   end
 
   def archive_files
-    ['/tmp/bin/godep', '/tmp/License']
+    ['/tmp/glide', '/tmp/LICENSE']
   end
 
   def archive_path_name
@@ -36,7 +39,7 @@ class GodepMeal < BaseRecipe
   end
 
   def url
-    "https://github.com/tools/godep/archive/#{version}.tar.gz"
+    "https://github.com/Masterminds/glide/archive/#{version}.tar.gz"
   end
 
   def go_recipe
@@ -44,6 +47,6 @@ class GodepMeal < BaseRecipe
   end
 
   def tmp_path
-    '/tmp/src/github.com/tools'
+    '/tmp/src/github.com/Masterminds'
   end
 end
