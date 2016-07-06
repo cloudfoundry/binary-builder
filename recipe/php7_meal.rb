@@ -161,7 +161,7 @@ class Php7Meal
     standard_pecl('msgpack', '2.0.1', '4d1db4592ffa4101601aefc794191de5')
     standard_pecl('solr', '2.4.0', '2c9accf66681a3daaaf371bc07e44902')
     standard_pecl('xdebug', '2.4.0', 'f49fc01332468f8b753fb37115505fb5')
-    standard_pecl('yaf', '3.0.2', '565305869773386724cb251a4d3405b1')
+    standard_pecl('yaf', '3.0.3', '565305869773386724cb251a4d3405b1')
     amqppecl_recipe.cook
     luapecl_recipe.cook
   end
