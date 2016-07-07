@@ -64,6 +64,8 @@ recipe = recipe.new(
   DetermineChecksum.new(options).to_h
 )
 Bundler.with_clean_env do
+  puts "Source URL: #{recipe.url}"
+
   recipe.cook
   ArchiveRecipe.new(recipe).tar!
 
