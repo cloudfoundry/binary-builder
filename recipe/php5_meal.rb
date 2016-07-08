@@ -179,7 +179,7 @@ class Php5Meal
     amqppecl_recipe.cook
     luapecl_recipe.cook
     phpprotobufpecl_recipe.cook
-    phalconpecl_recipe.cook
+    phalcon_recipe.cook
     suhosinpecl_recipe.cook
     twigpecl_recipe.cook
     xcachepecl_recipe.cook
@@ -217,7 +217,7 @@ class Php5Meal
       hiredis_recipe.send(:files_hashs) +
       phpiredis_recipe.send(:files_hashs) +
       phpprotobufpecl_recipe.send(:files_hashs) +
-      phalconpecl_recipe.send(:files_hashs) +
+      phalcon_recipe.send(:files_hashs) +
       suhosinpecl_recipe.send(:files_hashs) +
       twigpecl_recipe.send(:files_hashs) +
       xcachepecl_recipe.send(:files_hashs) +
@@ -281,8 +281,8 @@ class Php5Meal
     @ioncube ||= IonCubeRecipe.new('ioncube', '5.1.2', md5: 'dbff6dcfde17c34c9d38fe5adabf939b')
   end
 
-  def phalconpecl_recipe
-    @phalconpecl_recipe ||= PhalconPeclRecipe.new('phalcon', '2.0.11', md5: 'b644ac4915e95b6cec7dd4834fd9e127',
+  def phalcon_recipe
+    @phalcon_recipe ||= PhalconRecipe.new('phalcon', '2.0.13', md5: '4afa8dacd3badc0e770cde79636d1522',
                                                                       php_path: php_recipe.path)
   end
 

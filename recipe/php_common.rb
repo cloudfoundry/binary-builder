@@ -125,7 +125,7 @@ class PHPProtobufPeclRecipe < PeclRecipe
   end
 end
 
-class PhalconPeclRecipe < PeclRecipe
+class PhalconRecipe < PeclRecipe
   def configure_options
     [
       "--with-php-config=#{@php_path}/bin/php-config",
