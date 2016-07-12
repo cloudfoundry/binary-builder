@@ -98,6 +98,7 @@ class Php5Recipe < BaseRecipe
       cp -a /usr/lib/libmcrypt.so* #{path}/lib
       cp -a /usr/lib/libaspell.so* #{path}/lib
       cp -a /usr/lib/libpspell.so* #{path}/lib
+      cp -a /usr/lib/x86_64-linux-gnu/libgearman.so* #{path}/lib
 
       # Remove unused files
       rm "#{path}/etc/php-fpm.conf.default"
