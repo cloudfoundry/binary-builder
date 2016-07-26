@@ -30,7 +30,7 @@ This generates a gzipped tarball in the binary-builder directory with the filena
 For example, if you were building ruby 2.2.3, you'd run the following commands:
 
 ```bash
-$ docker run -w /binary-builder -v `pwd`:/binary-builder -it cloudfoundry/cflinuxfs2 ./bin/binary-builder --name=ruby --version=2.2.3 --md5=150a5efc5f5d8a8011f30aa2594a7654 
+$ docker run -w /binary-builder -v `pwd`:/binary-builder -it cloudfoundry/cflinuxfs2:ruby-2.2.4 ./bin/binary-builder --name=ruby --version=2.2.3 --md5=150a5efc5f5d8a8011f30aa2594a7654 
 $ ls
 ruby-2.2.3-linux-x64.tgz
 ```
