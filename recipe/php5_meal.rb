@@ -187,6 +187,7 @@ class Php5Meal
     twigpecl_recipe.cook
     xcachepecl_recipe.cook
     xhprofpecl_recipe.cook
+    oracle_recipe.cook unless not oracle_recipe.oracle_sdk?
     memcachedpecl_recipe.cook
   end
 
@@ -208,6 +209,7 @@ class Php5Meal
 
   def setup_tar
     php_recipe.setup_tar
+    oracle_recipe.setup_tar unless not oracle_recipe.oracle_sdk?
   end
 
   private
@@ -225,6 +227,7 @@ class Php5Meal
       twigpecl_recipe.send(:files_hashs) +
       xcachepecl_recipe.send(:files_hashs) +
       xhprofpecl_recipe.send(:files_hashs) +
+      oracle_recipe.send(:files_hashs) +
       libmemcached_recipe.send(:files_hashs) +
       memcachedpecl_recipe.send(:files_hashs) +
       @pecl_recipes.collect { |r| r.send(:files_hashs) }.flatten
@@ -307,5 +310,10 @@ class Php5Meal
   def xhprofpecl_recipe
     @xhprofpecl_recipe ||= XhprofPeclRecipe.new('xhprof', '0bbf2a2ac3', md5: '1df4aebf1cb24e7cf369b3af357106fc',
                                                                         php_path: php_recipe.path)
+  end
+
+  def oracle_recipe
+    @oracle_recipe ||= OraclePeclRecipe.new('oci8', '2.0.11', md5: 'b953aec8600b1990fc1956bd5f580b0b',
+									php_path: php_recipe.path)
   end
 end
