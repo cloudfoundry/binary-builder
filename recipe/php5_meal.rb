@@ -99,6 +99,8 @@ class Php5Recipe < BaseRecipe
       cp -a /usr/lib/libaspell.so* #{path}/lib
       cp -a /usr/lib/libpspell.so* #{path}/lib
       cp -a /usr/lib/x86_64-linux-gnu/libgearman.so* #{path}/lib
+      cp -a /usr/lib/x86_64-linux-gnu/libcassandra.so* #{path}/lib
+      cp -a /usr/lib/x86_64-linux-gnu/libuv.so* #{path}/lib
 
       # Remove unused files
       rm "#{path}/etc/php-fpm.conf.default"
@@ -151,6 +153,8 @@ class Php5Meal
       sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap_r.so /usr/lib/libldap_r.so
     eof
 
+    install_cassandra_dependencies
+
     ioncube_recipe.cook
 
     php_recipe.cook
@@ -165,6 +169,7 @@ class Php5Meal
     libmemcached_recipe.cook
 
     # php extensions
+    standard_pecl('cassandra', '1.2.1', 'dca2cda61a1ff6a6cecb94f88a75c757')
     standard_pecl('igbinary', '1.2.1', '04a2474ff5eb99c7d0007bf9f4e8a6ec')
     standard_pecl('imagick', '3.4.1', 'cc4f119a5f27b582f0f10e61451e266f')
     standard_pecl('gearman', '1.1.2', 'fb3bc8df2d017048726d5654459e8433')

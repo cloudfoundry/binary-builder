@@ -33,6 +33,8 @@ describe 'building a binary', :integration do
       expect(tar_contains_file('php/lib/libpspell.so.15')).to eq true
       expect(tar_contains_file('php/lib/libmemcached.so.11')).to eq true
       expect(tar_contains_file('php/lib/libgearman.so.7')).to eq true
+      expect(tar_contains_file('php/lib/libcassandra.so.2')).to eq true
+      expect(tar_contains_file('php/lib/libuv.so.1')).to eq true
     end
   end
 end

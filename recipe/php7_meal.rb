@@ -94,6 +94,8 @@ class Php7Recipe < BaseRecipe
       cp -a /usr/lib/libaspell.so* #{path}/lib
       cp -a /usr/lib/libpspell.so* #{path}/lib
       cp -a /usr/lib/x86_64-linux-gnu/libmemcached.so* #{path}/lib
+      cp -a /usr/lib/x86_64-linux-gnu/libcassandra.so* #{path}/lib
+      cp -a /usr/lib/x86_64-linux-gnu/libuv.so* #{path}/lib
 
       # Remove unused files
       rm "#{path}/etc/php-fpm.conf.default"
@@ -146,6 +148,8 @@ class Php7Meal
       sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap_r.so /usr/lib/libldap_r.so
     eof
 
+    install_cassandra_dependencies
+
     php_recipe.cook
     php_recipe.activate
 
@@ -162,6 +166,7 @@ class Php7Meal
     standard_pecl('solr', '2.4.0', '2c9accf66681a3daaaf371bc07e44902')
     standard_pecl('xdebug', '2.4.0', 'f49fc01332468f8b753fb37115505fb5')
     standard_pecl('yaf', '3.0.3', '74504e8f0ed7c346804c5a5043a5682b')
+    standard_pecl('cassandra', '1.2.1', 'dca2cda61a1ff6a6cecb94f88a75c757')
     amqppecl_recipe.cook
     luapecl_recipe.cook
   end

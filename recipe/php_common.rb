@@ -236,3 +236,17 @@ end
 def rabbitmq_recipe
   RabbitMQRecipe.new('rabbitmq', '0.7.1', md5: '6216c8876299a5efc4ff5ff84dc636d8')
 end
+
+def install_cassandra_dependencies
+  system <<-eof
+    wget http://downloads.datastax.com/cpp-driver/ubuntu/14.04/dependencies/libuv/v1.8.0/libuv_1.8.0-1_amd64.deb
+    wget http://downloads.datastax.com/cpp-driver/ubuntu/14.04/dependencies/libuv/v1.8.0/libuv-dev_1.8.0-1_amd64.deb
+    wget http://downloads.datastax.com/cpp-driver/ubuntu/14.04/cassandra/v2.4.2/cassandra-cpp-driver_2.4.2-1_amd64.deb
+    wget http://downloads.datastax.com/cpp-driver/ubuntu/14.04/cassandra/v2.4.2/cassandra-cpp-driver-dev_2.4.2-1_amd64.deb
+
+    dpkg -i libuv_1.8.0-1_amd64.deb
+    dpkg -i libuv-dev_1.8.0-1_amd64.deb
+    dpkg -i cassandra-cpp-driver_2.4.2-1_amd64.deb
+    dpkg -i cassandra-cpp-driver-dev_2.4.2-1_amd64.deb
+  eof
+end
