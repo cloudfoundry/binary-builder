@@ -110,6 +110,32 @@ class AmqpPeclRecipe < PeclRecipe
   end
 end
 
+class OraclePeclRecipe < PeclRecipe
+  def configure_options
+    [
+      "--with-oci8=shared,instantclient,/oracle"
+    ]
+  end
+
+  def oracle_sdk?
+    File.directory?('/oracle')
+  end
+
+  def setup_tar
+    puts "Copying oracle libs from /oracle/ to #{@php_path}/lib"
+    system <<-eof
+      cp -a /oracle/libclntshcore.so.12.1 #{@php_path}/lib
+      cp -a /oracle/libclntsh.so #{@php_path}/lib
+      cp -a /oracle/libclntsh.so.12.1 #{@php_path}/lib
+      cp -a /oracle/libipc1.so #{@php_path}/lib
+      cp -a /oracle/libmql1.so #{@php_path}/lib
+      cp -a /oracle/libnnz12.so #{@php_path}/lib
+      cp -a /oracle/libociicus.so #{@php_path}/lib
+      cp -a /oracle/libons.so #{@php_path}/lib
+    eof
+  end
+end
+
 class LuaPeclRecipe < PeclRecipe
   def configure_options
     [

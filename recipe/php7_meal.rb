@@ -21,7 +21,6 @@ class Php7Recipe < BaseRecipe
       '--with-cdb',
       '--with-gdbm',
       '--with-mcrypt=shared',
-      '--with-mysql=shared',
       '--with-mysqli=shared',
       '--enable-pdo=shared',
       '--with-pdo-sqlite=shared,/usr',
@@ -169,6 +168,7 @@ class Php7Meal
     standard_pecl('cassandra', '1.2.1', 'dca2cda61a1ff6a6cecb94f88a75c757')
     amqppecl_recipe.cook
     luapecl_recipe.cook
+    oracle_recipe.cook unless not oracle_recipe.oracle_sdk?
   end
 
   def url
@@ -189,6 +189,7 @@ class Php7Meal
 
   def setup_tar
     php_recipe.setup_tar
+    oracle_recipe.setup_tar unless not oracle_recipe.oracle_sdk?
   end
 
   private
@@ -198,6 +199,7 @@ class Php7Meal
       lua_recipe.send(:files_hashs) +
       luapecl_recipe.send(:files_hashs) +
       amqppecl_recipe.send(:files_hashs) +
+      oracle_recipe.send(:files_hashs) +
       @pecl_recipes.collect { |r| r.send(:files_hashs) }.flatten
   end
 
@@ -222,5 +224,10 @@ class Php7Meal
     @luapecl_recipe ||= LuaPeclRecipe.new('lua', '2.0.1', md5: '56924db266f3748a0432328e764b7782',
                                                           php_path: php_recipe.path,
                                                           lua_path: lua_recipe.path)
+  end
+
+  def oracle_recipe
+    @oracle_recipe ||= OraclePeclRecipe.new('oci8', '2.1.1', md5: '01bb3429ce3206dcc3d3198e65dadfbc',
+							     php_path: php_recipe.path)
   end
 end
