@@ -25,7 +25,7 @@ class GoRecipe < BaseRecipe
   end
 
   def archive_files
-    ["/#{tmp_path}/go/bin", "/#{tmp_path}/go/LICENSE"]
+    ["#{tmp_path}/go/*"]
   end
 
   def archive_path_name
