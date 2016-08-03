@@ -54,6 +54,7 @@ recipe = case options[:name]
          when 'nginx' then NginxRecipe
          when 'godep' then GodepMeal
          when 'glide' then GlideRecipe
+         when 'go' then GoRecipe
 end
 
 raise "Unsupported #{options[:name]}" unless recipe
