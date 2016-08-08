@@ -230,7 +230,7 @@ def amqppecl_recipe
 end
 
 def lua_recipe
-  LuaRecipe.new('lua', '5.3.2', md5: '33278c2ab5ee3c1a875be8d55c1ca2a1')
+  LuaRecipe.new('lua', '5.3.3', md5: '703f75caa4fdf4a911c1a72e67a27498')
 end
 
 def rabbitmq_recipe

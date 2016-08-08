@@ -219,7 +219,7 @@ class Php7Meal
   end
 
   def luapecl_recipe
-    @luapecl_recipe ||= LuaPeclRecipe.new('lua', '2.0.1', md5: '56924db266f3748a0432328e764b7782',
+    @luapecl_recipe ||= LuaPeclRecipe.new('lua', '2.0.2', md5: 'beb0c9b1c6ed2457d614607c8a1537af',
                                                           php_path: php_recipe.path,
                                                           lua_path: lua_recipe.path)
   end
