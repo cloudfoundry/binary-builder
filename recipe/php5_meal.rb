@@ -179,7 +179,7 @@ class Php5Meal
     standard_pecl('mongodb', '1.1.6', '8618d27f2ac2dca5c0b39eed22b892af')
     standard_pecl('msgpack', '0.5.7', 'b87b5c5e0dab9f41c824201abfbf363d')
     standard_pecl('protocolbuffers', '0.2.6', 'a304ca632b0d7c5710d5590ac06248a9')
-    standard_pecl('redis', '2.2.7', 'c55839465b2c435fd091ac50923f2d96')
+    standard_pecl('redis', '2.2.8', 'b6c998a6904cb89b06281e1cfb89bc4d')
     standard_pecl('solr', '2.4.0', '2c9accf66681a3daaaf371bc07e44902')
     standard_pecl('sundown', '0.3.11', 'c1397e9d3312226ec6c84e8e34c717a6')
     standard_pecl('xdebug', '2.4.0', 'f49fc01332468f8b753fb37115505fb5')
