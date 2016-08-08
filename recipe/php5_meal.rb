@@ -281,7 +281,7 @@ class Php5Meal
   end
 
   def phpprotobufpecl_recipe
-    @phpprotobufpecl_recipe ||= PHPProtobufPeclRecipe.new('phpprotobuf', 'd792f5b8e0', md5: '32d0febec95218348b34b74ede028d18',
+    @phpprotobufpecl_recipe ||= PHPProtobufPeclRecipe.new('phpprotobuf', '0.11.0', md5: '861602cbcc09c86313c7f0b8b95bb23d',
                                                                                        php_path: php_recipe.path)
   end
 
