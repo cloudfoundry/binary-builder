@@ -161,7 +161,7 @@ class Php7Meal
     # php extensions
     standard_pecl('imagick', '3.4.2', '3f80e35c2434636cdb5df01b221b3ffa')
     standard_pecl('mailparse', '3.0.1', '5ae0643a11159414c7e790c73a9e25ec')
-    standard_pecl('mongodb', '1.1.6', '8618d27f2ac2dca5c0b39eed22b892af')
+    standard_pecl('mongodb', '1.1.8', '94f0f8d551f5ca440420aa3db0054dd8')
     standard_pecl('msgpack', '2.0.1', '4d1db4592ffa4101601aefc794191de5')
     standard_pecl('solr', '2.4.0', '2c9accf66681a3daaaf371bc07e44902')
     standard_pecl('xdebug', '2.4.0', 'f49fc01332468f8b753fb37115505fb5')

@@ -176,7 +176,7 @@ class Php5Meal
     standard_pecl('mailparse', '2.1.6', '0f84e1da1d074a4915a9bcfe2319ce84')
     standard_pecl('memcache', '2.2.7', '171e3f51a9afe18b76348ddf1c952141')
     standard_pecl('mongo', '1.6.14', '19cd8bd94494f924ce8314f304fd83b6')
-    standard_pecl('mongodb', '1.1.6', '8618d27f2ac2dca5c0b39eed22b892af')
+    standard_pecl('mongodb', '1.1.8', '94f0f8d551f5ca440420aa3db0054dd8')
     standard_pecl('msgpack', '0.5.7', 'b87b5c5e0dab9f41c824201abfbf363d')
     standard_pecl('protocolbuffers', '0.2.6', 'a304ca632b0d7c5710d5590ac06248a9')
     standard_pecl('redis', '2.2.8', 'b6c998a6904cb89b06281e1cfb89bc4d')
