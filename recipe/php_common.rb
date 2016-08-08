@@ -234,7 +234,7 @@ def lua_recipe
 end
 
 def rabbitmq_recipe
-  RabbitMQRecipe.new('rabbitmq', '0.7.1', md5: '6216c8876299a5efc4ff5ff84dc636d8')
+  RabbitMQRecipe.new('rabbitmq', '0.8.0', md5: '51d5827651328236ecb7c60517c701c2')
 end
 
 def install_cassandra_dependencies
