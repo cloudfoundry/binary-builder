@@ -134,7 +134,7 @@ end
 
 class PHPProtobufPeclRecipe < PeclRecipe
   def url
-    "https://github.com/allegro/php-protobuf/archive/#{version}.tar.gz"
+    "https://github.com/allegro/php-protobuf/archive/v#{version}.tar.gz"
   end
 end
 
