@@ -7,11 +7,26 @@ require_relative '../lib/yaml_presenter'
 require_relative '../lib/archive_recipe'
 Dir['recipe/*.rb'].each { |f| require File.expand_path(f) }
 
+recipes = {
+     'ruby' => RubyRecipe,
+     'bundler' => BundlerRecipe,
+     'node' => NodeRecipe,
+     'jruby' => JRubyMeal,
+     'httpd' => HTTPdMeal,
+     'python' => PythonRecipe,
+     'php' => Php5Meal,
+     'php7' => Php7Meal,
+     'nginx' => NginxRecipe,
+     'godep' => GodepMeal,
+     'glide' => GlideRecipe,
+     'go' => GoRecipe
+}
+
 options = {}
 optparser = OptionParser.new do |opts|
   opts.banner = 'USAGE: binary-builder [options] (A checksum method is required)'
 
-  opts.on('-nNAME', '--name=NAME', 'Name of the binary e.g. nginx') do |n|
+  opts.on('-nNAME', '--name=NAME', "Name of the binary.  Options: [#{recipes.keys.join(", ")}]") do |n|
     options[:name] = n
   end
   opts.on('-vVERSION', '--version=VERSION', 'Version of the binary e.g. 1.7.11') do |n|
@@ -42,24 +57,9 @@ unless options[:name] && options[:version] && (
   raise optparser.help
 end
 
-recipe = case options[:name]
-         when 'ruby' then RubyRecipe
-         when 'bundler' then BundlerRecipe
-         when 'node' then NodeRecipe
-         when 'jruby' then JRubyMeal
-         when 'httpd' then HTTPdMeal
-         when 'python' then PythonRecipe
-         when 'php' then Php5Meal
-         when 'php7' then Php7Meal
-         when 'nginx' then NginxRecipe
-         when 'godep' then GodepMeal
-         when 'glide' then GlideRecipe
-         when 'go' then GoRecipe
-end
+raise "Unsupported recipe [#{options[:name]}], supported options are [#{recipes.keys.join(", ")}]" unless recipes.has_key?(options[:name])
 
-raise "Unsupported #{options[:name]}" unless recipe
-
-recipe = recipe.new(
+recipe = recipes[options[:name]].new(
   options[:name],
   options[:version],
   DetermineChecksum.new(options).to_h
