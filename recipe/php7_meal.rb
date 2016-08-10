@@ -89,6 +89,7 @@ class Php7Recipe < BaseRecipe
 
   def setup_tar
     system <<-eof
+      cp -a /usr/local/lib/x86_64-linux-gnu/librabbitmq.so* #{path}/lib/
       cp -a /usr/lib/libc-client.so* #{path}/lib/
       cp -a /usr/lib/libmcrypt.so* #{path}/lib
       cp -a /usr/lib/libaspell.so* #{path}/lib

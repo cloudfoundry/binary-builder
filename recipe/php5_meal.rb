@@ -89,8 +89,7 @@ class Php5Recipe < BaseRecipe
   end
 
   def setup_tar
-    system <<-eof
-      cp -a #{@rabbitmq_path}/lib/librabbitmq.so* #{path}/lib/
+  system <<-eof
       cp -a #{@hiredis_path}/lib/libhiredis.so* #{path}/lib/
       cp #{@ioncube_path}/ioncube_loader_lin_#{major_version}.so #{zts_path}/ioncube.so
       cp -a #{@libmemcached_path}/lib/libmemcached.so* #{path}/lib/
@@ -101,6 +100,7 @@ class Php5Recipe < BaseRecipe
       cp -a /usr/lib/x86_64-linux-gnu/libgearman.so* #{path}/lib
       cp -a /usr/lib/x86_64-linux-gnu/libcassandra.so* #{path}/lib
       cp -a /usr/lib/x86_64-linux-gnu/libuv.so* #{path}/lib
+      cp -a /usr/local/lib/x86_64-linux-gnu/librabbitmq.so* #{path}/lib/
 
       # Remove unused files
       rm "#{path}/etc/php-fpm.conf.default"
@@ -127,6 +127,7 @@ class Php5Meal
       sudo apt-get update
       sudo apt-get -y upgrade
       sudo apt-get -y install \
+        automake \
         libaspell-dev \
         libc-client2007e-dev \
         libcurl4-openssl-dev \
@@ -218,7 +219,7 @@ class Php5Meal
   private
 
   def files_hashs
-    rabbitmq_recipe.send(:files_hashs) +
+      rabbitmq_recipe.send(:files_hashs) +
       amqppecl_recipe.send(:files_hashs) +
       lua_recipe.send(:files_hashs) +
       luapecl_recipe.send(:files_hashs) +
@@ -257,7 +258,7 @@ class Php5Meal
 
   def php_recipe
     @php_recipe ||= Php5Recipe.new(@name, @version, {
-      rabbitmq_path: rabbitmq_recipe.path,
+      rabbitmq_path: File.join(rabbitmq_recipe.path, "rabbitmq-c-#{rabbitmq_recipe.version}", 'librabbitmq'),
       hiredis_path: hiredis_recipe.path,
       libmemcached_path: libmemcached_recipe.path,
       ioncube_path: ioncube_recipe.path

@@ -3,7 +3,21 @@ require_relative 'base'
 
 class RabbitMQRecipe < BaseRecipe
   def url
-    "https://github.com/alanxz/rabbitmq-c/releases/download/v#{version}/rabbitmq-c-#{version}.tar.gz"
+    "https://github.com/alanxz/rabbitmq-c/archive/v#{version}.tar.gz"
+  end
+
+  def work_path
+    File.join(tmp_path, "rabbitmq-c-#{@version}")
+  end
+
+  def configure
+  end
+
+  def compile
+    execute('compile', ['bash', '-c', 'cmake .'])
+    execute('compile', ['bash', '-c', 'cmake --build .'])
+    execute('compile', ['bash', '-c', 'cmake -DCMAKE_INSTALL_PREFIX=/usr/local .'])
+    execute('compile', ['bash', '-c', 'cmake --build . --target install'])
   end
 end
 
@@ -104,8 +118,7 @@ end
 class AmqpPeclRecipe < PeclRecipe
   def configure_options
     [
-      "--with-php-config=#{@php_path}/bin/php-config",
-      "--with-librabbitmq-dir=#{@rabbitmq_path}"
+      "--with-php-config=#{@php_path}/bin/php-config"
     ]
   end
 end
