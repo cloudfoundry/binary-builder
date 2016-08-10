@@ -237,9 +237,9 @@ end
 # PHP 5 and PHP 7 Common recipes
 
 def amqppecl_recipe
-  AmqpPeclRecipe.new('amqp', '1.7.0', md5: '5a701987a5c9d1f1b70b359e14d5162e',
+  AmqpPeclRecipe.new('amqp', '1.7.1', md5: '901befb3ba9c906e88ae810f83599baf',
                                       php_path: php_recipe.path,
-                                      rabbitmq_path: rabbitmq_recipe.path)
+                                      rabbitmq_path: rabbitmq_recipe.work_path)
 end
 
 def lua_recipe
