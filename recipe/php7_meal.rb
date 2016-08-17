@@ -21,7 +21,6 @@ class Php7Recipe < BaseRecipe
       '--with-cdb',
       '--with-gdbm',
       '--with-mcrypt=shared',
-      '--with-mysql=shared',
       '--with-mysqli=shared',
       '--enable-pdo=shared',
       '--with-pdo-sqlite=shared,/usr',
