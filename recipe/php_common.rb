@@ -82,7 +82,7 @@ class IonCubeRecipe < BaseRecipe
   def install; end
 
   def path
-    work_path
+    tmp_path
   end
 end
 

@@ -35,6 +35,8 @@ describe 'building a binary', :integration do
       expect(tar_contains_file('php/lib/libgearman.so.7')).to eq true
       expect(tar_contains_file('php/lib/libcassandra.so.2')).to eq true
       expect(tar_contains_file('php/lib/libuv.so.1')).to eq true
+
+      expect(tar_contains_file('php/lib/php/extensions/*/ioncube.so')).to eq true
     end
   end
 end
