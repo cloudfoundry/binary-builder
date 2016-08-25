@@ -1,6 +1,6 @@
 GIT
-  remote: https://github.com/jtarchie/mini_portile
-  revision: 8ea580fc338543a1db41d5e15c0b33c5d82faa60
+  remote: https://github.com/cf-buildpacks-eng/mini_portile
+  revision: 14fb74ed7bbb291fd42ba21904214f0b9e75a2d2
   specs:
     mini_portile (0.7.0.rc4)
 
