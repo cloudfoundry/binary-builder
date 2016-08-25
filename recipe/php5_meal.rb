@@ -193,9 +193,14 @@ class Php5Meal
     twigpecl_recipe.cook
     xcachepecl_recipe.cook
     xhprofpecl_recipe.cook
-    oracle_recipe.cook unless not OraclePeclRecipe.oracle_sdk?
-    oracle_pdo_recipe.cook unless not OraclePdoRecipe.oracle_sdk?
     memcachedpecl_recipe.cook
+
+    if OraclePeclRecipe.oracle_sdk?
+      system 'ln -s /oracle/libclntsh.so.* /oracle/libclntsh.so'
+
+      oracle_recipe.cook
+      oracle_pdo_recipe.cook
+    end
   end
 
   def url
@@ -216,8 +221,10 @@ class Php5Meal
 
   def setup_tar
     php_recipe.setup_tar
-    oracle_recipe.setup_tar unless not OraclePeclRecipe.oracle_sdk?
-    oracle_pdo_recipe.setup_tar unless not OraclePdoRecipe.oracle_sdk?
+    if OraclePeclRecipe.oracle_sdk?
+      oracle_recipe.setup_tar
+      oracle_pdo_recipe.setup_tar
+    end
   end
 
   private
@@ -236,7 +243,7 @@ class Php5Meal
       xcachepecl_recipe.send(:files_hashs) +
       xhprofpecl_recipe.send(:files_hashs) +
       (OraclePeclRecipe.oracle_sdk? ? oracle_recipe.send(:files_hashs) : []) +
-      (OraclePdoRecipe.oracle_sdk? ? oracle_pdo_recipe.send(:files_hashs) : []) +
+      (OraclePeclRecipe.oracle_sdk? ? oracle_pdo_recipe.send(:files_hashs) : []) +
       libmemcached_recipe.send(:files_hashs) +
       memcachedpecl_recipe.send(:files_hashs) +
       @pecl_recipes.collect { |r| r.send(:files_hashs) }.flatten

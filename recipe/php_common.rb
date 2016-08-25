@@ -173,10 +173,6 @@ class OraclePdoRecipe < PeclRecipe
     ]
   end
 
-  def self.oracle_sdk?
-    File.directory?('/oracle')
-  end
-
   def self.oracle_version
     Dir["/oracle/*"].select {|i| i.match(/libclntsh\.so\./) }.map {|i| i.sub(/.*libclntsh\.so\./, '')}.first
   end

@@ -7,18 +7,58 @@ RSpec.configure do |config|
     DOCKER_CONTAINER_NAME = "test-suite-binary-builder-#{Time.now.to_i}".freeze
 
     config.before(:all, :integration) do
-      docker_image = 'cloudfoundry/cflinuxfs2'
-
-      `docker run --name #{DOCKER_CONTAINER_NAME} -dit -v #{Dir.pwd}:/binary-builder -e CCACHE_DIR=/binary-builder/.ccache -w /binary-builder #{docker_image} sh -c 'env PATH=/usr/lib/ccache:$PATH bash'`
-      `docker exec #{DOCKER_CONTAINER_NAME} apt-get -y install ccache`
-      `docker exec #{DOCKER_CONTAINER_NAME} gem install bundler --no-ri --no-rdoc`
-      `docker exec #{DOCKER_CONTAINER_NAME} bundle install -j4`
+      directory_mapping = "-v #{Dir.pwd}:/binary-builder"
+      setup_docker_container(DOCKER_CONTAINER_NAME, directory_mapping)
     end
 
     config.after(:all, :integration) do
-      `docker stop #{DOCKER_CONTAINER_NAME}`
-      `docker rm #{DOCKER_CONTAINER_NAME}`
+      cleanup_docker_artifacts(DOCKER_CONTAINER_NAME)
     end
+
+    config.before(:all, :run_oracle_php_tests) do
+      dir_to_contain_oracle = File.join(Dir.pwd, 'oracle_client_libs')
+      FileUtils.mkdir_p(dir_to_contain_oracle)
+      setup_oracle_libs(dir_to_contain_oracle)
+
+      oracle_dir = File.join(dir_to_contain_oracle, 'oracle')
+      directory_mapping = "-v #{Dir.pwd}:/binary-builder -v #{oracle_dir}:/oracle"
+      setup_docker_container(DOCKER_CONTAINER_NAME, directory_mapping)
+    end
+
+    config.after(:all, :run_oracle_php_tests) do
+      cleanup_docker_artifacts(DOCKER_CONTAINER_NAME)
+
+      dir_containing_oracle = File.join(Dir.pwd, 'oracle_client_libs')
+      FileUtils.rm_rf(dir_containing_oracle)
+    end
+  else
+    config.before(:all, :run_oracle_php_tests) do
+      setup_oracle_libs('/')
+    end
+  end
+
+  def cleanup_docker_artifacts(docker_container_name)
+    `docker stop #{docker_container_name}`
+    `docker rm #{docker_container_name}`
+
+    Dir['*deb*'].each do |deb_file|
+      FileUtils.rm(deb_file)
+    end
+  end
+
+  def setup_oracle_libs(dir_to_contain_oracle)
+    Dir.chdir(dir_to_contain_oracle) do
+      system 'aws s3 cp s3://buildpacks-oracle-client-libs/oracle_client_libs.tgz .'
+      system 'tar -xvf oracle_client_libs.tgz'
+    end
+  end
+
+  def setup_docker_container(docker_container_name, directory_mapping)
+    docker_image = 'cloudfoundry/cflinuxfs2'
+    `docker run --name #{docker_container_name} -dit #{directory_mapping} -e CCACHE_DIR=/binary-builder/.ccache -w /binary-builder #{docker_image} sh -c 'env PATH=/usr/lib/ccache:$PATH bash'`
+    `docker exec #{docker_container_name} apt-get -y install ccache`
+    `docker exec #{docker_container_name} gem install bundler --no-ri --no-rdoc`
+    `docker exec #{docker_container_name} bundle install -j4`
   end
 
   def run(cmd)

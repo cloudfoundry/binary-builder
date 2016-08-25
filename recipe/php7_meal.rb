@@ -169,8 +169,13 @@ class Php7Meal
     standard_pecl('cassandra', '1.2.1', 'dca2cda61a1ff6a6cecb94f88a75c757')
     amqppecl_recipe.cook
     luapecl_recipe.cook
-    oracle_recipe.cook unless not OraclePeclRecipe.oracle_sdk?
-    oracle_pdo_recipe.cook unless not OraclePdoRecipe.oracle_sdk?
+
+    if OraclePeclRecipe.oracle_sdk?
+      system 'ln -s /oracle/libclntsh.so.* /oracle/libclntsh.so'
+
+      oracle_recipe.cook
+      oracle_pdo_recipe.cook
+    end
   end
 
   def url
@@ -191,8 +196,10 @@ class Php7Meal
 
   def setup_tar
     php_recipe.setup_tar
-    oracle_recipe.setup_tar unless not OraclePeclRecipe.oracle_sdk?
-    oracle_pdo_recipe.setup_tar unless not OraclePdoRecipe.oracle_sdk?
+    if OraclePeclRecipe.oracle_sdk?
+      oracle_recipe.setup_tar
+      oracle_pdo_recipe.setup_tar
+    end
   end
 
   private
@@ -203,7 +210,7 @@ class Php7Meal
       luapecl_recipe.send(:files_hashs) +
       amqppecl_recipe.send(:files_hashs) +
       (OraclePeclRecipe.oracle_sdk? ? oracle_recipe.send(:files_hashs) : []) +
-      (OraclePdoRecipe.oracle_sdk? ? oracle_pdo_recipe.send(:files_hashs) : []) +
+      (OraclePeclRecipe.oracle_sdk? ? oracle_pdo_recipe.send(:files_hashs) : []) +
       @pecl_recipes.collect { |r| r.send(:files_hashs) }.flatten
   end
 
