@@ -4,12 +4,12 @@ require 'fileutils'
 
 describe 'building a binary', :integration do
   context 'when go is specified' do
-    before do
+    before(:all) do
       run_binary_builder('go', '1.6.3', '--sha256=6326aeed5f86cf18f16d6dc831405614f855e2d416a91fd3fdc334f772345b00')
       @binary_tarball_location = File.join(Dir.pwd, 'go1.6.3.linux-amd64.tar.gz')
     end
 
-    after do
+    after(:all) do
       FileUtils.rm(@binary_tarball_location)
     end
 
@@ -17,8 +17,9 @@ describe 'building a binary', :integration do
       expect(File).to exist(@binary_tarball_location)
 
       go_version_cmd = './spec/assets/binary-exerciser.sh go1.6.3.linux-amd64.tar.gz GOROOT=/tmp/binary-exerciser/go ./go/bin/go version'
-      output, _ = run(go_version_cmd)
+      output, status = run(go_version_cmd)
 
+      expect(status).to be_success
       expect(output).to include('go1.6.3')
     end
 

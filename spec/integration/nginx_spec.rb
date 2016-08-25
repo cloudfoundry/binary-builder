@@ -3,7 +3,7 @@ require 'spec_helper'
 
 describe 'building a binary', :integration do
   context 'when nginx is specified' do
-    before do
+    before(:all) do
       run_binary_builder('nginx', '1.9.4', '--gpg-rsa-key-id=A1C052F8 --gpg-signature="-----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
@@ -15,18 +15,21 @@ zAZ014ADQ5yfH+Ma40K997AxZeCVGU+A5IEHGoZ2i8pyqx0Jhh6cbpC18yHu5ciN
 aySUQcOvO67Z14d9E9ziX/E24KWl6xRymmy9VhzawgSmf//3yZVaD6C/8om3qMw=
 =zjw3
 -----END PGP SIGNATURE-----"')
+      @binary_tarball_location = File.join(Dir.pwd, 'nginx-1.9.4-linux-x64.tgz')
+    end
+
+    after(:all) do
+      FileUtils.rm(@binary_tarball_location)
     end
 
     it 'builds the specified binary, tars it, and places it in your current working directory' do
-      binary_tarball_location = File.join(Dir.pwd, 'nginx-1.9.4-linux-x64.tgz')
-      expect(File).to exist(binary_tarball_location)
+      expect(File).to exist(@binary_tarball_location)
 
       httpd_version_cmd = './spec/assets/binary-exerciser.sh nginx-1.9.4-linux-x64.tgz ./nginx/sbin/nginx -v'
       output, status = run(httpd_version_cmd)
 
       expect(status).to be_success
       expect(output).to include('1.9.4')
-      FileUtils.rm(binary_tarball_location)
     end
   end
 end

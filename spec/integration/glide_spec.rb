@@ -5,7 +5,7 @@ require 'fileutils'
 describe 'building a binary', :integration do
   context 'when glide is specified' do
     before(:all) do
-      @binary_builder_output = run_binary_builder('glide', 'v0.11.0', '--sha256=7a7023aff20ba695706a262b8c07840ee28b939ea6358efbb69ab77da04f0052')
+      run_binary_builder('glide', 'v0.11.0', '--sha256=7a7023aff20ba695706a262b8c07840ee28b939ea6358efbb69ab77da04f0052')
       @binary_tarball_location = File.join(Dir.pwd, 'glide-v0.11.0-linux-x64.tgz')
     end
 
