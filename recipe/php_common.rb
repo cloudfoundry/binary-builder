@@ -1,5 +1,6 @@
 # encoding: utf-8
 require_relative 'base'
+require 'uri'
 
 class RabbitMQRecipe < BaseRecipe
   def url
@@ -120,6 +121,77 @@ class AmqpPeclRecipe < PeclRecipe
     [
       "--with-php-config=#{@php_path}/bin/php-config"
     ]
+  end
+end
+
+class OraclePeclRecipe < PeclRecipe
+  def configure_options
+    [
+      "--with-oci8=shared,instantclient,/oracle"
+    ]
+  end
+
+  def self.oracle_sdk?
+    File.directory?('/oracle')
+  end
+
+  def setup_tar
+    system <<-eof
+      cp -an /oracle/libclntshcore.so.12.1 #{@php_path}/lib
+      cp -an /oracle/libclntsh.so #{@php_path}/lib
+      cp -an /oracle/libclntsh.so.12.1 #{@php_path}/lib
+      cp -an /oracle/libipc1.so #{@php_path}/lib
+      cp -an /oracle/libmql1.so #{@php_path}/lib
+      cp -an /oracle/libnnz12.so #{@php_path}/lib
+      cp -an /oracle/libociicus.so #{@php_path}/lib
+      cp -an /oracle/libons.so #{@php_path}/lib
+    eof
+  end
+end
+
+class OraclePdoRecipe < PeclRecipe
+  def url
+    "file://#{@php_source}/ext/pdo_oci-#{version}.tar.gz"
+  end
+
+  def download
+    # this copys an extension folder out of the PHP source director (i.e. `ext/<name>`)
+    # it pretends to download it by making a zip of the extension files
+    # that way the rest of the PeclRecipe works normally
+    files_hashs.each do |file|
+      path = URI(file[:url]).path.rpartition('-')[0] # only need path before the `-`, see url above
+      system <<-eof
+        echo 'tar czf "#{file[:local_path]}" -C "#{File.dirname(path)}" "#{File.basename(path)}"'
+        tar czf "#{file[:local_path]}" -C "#{File.dirname(path)}" "#{File.basename(path)}"
+      eof
+    end
+  end
+
+  def configure_options
+    [
+      "--with-pdo-oci=shared,instantclient,/oracle,#{OraclePdoRecipe.oracle_version}"
+    ]
+  end
+
+  def self.oracle_sdk?
+    File.directory?('/oracle')
+  end
+
+  def self.oracle_version
+    Dir["/oracle/*"].select {|i| i.match(/libclntsh\.so\./) }.map {|i| i.sub(/.*libclntsh\.so\./, '')}.first
+  end
+
+  def setup_tar
+    system <<-eof
+      cp -an /oracle/libclntshcore.so.12.1 #{@php_path}/lib
+      cp -an /oracle/libclntsh.so #{@php_path}/lib
+      cp -an /oracle/libclntsh.so.12.1 #{@php_path}/lib
+      cp -an /oracle/libipc1.so #{@php_path}/lib
+      cp -an /oracle/libmql1.so #{@php_path}/lib
+      cp -an /oracle/libnnz12.so #{@php_path}/lib
+      cp -an /oracle/libociicus.so #{@php_path}/lib
+      cp -an /oracle/libons.so #{@php_path}/lib
+    eof
   end
 end
 
