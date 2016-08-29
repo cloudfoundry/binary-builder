@@ -169,6 +169,7 @@ class Php7Meal
     standard_pecl('cassandra', '1.2.1', 'dca2cda61a1ff6a6cecb94f88a75c757')
     amqppecl_recipe.cook
     luapecl_recipe.cook
+    phalcon_recipe.cook
 
     if OraclePeclRecipe.oracle_sdk?
       system 'ln -s /oracle/libclntsh.so.* /oracle/libclntsh.so'
@@ -208,6 +209,7 @@ class Php7Meal
     rabbitmq_recipe.send(:files_hashs) +
       lua_recipe.send(:files_hashs) +
       luapecl_recipe.send(:files_hashs) +
+      phalcon_recipe.send(:files_hashs) +
       amqppecl_recipe.send(:files_hashs) +
       (OraclePeclRecipe.oracle_sdk? ? oracle_recipe.send(:files_hashs) : []) +
       (OraclePeclRecipe.oracle_sdk? ? oracle_pdo_recipe.send(:files_hashs) : []) +
@@ -246,5 +248,12 @@ class Php7Meal
     @oracle_pdo_recipe ||= OraclePdoRecipe.new('pdo_oci', version,
                                                php_source: "#{php_recipe.send(:tmp_path)}/php-#{version}",
                                                php_path: php_recipe.path)
+  end
+
+  def phalcon_recipe
+    @phalcon_recipe ||= PhalconRecipe.new('phalcon', '3.0.1', md5: '4a67015af27eb4fbb4e32c23d2610815',
+                                                              php_path: php_recipe.path)
+    @phalcon_recipe.set_php_version('php7')
+    @phalcon_recipe
   end
 end

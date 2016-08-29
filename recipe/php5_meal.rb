@@ -304,8 +304,10 @@ class Php5Meal
   end
 
   def phalcon_recipe
-    @phalcon_recipe ||= PhalconRecipe.new('phalcon', '2.0.13', md5: '4afa8dacd3badc0e770cde79636d1522',
-                                                                      php_path: php_recipe.path)
+    @phalcon_recipe ||= PhalconRecipe.new('phalcon', '3.0.1', md5: '4a67015af27eb4fbb4e32c23d2610815',
+                                                              php_path: php_recipe.path)
+    @phalcon_recipe.set_php_version('php5')
+    @phalcon_recipe
   end
 
   def suhosinpecl_recipe

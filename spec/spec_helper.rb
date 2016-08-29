@@ -80,6 +80,10 @@ RSpec.configure do |config|
   end
 
   def tar_contains_file(filename)
-    system("tar --wildcards -tf #{@binary_tarball_location} #{filename} >/dev/null 2>&1")
+    if RUBY_PLATFORM.include?('darwin')
+      system("tar -tf #{@binary_tarball_location} #{filename} >/dev/null 2>&1")
+    else
+      system("tar --wildcards -tf #{@binary_tarball_location} #{filename} >/dev/null 2>&1")
+    end
   end
 end

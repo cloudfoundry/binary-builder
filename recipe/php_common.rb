@@ -214,12 +214,16 @@ class PhalconRecipe < PeclRecipe
     ]
   end
 
+  def set_php_version(php_version)
+    @php_version = php_version
+  end
+
   def work_path
-    "#{super}/build/64bits"
+    "#{super}/build/#{@php_version}/64bits"
   end
 
   def url
-    "https://github.com/phalcon/cphalcon/archive/phalcon-v#{version}.tar.gz"
+    "https://github.com/phalcon/cphalcon/archive/v#{version}.tar.gz"
   end
 end
 
