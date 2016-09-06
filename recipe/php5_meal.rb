@@ -27,6 +27,8 @@ class Php5Recipe < BaseRecipe
       '--enable-pdo=shared',
       '--with-pdo-sqlite=shared,/usr',
       '--with-pdo-mysql=shared,mysqlnd',
+      '--with-mssql=shared',
+      '--with-pdo-dblib=shared',
       '--with-gd=shared',
       '--with-jpeg-dir=/usr',
       '--with-freetype-dir=/usr',
@@ -101,6 +103,7 @@ class Php5Recipe < BaseRecipe
       cp -a /usr/lib/x86_64-linux-gnu/libcassandra.so* #{path}/lib
       cp -a /usr/lib/x86_64-linux-gnu/libuv.so* #{path}/lib
       cp -a /usr/local/lib/x86_64-linux-gnu/librabbitmq.so* #{path}/lib/
+      cp -a /usr/lib/x86_64-linux-gnu/libsybdb.so* #{path}/lib/
 
       # Remove unused files
       rm "#{path}/etc/php-fpm.conf.default"
@@ -128,6 +131,7 @@ class Php5Meal
       sudo apt-get -y upgrade
       sudo apt-get -y install \
         automake \
+        freetds-dev \
         libaspell-dev \
         libc-client2007e-dev \
         libcurl4-openssl-dev \
@@ -145,6 +149,7 @@ class Php5Meal
         libsnmp-dev \
         libsqlite3-dev \
         libssl-dev \
+        libsybdb5 \
         libxml2-dev \
         libzip-dev \
         libzookeeper-mt-dev \
@@ -152,6 +157,7 @@ class Php5Meal
       sudo ln -fs /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h
       sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap.so /usr/lib/libldap.so
       sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap_r.so /usr/lib/libldap_r.so
+      sudo ln -fs /usr/lib/x86_64-linux-gnu/libsybdb.so /usr/lib/libsybdb.so
     eof
 
     install_cassandra_dependencies
