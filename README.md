@@ -11,6 +11,10 @@ This tool provides a mechanism for building binaries for the Cloud Foundry build
 * PHP
 * Nginx
 * Apache HTTPD Server
+* Go
+* Glide
+* Godep
+* Bundler
 
 # Usage
 
