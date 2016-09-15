@@ -165,7 +165,7 @@ class Php7Meal
     standard_pecl('msgpack', '2.0.1', '4d1db4592ffa4101601aefc794191de5')
     standard_pecl('solr', '2.4.0', '2c9accf66681a3daaaf371bc07e44902')
     standard_pecl('xdebug', '2.4.1', '03f52af10108450942c9c0ac3b72637f')
-    standard_pecl('yaf', '3.0.3', '74504e8f0ed7c346804c5a5043a5682b')
+    standard_pecl('yaf', '3.0.4', '1420d91ca5deb31147b25bd08124e400')
     standard_pecl('cassandra', '1.2.1', 'dca2cda61a1ff6a6cecb94f88a75c757')
     amqppecl_recipe.cook
     luapecl_recipe.cook
