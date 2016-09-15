@@ -164,7 +164,7 @@ class Php7Meal
     standard_pecl('mongodb', '1.1.8', '94f0f8d551f5ca440420aa3db0054dd8')
     standard_pecl('msgpack', '2.0.1', '4d1db4592ffa4101601aefc794191de5')
     standard_pecl('solr', '2.4.0', '2c9accf66681a3daaaf371bc07e44902')
-    standard_pecl('xdebug', '2.4.0', 'f49fc01332468f8b753fb37115505fb5')
+    standard_pecl('xdebug', '2.4.1', '03f52af10108450942c9c0ac3b72637f')
     standard_pecl('yaf', '3.0.3', '74504e8f0ed7c346804c5a5043a5682b')
     standard_pecl('cassandra', '1.2.1', 'dca2cda61a1ff6a6cecb94f88a75c757')
     amqppecl_recipe.cook

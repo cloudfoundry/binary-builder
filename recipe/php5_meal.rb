@@ -189,7 +189,7 @@ class Php5Meal
     standard_pecl('redis', '2.2.8', 'b6c998a6904cb89b06281e1cfb89bc4d')
     standard_pecl('solr', '2.4.0', '2c9accf66681a3daaaf371bc07e44902')
     standard_pecl('sundown', '0.3.11', 'c1397e9d3312226ec6c84e8e34c717a6')
-    standard_pecl('xdebug', '2.4.0', 'f49fc01332468f8b753fb37115505fb5')
+    standard_pecl('xdebug', '2.4.1', '03f52af10108450942c9c0ac3b72637f')
     standard_pecl('yaf', '2.3.5', '77d5d9d6c8471737395350966986bc2e')
     amqppecl_recipe.cook
     luapecl_recipe.cook
