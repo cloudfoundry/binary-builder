@@ -322,7 +322,7 @@ class Php5Meal
   end
 
   def twigpecl_recipe
-    @twigpecl_recipe ||= TwigPeclRecipe.new('twig', '1.24.1', md5: 'faa479d40fa09fc452a718700bf819ac',
+    @twigpecl_recipe ||= TwigPeclRecipe.new('twig', '1.24.2', md5: 'e42bcbeb337ef7a22fa5caf179e60d5a',
                                                               php_path: php_recipe.path)
   end
 
