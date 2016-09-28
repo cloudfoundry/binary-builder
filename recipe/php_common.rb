@@ -71,9 +71,8 @@ class LuaRecipe < BaseRecipe
 end
 
 class IonCubeRecipe < BaseRecipe
-  # NOTE: not a versioned URL, will always be the lastest support version
   def url
-    'http://downloads3.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz'
+    "http://downloads3.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64_#{version}.tar.gz"
   end
 
   def configure; end
