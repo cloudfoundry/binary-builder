@@ -19,7 +19,8 @@ recipes = {
      'nginx' => NginxRecipe,
      'godep' => GodepMeal,
      'glide' => GlideRecipe,
-     'go' => GoRecipe
+     'go' => GoRecipe,
+     'dotnet-core' => DotNetCoreRecipe
 }
 
 options = {}
@@ -46,12 +47,17 @@ optparser = OptionParser.new do |opts|
     options[:gpg] ||= {}
     options[:gpg][:signature] = n
   end
+  opts.on('--git-commit-sha=SHA', 'git commit sha of the specified version') do |n|
+    options[:git] ||= {}
+    options[:git][:commit_sha] = n
+  end
 end
 optparser.parse!
 
 unless options[:name] && options[:version] && (
     options[:sha256] ||
     options[:md5] ||
+    options[:git][:commit_sha] ||
     (options[:gpg][:signature] && options[:gpg][:key])
 )
   raise optparser.help

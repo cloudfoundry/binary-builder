@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/cf-buildpacks-eng/mini_portile
-  revision: 14fb74ed7bbb291fd42ba21904214f0b9e75a2d2
+  revision: 0a1df8881bb6eb58788631f2aaa913766bd5a6dc
   specs:
     mini_portile (0.7.0.rc4)
 
@@ -23,7 +23,7 @@ GEM
       rspec-core (~> 3.5.0)
       rspec-expectations (~> 3.5.0)
       rspec-mocks (~> 3.5.0)
-    rspec-core (3.5.3)
+    rspec-core (3.5.4)
       rspec-support (~> 3.5.0)
     rspec-expectations (3.5.0)
       diff-lcs (>= 1.2.0, < 2.0)
@@ -61,4 +61,4 @@ RUBY VERSION
    ruby 2.3.1p112
 
 BUNDLED WITH
-   1.13.1
+   1.13.2

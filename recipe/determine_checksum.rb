@@ -5,7 +5,7 @@ class DetermineChecksum
   end
 
   def to_h
-    checksum_type = ([:md5, :sha256, :gpg] & @options.keys).first
+    checksum_type = ([:md5, :sha256, :gpg, :git] & @options.keys).first
     {
       checksum_type => @options[checksum_type]
     }
