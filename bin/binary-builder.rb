@@ -20,7 +20,7 @@ recipes = {
      'godep' => GodepMeal,
      'glide' => GlideRecipe,
      'go' => GoRecipe,
-     'dotnet-core' => DotNetCoreRecipe
+     'dotnet' => DotNetRecipe
 }
 
 options = {}

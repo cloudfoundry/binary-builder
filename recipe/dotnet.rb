@@ -1,7 +1,7 @@
 # encoding: utf-8
 require_relative 'base'
 
-class DotNetCoreRecipe < BaseRecipe
+class DotNetRecipe < BaseRecipe
   attr_reader :name, :version
 
   def extract_file(source, target)
@@ -31,7 +31,7 @@ class DotNetCoreRecipe < BaseRecipe
               CMD
 
     Dir.chdir("#{tmp_path}/cli") do
-      raise 'Could not build dotnet-core' unless system('./build.sh --targets Prepare,Compile')
+      raise 'Could not build dotnet' unless system('./build.sh --targets Prepare,Compile')
     end
   end
 
