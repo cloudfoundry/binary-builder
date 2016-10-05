@@ -57,7 +57,7 @@ optparser.parse!
 unless options[:name] && options[:version] && (
     options[:sha256] ||
     options[:md5] ||
-    options[:git][:commit_sha] ||
+    (options.has_key?(:git) && options[:git][:commit_sha]) ||
     (options[:gpg][:signature] && options[:gpg][:key])
 )
   raise optparser.help
