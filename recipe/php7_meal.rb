@@ -89,6 +89,7 @@ class Php7Recipe < BaseRecipe
   def setup_tar
     system <<-eof
       cp -a /usr/local/lib/x86_64-linux-gnu/librabbitmq.so* #{path}/lib/
+      cp -a #{@hiredis_path}/lib/libhiredis.so* #{path}/lib/
       cp -a /usr/lib/libc-client.so* #{path}/lib/
       cp -a /usr/lib/libmcrypt.so* #{path}/lib
       cp -a /usr/lib/libaspell.so* #{path}/lib
@@ -155,21 +156,24 @@ class Php7Meal
     php_recipe.activate
 
     # native dependencies
+    hiredis_recipe.cook
+    phpiredis_recipe.cook
     rabbitmq_recipe.cook
     lua_recipe.cook
     snmp_recipe.cook
     librdkafka_recipe.cook
 
     # php extensions
+    standard_pecl('cassandra', '1.2.1', 'dca2cda61a1ff6a6cecb94f88a75c757')
     standard_pecl('imagick', '3.4.2', '3f80e35c2434636cdb5df01b221b3ffa')
     standard_pecl('mailparse', '3.0.1', '5ae0643a11159414c7e790c73a9e25ec')
     standard_pecl('mongodb', '1.1.8', '94f0f8d551f5ca440420aa3db0054dd8')
     standard_pecl('msgpack', '2.0.1', '4d1db4592ffa4101601aefc794191de5')
+    standard_pecl('rdkafka', '2.0.0', '87bce41f61818fd7bc442f71d4c28cde')
+    standard_pecl('redis', '3.0.0', '1b90e954afc1f9993cc0552d0f1d1daa')
     standard_pecl('solr', '2.4.0', '2c9accf66681a3daaaf371bc07e44902')
     standard_pecl('xdebug', '2.4.1', '03f52af10108450942c9c0ac3b72637f')
     standard_pecl('yaf', '3.0.4', '1420d91ca5deb31147b25bd08124e400')
-    standard_pecl('cassandra', '1.2.1', 'dca2cda61a1ff6a6cecb94f88a75c757')
-    standard_pecl('rdkafka', '2.0.0', '87bce41f61818fd7bc442f71d4c28cde')
     amqppecl_recipe.cook
     luapecl_recipe.cook
     phalcon_recipe.cook
@@ -209,12 +213,14 @@ class Php7Meal
   private
 
   def files_hashs
-    rabbitmq_recipe.send(:files_hashs) +
+    amqppecl_recipe.send(:files_hashs) +
+      hiredis_recipe.send(:files_hashs) +
+      librdkafka_recipe.send(:files_hashs) +
       lua_recipe.send(:files_hashs) +
       luapecl_recipe.send(:files_hashs) +
       phalcon_recipe.send(:files_hashs) +
-      amqppecl_recipe.send(:files_hashs) +
-      librdkafka_recipe.send(:files_hashs) +
+      phpiredis_recipe.send(:files_hashs) +
+      rabbitmq_recipe.send(:files_hashs) +
       (OraclePeclRecipe.oracle_sdk? ? oracle_recipe.send(:files_hashs) : []) +
       (OraclePeclRecipe.oracle_sdk? ? oracle_pdo_recipe.send(:files_hashs) : []) +
       @pecl_recipes.collect { |r| r.send(:files_hashs) }.flatten
@@ -234,6 +240,7 @@ class Php7Meal
 
   def php_recipe
     @php_recipe ||= Php7Recipe.new(@name, @version, {
+      hiredis_path: hiredis_recipe.path
     }.merge(DetermineChecksum.new(@options).to_h))
   end
 

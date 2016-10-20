@@ -290,15 +290,6 @@ class Php5Meal
                                                           lua_path: lua_recipe.path)
   end
 
-  def hiredis_recipe
-    @hiredis_recipe ||= HiredisRecipe.new('hiredis', '0.13.3', md5: '43dca1445ec6d3b702821dba36000279')
-  end
-
-  def phpiredis_recipe
-    @phpiredis_recipe ||= PHPIRedisRecipe.new('phpiredis', '704c08c7b', md5: '1ea635f3712aa1b80245eeed2d570a0e',
-                                                                        php_path: php_recipe.path,
-                                                                        hiredis_path: hiredis_recipe.path)
-  end
 
   def phpprotobufpecl_recipe
     @phpprotobufpecl_recipe ||= PHPProtobufPeclRecipe.new('phpprotobuf', '0.11.1', md5: 'adbf5214bfd44ce18962dd49f5640552',

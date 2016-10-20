@@ -331,6 +331,17 @@ end
 
 # PHP 5 and PHP 7 Common recipes
 
+def hiredis_recipe
+  HiredisRecipe.new('hiredis', '0.13.3', md5: '43dca1445ec6d3b702821dba36000279')
+end
+
+def phpiredis_recipe
+  PHPIRedisRecipe.new('phpiredis', 'a64e3bfe7', md5: '84c68887c3b9744106f4ccb2969f3a2a',
+                                                php_path: php_recipe.path,
+                                                hiredis_path: hiredis_recipe.path)
+end
+
+
 def amqppecl_recipe
   AmqpPeclRecipe.new('amqp', '1.7.1', md5: '901befb3ba9c906e88ae810f83599baf',
                                       php_path: php_recipe.path,
