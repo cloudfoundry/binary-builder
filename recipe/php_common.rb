@@ -361,7 +361,7 @@ def librdkafka_recipe
 end
 
 def install_cassandra_dependencies
-  cassandra_version = "2.4.3"
+  cassandra_version = "2.5.0"
   system <<-eof
     wget http://downloads.datastax.com/cpp-driver/ubuntu/14.04/dependencies/libuv/v1.8.0/libuv_1.8.0-1_amd64.deb
     wget http://downloads.datastax.com/cpp-driver/ubuntu/14.04/dependencies/libuv/v1.8.0/libuv-dev_1.8.0-1_amd64.deb
