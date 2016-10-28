@@ -164,6 +164,7 @@ class Php7Meal
     librdkafka_recipe.cook
 
     # php extensions
+    standard_pecl('apcu', '5.1.7', '7803b58fab6ecfe847ef5b9be6825dea')
     standard_pecl('cassandra', '1.2.1', 'dca2cda61a1ff6a6cecb94f88a75c757')
     standard_pecl('imagick', '3.4.2', '3f80e35c2434636cdb5df01b221b3ffa')
     standard_pecl('mailparse', '3.0.1', '5ae0643a11159414c7e790c73a9e25ec')

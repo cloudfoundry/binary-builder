@@ -176,6 +176,7 @@ class Php5Meal
     libmemcached_recipe.cook
 
     # php extensions
+    standard_pecl('apcu', '4.0.11', '13c0c0dd676e5a7905d54fa985d0ee62')
     standard_pecl('cassandra', '1.2.2', '2226a4d66f8e0a4de85656f10472afc5')
     standard_pecl('igbinary', '1.2.1', '04a2474ff5eb99c7d0007bf9f4e8a6ec')
     standard_pecl('imagick', '3.4.2', '3f80e35c2434636cdb5df01b221b3ffa')

@@ -37,6 +37,7 @@ describe 'building a binary', :integration do
       expect(tar_contains_file('php/lib/libuv.so.1')).to eq true
       expect(tar_contains_file('php/lib/libsybdb.so.5')).to eq true
 
+      expect(tar_contains_file('php/lib/php/extensions/*/apcu.so')).to eq true
       expect(tar_contains_file('php/lib/php/extensions/*/ioncube.so')).to eq true
       expect(tar_contains_file('php/lib/php/extensions/*/pdo_dblib.so')).to eq true
       expect(tar_contains_file('php/lib/php/extensions/*/phalcon.so')).to eq true
