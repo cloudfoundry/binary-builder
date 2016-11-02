@@ -3,6 +3,9 @@ require 'open3'
 require 'fileutils'
 
 RSpec.configure do |config|
+  config.color = true
+  config.tty = true
+
   if RUBY_PLATFORM.include?('darwin')
     DOCKER_CONTAINER_NAME = "test-suite-binary-builder-#{Time.now.to_i}".freeze
 
