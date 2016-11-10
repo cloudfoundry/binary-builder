@@ -51,8 +51,11 @@ RSpec.configure do |config|
 
   def setup_oracle_libs(dir_to_contain_oracle)
     Dir.chdir(dir_to_contain_oracle) do
-      system 'aws s3 cp s3://buildpacks-oracle-client-libs/oracle_client_libs.tgz .'
-      system 'tar -xvf oracle_client_libs.tgz'
+      s3_bucket = ENV['ORACLE_LIBS_AWS_BUCKET']
+      libs_filename = ENV['ORACLE_LIBS_FILENAME']
+
+      system "aws s3 cp s3://#{s3_bucket}/#{libs_filename} ."
+      system "tar -xvf #{libs_filename}"
     end
   end
 
