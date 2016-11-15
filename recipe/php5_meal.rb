@@ -104,6 +104,7 @@ class Php5Recipe < BaseRecipe
       cp -a /usr/lib/x86_64-linux-gnu/libuv.so* #{path}/lib
       cp -a /usr/local/lib/x86_64-linux-gnu/librabbitmq.so* #{path}/lib/
       cp -a /usr/lib/x86_64-linux-gnu/libsybdb.so* #{path}/lib/
+      cp -a /usr/lib/librdkafka.so* #{path}/lib
 
       # Remove unused files
       rm "#{path}/etc/php-fpm.conf.default"
@@ -174,6 +175,7 @@ class Php5Meal
     phpiredis_recipe.cook
     snmp_recipe.cook
     libmemcached_recipe.cook
+    librdkafka_recipe.cook
 
     # php extensions
     standard_pecl('apcu', '4.0.11', '13c0c0dd676e5a7905d54fa985d0ee62')
@@ -181,6 +183,7 @@ class Php5Meal
     standard_pecl('igbinary', '1.2.1', '04a2474ff5eb99c7d0007bf9f4e8a6ec')
     standard_pecl('imagick', '3.4.2', '3f80e35c2434636cdb5df01b221b3ffa')
     standard_pecl('gearman', '1.1.2', 'fb3bc8df2d017048726d5654459e8433')
+    standard_pecl('rdkafka', '1.0.0', 'fb4c1047e537854ed2efc112c21de3d0')
     standard_pecl('mailparse', '2.1.6', '0f84e1da1d074a4915a9bcfe2319ce84')
     standard_pecl('memcache', '2.2.7', '171e3f51a9afe18b76348ddf1c952141')
     standard_pecl('mongo', '1.6.14', '19cd8bd94494f924ce8314f304fd83b6')
@@ -242,6 +245,7 @@ class Php5Meal
       lua_recipe.send(:files_hashs) +
       luapecl_recipe.send(:files_hashs) +
       hiredis_recipe.send(:files_hashs) +
+      librdkafka_recipe.send(:files_hashs) +
       phpiredis_recipe.send(:files_hashs) +
       phpprotobufpecl_recipe.send(:files_hashs) +
       phalcon_recipe.send(:files_hashs) +
