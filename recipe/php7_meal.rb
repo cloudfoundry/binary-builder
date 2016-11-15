@@ -90,6 +90,7 @@ class Php7Recipe < BaseRecipe
     system <<-eof
       cp -a /usr/local/lib/x86_64-linux-gnu/librabbitmq.so* #{path}/lib/
       cp -a #{@hiredis_path}/lib/libhiredis.so* #{path}/lib/
+      cp #{@ioncube_path}/ioncube/ioncube_loader_lin_#{major_version}.so #{zts_path}/ioncube.so
       cp -a /usr/lib/libc-client.so* #{path}/lib/
       cp -a /usr/lib/libmcrypt.so* #{path}/lib
       cp -a /usr/lib/libaspell.so* #{path}/lib
@@ -151,6 +152,8 @@ class Php7Meal
     eof
 
     install_cassandra_dependencies
+
+    ioncube_recipe.cook
 
     php_recipe.cook
     php_recipe.activate
@@ -241,8 +244,13 @@ class Php7Meal
 
   def php_recipe
     @php_recipe ||= Php7Recipe.new(@name, @version, {
-      hiredis_path: hiredis_recipe.path
+      hiredis_path: hiredis_recipe.path,
+      ioncube_path: ioncube_recipe.path
     }.merge(DetermineChecksum.new(@options).to_h))
+  end
+
+  def ioncube_recipe
+    @ioncube ||= IonCubeRecipe.new('ioncube', '6.0.6', md5: '7d2b42033a0570e99080beb6a7db1478')
   end
 
   def luapecl_recipe

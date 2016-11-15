@@ -36,6 +36,7 @@ describe 'building a binary', :integration do
       expect(tar_contains_file('php/lib/librdkafka.so.1')).to eq true
 
       expect(tar_contains_file('php/lib/php/extensions/*/apcu.so')).to eq true
+      expect(tar_contains_file('php/lib/php/extensions/*/ioncube.so')).to eq true
       expect(tar_contains_file('php/lib/php/extensions/*/phpiredis.so')).to eq true
       expect(tar_contains_file('php/lib/php/extensions/*/phalcon.so')).to eq true
     end
