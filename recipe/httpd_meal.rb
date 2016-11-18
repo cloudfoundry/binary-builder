@@ -79,7 +79,11 @@ class HTTPdRecipe < BaseRecipe
       mkdir -p lib
       cp "#{@apr_path}/lib/libapr-1.so.0" ./lib
       cp "#{@apr_util_path}/lib/libaprutil-1.so.0" ./lib
+      mkdir -p "./lib/apr-util-1"
+      cp "#{@apr_util_path}/lib/apr-util-1/"*.so ./lib/apr-util-1/
+      mkdir -p "./lib/iconv"
       cp "#{@apr_iconv_path}/lib/libapriconv-1.so.0" ./lib
+      cp "#{@apr_iconv_path}/lib/iconv/"*.so ./lib/iconv/
     eof
   end
 end
