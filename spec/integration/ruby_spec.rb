@@ -21,6 +21,13 @@ describe 'building a binary', :integration do
 
       expect(status).to be_success
       expect(output).to include('2.2.3')
+
+      libgmp_cmd = "./spec/assets/binary-exerciser.sh ruby-2.2.3-linux-x64.tgz grep LIBS= lib/pkgconfig/ruby-2.2.pc"
+      output, status = run(libgmp_cmd)
+
+      expect(status).to be_success
+      expect(output).to include('LIBS=')
+      expect(output).not_to include('lgmp')
     end
   end
 end

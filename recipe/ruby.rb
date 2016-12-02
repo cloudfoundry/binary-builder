@@ -8,7 +8,8 @@ class RubyRecipe < BaseRecipe
       '--enable-load-relative',
       '--disable-install-doc',
       'debugflags=-g',
-      "--prefix=#{prefix_path}"
+      "--prefix=#{prefix_path}",
+      "--without-gmp"
     ]
   end
 
