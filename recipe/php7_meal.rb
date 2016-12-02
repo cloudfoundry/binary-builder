@@ -169,7 +169,7 @@ class Php7Meal
     # php extensions
     standard_pecl('apcu', '5.1.7', '7803b58fab6ecfe847ef5b9be6825dea')
     standard_pecl('cassandra', '1.2.2', '2226a4d66f8e0a4de85656f10472afc5')
-    standard_pecl('imagick', '3.4.2', '3f80e35c2434636cdb5df01b221b3ffa')
+    standard_pecl('imagick', '3.4.3RC1', '32042fc3043f013047927de21ff15a47')
     standard_pecl('mailparse', '3.0.1', '5ae0643a11159414c7e790c73a9e25ec')
     standard_pecl('mongodb', '1.1.9', '0644ad0451e5913cbac22e3456ba239b')
     standard_pecl('msgpack', '2.0.1', '4d1db4592ffa4101601aefc794191de5')
