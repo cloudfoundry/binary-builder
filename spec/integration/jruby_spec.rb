@@ -4,24 +4,23 @@ require 'fileutils'
 
 describe 'building a binary', :integration do
   context 'when jruby is specified' do
-    # This spec is currently disabled due to https://www.pivotaltracker.com/story/show/128679225
-    # before(:all) do
-    #   output = run_binary_builder('jruby', '9.0.0.0_ruby-2.2.0', '--sha256=cef101e4265b65e2c729eba97838546c8e08123d8ee18f0e12fd0dd8d0db16b6')
-    #   @binary_tarball_location = File.join(Dir.pwd, 'jruby-9.0.0.0_ruby-2.2.0-linux-x64.tgz')
-    # end
+    before(:all) do
+      output = run_binary_builder('jruby', '9.1.6.0_ruby-2.3.1', '--sha256=b648dc46bec6c91ce48c0d7da09972f4f63dd7b7579d374e94fde17c219b05ae')
+      @binary_tarball_location = File.join(Dir.pwd, 'jruby-9.1.6.0_ruby-2.3.1-linux-x64.tgz')
+    end
 
-    # after(:all) do
-    #   FileUtils.rm(@binary_tarball_location)
-    # end
+    after(:all) do
+      FileUtils.rm(@binary_tarball_location)
+    end
 
-    # it 'builds the specified binary, tars it, and places it in your current working directory' do
-    #   expect(File).to exist(@binary_tarball_location)
+    it 'builds the specified binary, tars it, and places it in your current working directory' do
+      expect(File).to exist(@binary_tarball_location)
 
-    #   jruby_version_cmd = './spec/assets/jruby-exerciser.sh'
-    #   output, status = run(jruby_version_cmd)
+      jruby_version_cmd = './spec/assets/jruby-exerciser.sh'
+      output, status = run(jruby_version_cmd)
 
-    #   expect(status).to be_success
-    #   expect(output).to include('java 2.2.2')
-    # end
+      expect(status).to be_success
+      expect(output).to include('java 2.3.1')
+    end
   end
 end

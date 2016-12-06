@@ -2,7 +2,7 @@
 require_relative 'ant'
 require_relative 'jruby'
 require_relative 'maven'
-require_relative 'openjdk7'
+require 'fileutils'
 
 class JRubyMeal
   attr_reader :name, :version
@@ -14,11 +14,21 @@ class JRubyMeal
   end
 
   def cook
-    # NOTE: We compile against OpenJDK7 because trusty does not support
-    # OpenJDK8. Unable to use java-buildpack OpenJDK8 because it only contains
-    # the JRE, not the JDK.
-    # https://www.pivotaltracker.com/story/show/106836266
-    openjdk.cook
+    # We compile against the OpenJDK8 that the java buildpack team builds
+    # This is the openjdk-jdk that contains the openjdk-jre used in the ruby buildpack
+    # Ubuntu Trusty itself does not provide openjdk 8
+
+    java_jdk_dir = '/opt/java'
+    java_jdk_tar_file = File.join(java_jdk_dir, 'openjdk-8-jdk.tar.gz')
+    java_jdk_bin_dir = File.join(java_jdk_dir, 'bin')
+    java_buildpack_java_sdk = "https://java-buildpack.cloudfoundry.org/openjdk-jdk/trusty/x86_64/openjdk-1.8.0_111.tar.gz"
+
+    FileUtils.mkdir_p(java_jdk_dir)
+    raise "Downloading openjdk-8-jdk failed." unless system("wget #{java_buildpack_java_sdk} -O #{java_jdk_tar_file}")
+    raise "Untarring openjdk-8-jdk failed." unless system("tar xvf #{java_jdk_tar_file} -C #{java_jdk_dir}")
+
+    ENV['JAVA_HOME'] = java_jdk_dir
+    ENV['PATH'] = "#{ENV['PATH']}:#{java_jdk_bin_dir}"
 
     ant.cook
     ant.activate
@@ -55,10 +65,6 @@ class JRubyMeal
 
   def jruby
     @jruby ||= JRubyRecipe.new(@name, @version, @options)
-  end
-
-  def openjdk
-    @openjdk ||= OpenJDK7Recipe.new('openjdk', '7')
   end
 
   def maven

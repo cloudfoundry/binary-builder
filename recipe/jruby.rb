@@ -21,7 +21,7 @@ class JRubyRecipe < BaseRecipe
   end
 
   def compile
-    execute('compile', ['mvn', "-Djruby.default.ruby.version=#{ruby_version}"])
+    execute('compile', ['mvn', '-P', '!truffle', "-Djruby.default.ruby.version=#{ruby_version}"])
   end
 
   def ruby_version
