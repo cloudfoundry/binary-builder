@@ -183,7 +183,7 @@ class Php5Meal
     standard_pecl('igbinary', '1.2.1', '04a2474ff5eb99c7d0007bf9f4e8a6ec')
     standard_pecl('imagick', '3.4.3RC1', '32042fc3043f013047927de21ff15a47')
     standard_pecl('gearman', '1.1.2', 'fb3bc8df2d017048726d5654459e8433')
-    standard_pecl('rdkafka', '1.0.0', 'fb4c1047e537854ed2efc112c21de3d0')
+    standard_pecl('rdkafka', '3.0.0', 'c798343029fd4a7c8fe3fae365d438df')
     standard_pecl('mailparse', '2.1.6', '0f84e1da1d074a4915a9bcfe2319ce84')
     standard_pecl('memcache', '2.2.7', '171e3f51a9afe18b76348ddf1c952141')
     standard_pecl('mongo', '1.6.14', '19cd8bd94494f924ce8314f304fd83b6')
@@ -193,7 +193,7 @@ class Php5Meal
     standard_pecl('redis', '2.2.8', 'b6c998a6904cb89b06281e1cfb89bc4d')
     standard_pecl('solr', '2.4.0', '2c9accf66681a3daaaf371bc07e44902')
     standard_pecl('sundown', '0.3.11', 'c1397e9d3312226ec6c84e8e34c717a6')
-    standard_pecl('xdebug', '2.4.1', '03f52af10108450942c9c0ac3b72637f')
+    standard_pecl('xdebug', '2.5.0', '03f52af10108450942c9c0ac3b72637f')
     standard_pecl('yaf', '2.3.5', '77d5d9d6c8471737395350966986bc2e')
     amqppecl_recipe.cook
     luapecl_recipe.cook
@@ -306,7 +306,7 @@ class Php5Meal
   end
 
   def phalcon_recipe
-    @phalcon_recipe ||= PhalconRecipe.new('phalcon', '3.0.1', md5: '4a67015af27eb4fbb4e32c23d2610815',
+    @phalcon_recipe ||= PhalconRecipe.new('phalcon', '3.0.2', md5: '43e2aa0360af1787db03f5cc6cd1b676',
                                                               php_path: php_recipe.path)
     @phalcon_recipe.set_php_version('php5')
     @phalcon_recipe

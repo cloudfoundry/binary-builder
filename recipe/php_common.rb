@@ -105,6 +105,11 @@ class IonCubeRecipe < BaseRecipe
 
   def install; end
 
+  def self.build_ioncube?(php_version)
+    major, minor, _ = php_version.split('.')
+    !(major == '7' && minor == '1')
+  end
+
   def path
     tmp_path
   end
