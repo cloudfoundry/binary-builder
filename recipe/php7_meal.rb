@@ -187,7 +187,10 @@ class Php7Meal
     standard_pecl('yaf', '3.0.4', '1420d91ca5deb31147b25bd08124e400')
     amqppecl_recipe.cook
     luapecl_recipe.cook
-    phalcon_recipe.cook
+
+    if PhalconRecipe.build_phalcon?(version)
+      phalcon_recipe.cook
+    end
 
     if OraclePeclRecipe.oracle_sdk?
       system 'ln -s /oracle/libclntsh.so.* /oracle/libclntsh.so'
@@ -229,7 +232,7 @@ class Php7Meal
       librdkafka_recipe.send(:files_hashs) +
       lua_recipe.send(:files_hashs) +
       luapecl_recipe.send(:files_hashs) +
-      phalcon_recipe.send(:files_hashs) +
+      (PhalconRecipe.build_phalcon?(version) ? phalcon_recipe.send(:files_hashs) : []) +
       phpiredis_recipe.send(:files_hashs) +
       rabbitmq_recipe.send(:files_hashs) +
       (OraclePeclRecipe.oracle_sdk? ? oracle_recipe.send(:files_hashs) : []) +

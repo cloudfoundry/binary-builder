@@ -40,7 +40,9 @@ describe 'building a binary', :integration do
       # Once this is done, this spec can probably be merged back with the 7.0.x specs
       #expect(tar_contains_file('php/lib/php/extensions/*/ioncube.so')).to eq true
       expect(tar_contains_file('php/lib/php/extensions/*/phpiredis.so')).to eq true
-      expect(tar_contains_file('php/lib/php/extensions/*/phalcon.so')).to eq true
+      # phalcon does not support php 7.1.x yet
+      # https://github.com/phalcon/cphalcon/issues/12444
+      expect(tar_contains_file('php/lib/php/extensions/*/phalcon.so')).to eq false
     end
   end
 end

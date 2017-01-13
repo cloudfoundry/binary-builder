@@ -253,6 +253,11 @@ class PhalconRecipe < PeclRecipe
   def url
     "https://github.com/phalcon/cphalcon/archive/v#{version}.tar.gz"
   end
+
+  def self.build_phalcon?(php_version)
+    major, minor, _ = php_version.split('.')
+    !(major == '7' && minor == '1')
+  end
 end
 
 class MemcachedPeclRecipe < PeclRecipe
