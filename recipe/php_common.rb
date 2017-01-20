@@ -140,7 +140,7 @@ class PHPIRedisRecipe < PeclRecipe
   end
 
   def url
-    "https://github.com/nrk/phpiredis/archive/#{version}.tar.gz"
+    "https://github.com/nrk/phpiredis/archive/v#{version}.tar.gz"
   end
 end
 
@@ -346,7 +346,7 @@ def hiredis_recipe
 end
 
 def phpiredis_recipe
-  PHPIRedisRecipe.new('phpiredis', 'a64e3bfe7', md5: '84c68887c3b9744106f4ccb2969f3a2a',
+  PHPIRedisRecipe.new('phpiredis', '1.0.0', md5: 'd84a6e7e3a54744269fd776d7be80be1',
                                                 php_path: php_recipe.path,
                                                 hiredis_path: hiredis_recipe.path)
 end

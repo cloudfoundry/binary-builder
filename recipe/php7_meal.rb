@@ -174,14 +174,14 @@ class Php7Meal
     librdkafka_recipe.cook
 
     # php extensions
-    standard_pecl('apcu', '5.1.7', '7803b58fab6ecfe847ef5b9be6825dea')
+    standard_pecl('apcu', '5.1.8', '0ef8be2ee8acb4dba5a66b247a254995')
     standard_pecl('cassandra', '1.2.2', '2226a4d66f8e0a4de85656f10472afc5')
-    standard_pecl('imagick', '3.4.3RC1', '32042fc3043f013047927de21ff15a47')
-    standard_pecl('mailparse', '3.0.1', '5ae0643a11159414c7e790c73a9e25ec')
-    standard_pecl('mongodb', '1.1.9', '0644ad0451e5913cbac22e3456ba239b')
+    standard_pecl('imagick', '3.4.3RC2', 'd488ccdedbf8077e690548dd27acf820')
+    standard_pecl('mailparse', '3.0.2', '4bd96a980013374f23a7461cc0a919aa')
+    standard_pecl('mongodb', '1.2.3', '133c77a004c5b26fa2cea8eff2cf46a1')
     standard_pecl('msgpack', '2.0.2', '02f7e109d438072c4b642b01cf78533e')
     standard_pecl('rdkafka', '3.0.0', 'c798343029fd4a7c8fe3fae365d438df')
-    standard_pecl('redis', '3.0.0', '1b90e954afc1f9993cc0552d0f1d1daa')
+    standard_pecl('redis', '3.1.0', '897400f375ef6a9288fa3cb07c971786')
     standard_pecl('solr', '2.4.0', '2c9accf66681a3daaaf371bc07e44902')
     standard_pecl('xdebug', '2.5.0', '5306da5948e195c2e4585c9abd7741f9')
     standard_pecl('yaf', '3.0.4', '1420d91ca5deb31147b25bd08124e400')
@@ -260,7 +260,7 @@ class Php7Meal
   end
 
   def ioncube_recipe
-    @ioncube ||= IonCubeRecipe.new('ioncube', '6.0.6', md5: '7d2b42033a0570e99080beb6a7db1478')
+    @ioncube ||= IonCubeRecipe.new('ioncube', '6.0.8', md5: '49851554b1e448142b8576e399ae3b19')
   end
 
   def luapecl_recipe
@@ -270,7 +270,7 @@ class Php7Meal
   end
 
   def oracle_recipe
-    @oracle_recipe ||= OraclePeclRecipe.new('oci8', '2.1.1', md5: '01bb3429ce3206dcc3d3198e65dadfbc',
+    @oracle_recipe ||= OraclePeclRecipe.new('oci8', '2.1.3', md5: '99fa44a82ecc5473820f1d810911f24f',
 							     php_path: php_recipe.path)
   end
 
@@ -281,9 +281,9 @@ class Php7Meal
   end
 
   def phalcon_recipe
-    @phalcon_recipe ||= PhalconRecipe.new('phalcon', '3.0.2', md5: '43e2aa0360af1787db03f5cc6cd1b676',
+    @phalcon_recipe ||= PhalconRecipe.new('phalcon', '3.0.3', md5: '5a6c376782e50c63735601f92aec6a7d',
                                                               php_path: php_recipe.path)
     @phalcon_recipe.set_php_version('php7')
     @phalcon_recipe
   end
-end
+ene
