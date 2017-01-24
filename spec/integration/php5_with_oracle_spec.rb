@@ -5,7 +5,7 @@ require 'fileutils'
 describe 'building a binary', :run_oracle_php_tests do
   context 'when php5 is specified with oracle libraries' do
     before(:all) do
-      run_binary_builder('php', '5.6.14', '--md5=ae625e0cfcfdacea3e7a70a075e47155')
+      run_binary_builder('php', '5.6.14', '--md5=ae625e0cfcfdacea3e7a70a075e47155 --php-extensions-file=./spec/assets/php-extensions.yml')
       @binary_tarball_location = Dir.glob(File.join(Dir.pwd, 'php-5.6.14-linux-x64-*.tgz')).first
     end
 

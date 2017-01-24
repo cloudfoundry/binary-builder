@@ -2,23 +2,76 @@
 require_relative 'base'
 require 'uri'
 
-class RabbitMQRecipe < BaseRecipe
+class PeclRecipe < BaseRecipe
   def url
-    "https://github.com/alanxz/rabbitmq-c/archive/v#{version}.tar.gz"
+    "http://pecl.php.net/get/#{name}-#{version}.tgz"
   end
 
-  def work_path
-    File.join(tmp_path, "rabbitmq-c-#{@version}")
+  def configure_options
+    [
+      "--with-php-config=#{@php_path}/bin/php-config"
+    ]
+  end
+
+  def configure
+    return if configured?
+
+    md5_file = File.join(tmp_path, 'configure.md5')
+    digest   = Digest::MD5.hexdigest(computed_options.to_s)
+    File.open(md5_file, 'w') { |f| f.write digest }
+
+    execute('configure', 'phpize')
+    execute('configure', %w(sh configure) + computed_options)
+  end
+end
+
+class AmqpPeclRecipe < PeclRecipe
+  def configure_options
+    [
+      "--with-php-config=#{@php_path}/bin/php-config"
+    ]
+  end
+end
+
+class HiredisRecipe < BaseRecipe
+  def url
+    "https://github.com/redis/hiredis/archive/v#{version}.tar.gz"
   end
 
   def configure
   end
 
-  def compile
-    execute('compile', ['bash', '-c', 'cmake .'])
-    execute('compile', ['bash', '-c', 'cmake --build .'])
-    execute('compile', ['bash', '-c', 'cmake -DCMAKE_INSTALL_PREFIX=/usr/local .'])
-    execute('compile', ['bash', '-c', 'cmake --build . --target install'])
+  def install
+    return if installed?
+
+    execute('install', ['bash', '-c', "LIBRARY_PATH=lib PREFIX='#{path}' #{make_cmd} install"])
+  end
+end
+
+class IonCubeRecipe < BaseRecipe
+  def url
+    "http://downloads3.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64_#{version}.tar.gz"
+  end
+
+  def configure; end
+
+  def compile; end
+
+  def install; end
+
+  def self.build_ioncube?(php_version)
+    major, minor, _ = php_version.split('.')
+    !(major == '7' && minor == '1')
+  end
+
+  def path
+    tmp_path
+  end
+end
+
+class LibmemcachedRecipe < BaseRecipe
+  def url
+    "https://launchpad.net/libmemcached/1.0/#{version}/+download/libmemcached-#{version}.tar.gz"
   end
 end
 
@@ -46,32 +99,12 @@ class LibRdKafkaRecipe < BaseRecipe
   end
 end
 
-class PeclRecipe < BaseRecipe
-  def url
-    "http://pecl.php.net/get/#{name}-#{version}.tgz"
-  end
-
+class LuaPeclRecipe < PeclRecipe
   def configure_options
     [
-      "--with-php-config=#{@php_path}/bin/php-config"
+      "--with-php-config=#{@php_path}/bin/php-config",
+      "--with-lua=#{@lua_path}"
     ]
-  end
-
-  def configure
-    return if configured?
-
-    md5_file = File.join(tmp_path, 'configure.md5')
-    digest   = Digest::MD5.hexdigest(computed_options.to_s)
-    File.open(md5_file, 'w') { |f| f.write digest }
-
-    execute('configure', 'phpize')
-    execute('configure', %w(sh configure) + computed_options)
-  end
-end
-
-class LibmemcachedRecipe < BaseRecipe
-  def url
-    "https://launchpad.net/libmemcached/1.0/#{version}/+download/libmemcached-#{version}.tar.gz"
   end
 end
 
@@ -94,86 +127,16 @@ class LuaRecipe < BaseRecipe
   end
 end
 
-class IonCubeRecipe < BaseRecipe
-  def url
-    "http://downloads3.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64_#{version}.tar.gz"
-  end
-
-  def configure; end
-
-  def compile; end
-
-  def install; end
-
-  def self.build_ioncube?(php_version)
-    major, minor, _ = php_version.split('.')
-    !(major == '7' && minor == '1')
-  end
-
-  def path
-    tmp_path
-  end
-end
-
-class HiredisRecipe < BaseRecipe
-  def url
-    "https://github.com/redis/hiredis/archive/v#{version}.tar.gz"
-  end
-
-  def configure
-  end
-
-  def install
-    return if installed?
-
-    execute('install', ['bash', '-c', "LIBRARY_PATH=lib PREFIX='#{path}' #{make_cmd} install"])
-  end
-end
-
-class PHPIRedisRecipe < PeclRecipe
+class MemcachedPeclRecipe < PeclRecipe
   def configure_options
     [
       "--with-php-config=#{@php_path}/bin/php-config",
-      '--enable-phpiredis',
-      "--with-hiredis-dir=#{@hiredis_path}"
+      "--with-libmemcached-dir=#{@libmemcached_path}",
+      '--enable-memcached-sasl',
+      '--enable-memcached-msgpack',
+      '--enable-memcached-igbinary',
+      '--enable-memcached-json'
     ]
-  end
-
-  def url
-    "https://github.com/nrk/phpiredis/archive/v#{version}.tar.gz"
-  end
-end
-
-class AmqpPeclRecipe < PeclRecipe
-  def configure_options
-    [
-      "--with-php-config=#{@php_path}/bin/php-config"
-    ]
-  end
-end
-
-class OraclePeclRecipe < PeclRecipe
-  def configure_options
-    [
-      "--with-oci8=shared,instantclient,/oracle"
-    ]
-  end
-
-  def self.oracle_sdk?
-    File.directory?('/oracle')
-  end
-
-  def setup_tar
-    system <<-eof
-      cp -an /oracle/libclntshcore.so.12.1 #{@php_path}/lib
-      cp -an /oracle/libclntsh.so #{@php_path}/lib
-      cp -an /oracle/libclntsh.so.12.1 #{@php_path}/lib
-      cp -an /oracle/libipc1.so #{@php_path}/lib
-      cp -an /oracle/libmql1.so #{@php_path}/lib
-      cp -an /oracle/libnnz12.so #{@php_path}/lib
-      cp -an /oracle/libociicus.so #{@php_path}/lib
-      cp -an /oracle/libons.so #{@php_path}/lib
-    eof
   end
 end
 
@@ -219,18 +182,28 @@ class OraclePdoRecipe < PeclRecipe
   end
 end
 
-class LuaPeclRecipe < PeclRecipe
+class OraclePeclRecipe < PeclRecipe
   def configure_options
     [
-      "--with-php-config=#{@php_path}/bin/php-config",
-      "--with-lua=#{@lua_path}"
+      "--with-oci8=shared,instantclient,/oracle"
     ]
   end
-end
 
-class PHPProtobufPeclRecipe < PeclRecipe
-  def url
-    "https://github.com/allegro/php-protobuf/archive/v#{version}.tar.gz"
+  def self.oracle_sdk?
+    File.directory?('/oracle')
+  end
+
+  def setup_tar
+    system <<-eof
+      cp -an /oracle/libclntshcore.so.12.1 #{@php_path}/lib
+      cp -an /oracle/libclntsh.so #{@php_path}/lib
+      cp -an /oracle/libclntsh.so.12.1 #{@php_path}/lib
+      cp -an /oracle/libipc1.so #{@php_path}/lib
+      cp -an /oracle/libmql1.so #{@php_path}/lib
+      cp -an /oracle/libnnz12.so #{@php_path}/lib
+      cp -an /oracle/libociicus.so #{@php_path}/lib
+      cp -an /oracle/libons.so #{@php_path}/lib
+    eof
   end
 end
 
@@ -240,10 +213,6 @@ class PhalconRecipe < PeclRecipe
       "--with-php-config=#{@php_path}/bin/php-config",
       '--enable-phalcon'
     ]
-  end
-
-  def set_php_version(php_version)
-    @php_version = php_version
   end
 
   def work_path
@@ -260,16 +229,85 @@ class PhalconRecipe < PeclRecipe
   end
 end
 
-class MemcachedPeclRecipe < PeclRecipe
+class PHPIRedisRecipe < PeclRecipe
   def configure_options
     [
       "--with-php-config=#{@php_path}/bin/php-config",
-      "--with-libmemcached-dir=#{@libmemcached_path}",
-      '--enable-memcached-sasl',
-      '--enable-memcached-msgpack',
-      '--enable-memcached-igbinary',
-      '--enable-memcached-json'
+      '--enable-phpiredis',
+      "--with-hiredis-dir=#{@hiredis_path}"
     ]
+  end
+
+  def url
+    "https://github.com/nrk/phpiredis/archive/v#{version}.tar.gz"
+  end
+end
+
+class PHPProtobufPeclRecipe < PeclRecipe
+  def url
+    "https://github.com/allegro/php-protobuf/archive/v#{version}.tar.gz"
+  end
+end
+
+class RabbitMQRecipe < BaseRecipe
+  def url
+    "https://github.com/alanxz/rabbitmq-c/archive/v#{version}.tar.gz"
+  end
+
+  def work_path
+    File.join(tmp_path, "rabbitmq-c-#{@version}")
+  end
+
+  def configure
+  end
+
+  def compile
+    execute('compile', ['bash', '-c', 'cmake .'])
+    execute('compile', ['bash', '-c', 'cmake --build .'])
+    execute('compile', ['bash', '-c', 'cmake -DCMAKE_INSTALL_PREFIX=/usr/local .'])
+    execute('compile', ['bash', '-c', 'cmake --build . --target install'])
+  end
+end
+
+class SnmpRecipe
+  attr_reader :name, :version
+
+  def initialize(name, version, options)
+    @name = name
+    @version = version
+    @options = options
+  end
+
+  def files_hashs
+    []
+  end
+
+  def cook
+    system <<-eof
+      cd #{@php_path}
+      mkdir -p mibs
+      cp "/usr/lib/x86_64-linux-gnu/libnetsnmp.so.30" lib/
+      # copy mibs that are packaged freely
+      cp /usr/share/snmp/mibs/* mibs
+      # copy mibs downloader & smistrip, will download un-free mibs
+      cp /usr/bin/download-mibs bin
+      cp /usr/bin/smistrip bin
+      sed -i "s|^CONFDIR=/etc/snmp-mibs-downloader|CONFDIR=\$HOME/php/mibs/conf|" bin/download-mibs
+      sed -i "s|^SMISTRIP=/usr/bin/smistrip|SMISTRIP=\$HOME/php/bin/smistrip|" bin/download-mibs
+      # copy mibs download config
+      cp -R /etc/snmp-mibs-downloader mibs/conf
+      sed -i "s|^DIR=/usr/share/doc|DIR=\$HOME/php/mibs/originals|" mibs/conf/iana.conf
+      sed -i "s|^DEST=iana|DEST=|" mibs/conf/iana.conf
+      sed -i "s|^DIR=/usr/share/doc|DIR=\$HOME/php/mibs/originals|" mibs/conf/ianarfc.conf
+      sed -i "s|^DEST=iana|DEST=|" mibs/conf/ianarfc.conf
+      sed -i "s|^DIR=/usr/share/doc|DIR=\$HOME/php/mibs/originals|" mibs/conf/rfc.conf
+      sed -i "s|^DEST=ietf|DEST=|" mibs/conf/rfc.conf
+      sed -i "s|^BASEDIR=/var/lib/mibs|BASEDIR=\$HOME/php/mibs|" mibs/conf/snmp-mibs-downloader.conf
+      # copy data files
+      mkdir mibs/originals
+      cp -R /usr/share/doc/mibiana mibs/originals
+      cp -R /usr/share/doc/mibrfcs mibs/originals
+    eof
   end
 end
 
@@ -303,71 +341,6 @@ class XhprofPeclRecipe < PeclRecipe
   def work_path
     "#{super}/extension"
   end
-end
-
-class SnmpRecipe
-  def initialize(php_path)
-    @php_path = php_path
-  end
-
-  def cook
-    system <<-eof
-      cd #{@php_path}
-      mkdir -p mibs
-      cp "/usr/lib/x86_64-linux-gnu/libnetsnmp.so.30" lib/
-      # copy mibs that are packaged freely
-      cp /usr/share/snmp/mibs/* mibs
-      # copy mibs downloader & smistrip, will download un-free mibs
-      cp /usr/bin/download-mibs bin
-      cp /usr/bin/smistrip bin
-      sed -i "s|^CONFDIR=/etc/snmp-mibs-downloader|CONFDIR=\$HOME/php/mibs/conf|" bin/download-mibs
-      sed -i "s|^SMISTRIP=/usr/bin/smistrip|SMISTRIP=\$HOME/php/bin/smistrip|" bin/download-mibs
-      # copy mibs download config
-      cp -R /etc/snmp-mibs-downloader mibs/conf
-      sed -i "s|^DIR=/usr/share/doc|DIR=\$HOME/php/mibs/originals|" mibs/conf/iana.conf
-      sed -i "s|^DEST=iana|DEST=|" mibs/conf/iana.conf
-      sed -i "s|^DIR=/usr/share/doc|DIR=\$HOME/php/mibs/originals|" mibs/conf/ianarfc.conf
-      sed -i "s|^DEST=iana|DEST=|" mibs/conf/ianarfc.conf
-      sed -i "s|^DIR=/usr/share/doc|DIR=\$HOME/php/mibs/originals|" mibs/conf/rfc.conf
-      sed -i "s|^DEST=ietf|DEST=|" mibs/conf/rfc.conf
-      sed -i "s|^BASEDIR=/var/lib/mibs|BASEDIR=\$HOME/php/mibs|" mibs/conf/snmp-mibs-downloader.conf
-      # copy data files
-      mkdir mibs/originals
-      cp -R /usr/share/doc/mibiana mibs/originals
-      cp -R /usr/share/doc/mibrfcs mibs/originals
-    eof
-  end
-end
-
-# PHP 5 and PHP 7 Common recipes
-
-def hiredis_recipe
-  HiredisRecipe.new('hiredis', '0.13.3', md5: '43dca1445ec6d3b702821dba36000279')
-end
-
-def phpiredis_recipe
-  PHPIRedisRecipe.new('phpiredis', '1.0.0', md5: 'd84a6e7e3a54744269fd776d7be80be1',
-                                                php_path: php_recipe.path,
-                                                hiredis_path: hiredis_recipe.path)
-end
-
-
-def amqppecl_recipe
-  AmqpPeclRecipe.new('amqp', '1.7.1', md5: '901befb3ba9c906e88ae810f83599baf',
-                                      php_path: php_recipe.path,
-                                      rabbitmq_path: rabbitmq_recipe.work_path)
-end
-
-def lua_recipe
-  LuaRecipe.new('lua', '5.3.3', md5: '703f75caa4fdf4a911c1a72e67a27498')
-end
-
-def rabbitmq_recipe
-  RabbitMQRecipe.new('rabbitmq', '0.8.0', md5: '51d5827651328236ecb7c60517c701c2')
-end
-
-def librdkafka_recipe
-  LibRdKafkaRecipe.new('librdkafka', '0.9.2', md5: 'f2cc5ca6a149928c3cb34398379a5024')
 end
 
 def install_cassandra_dependencies

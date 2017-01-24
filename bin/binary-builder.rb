@@ -14,8 +14,8 @@ recipes = {
      'jruby' => JRubyMeal,
      'httpd' => HTTPdMeal,
      'python' => PythonRecipe,
-     'php' => Php5Meal,
-     'php7' => Php7Meal,
+     'php' => PhpMeal,
+     'php7' => PhpMeal,
      'nginx' => NginxRecipe,
      'godep' => GodepMeal,
      'glide' => GlideRecipe,
@@ -51,6 +51,9 @@ optparser = OptionParser.new do |opts|
     options[:git] ||= {}
     options[:git][:commit_sha] = n
   end
+  opts.on('--php-extensions-file=FILE', 'yaml file containing PHP extensions + versions') do |n|
+    options[:php_extensions_file] = n
+  end
 end
 optparser.parse!
 
@@ -65,10 +68,15 @@ end
 
 raise "Unsupported recipe [#{options[:name]}], supported options are [#{recipes.keys.join(", ")}]" unless recipes.has_key?(options[:name])
 
+recipe_options = DetermineChecksum.new(options).to_h
+
+if options[:php_extensions_file]
+  recipe_options[:php_extensions_file] = options[:php_extensions_file]
+end
 recipe = recipes[options[:name]].new(
   options[:name],
   options[:version],
-  DetermineChecksum.new(options).to_h
+  recipe_options
 )
 Bundler.with_clean_env do
   puts "Source URL: #{recipe.url}"

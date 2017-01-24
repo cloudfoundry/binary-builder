@@ -5,7 +5,7 @@ require 'fileutils'
 describe 'building a binary', :integration do
   context 'when php7.0 is specified' do
     before(:all) do
-      run_binary_builder('php7', '7.0.3', '--md5=235b1217a9ec7bee6e0bd517e3636d45')
+      run_binary_builder('php7', '7.0.3', '--md5=235b1217a9ec7bee6e0bd517e3636d45 --php-extensions-file=./spec/assets/php7-extensions.yml')
       @binary_tarball_location = Dir.glob(File.join(Dir.pwd, 'php7-7.0.3-linux-x64-*.tgz')).first
     end
 
