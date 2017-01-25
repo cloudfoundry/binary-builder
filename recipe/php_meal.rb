@@ -9,7 +9,7 @@ class PhpMeal
   def initialize(name, version, options)
     @name    = name
     @version = version
-    @major_version = version.spilt('.').first
+    @major_version = version.split('.').first
     @options = options
     @native_modules = []
     @extensions = []
