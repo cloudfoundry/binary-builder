@@ -8,20 +8,20 @@ The requirements to build these extensions are listed here.
 
   http://php.net/manual/en/oci8.requirements.php
 
-This basically boils down to installing the Oracle Instant Client Basic or Basic Lite plus the SDK.  Use the ZIP installs and extract them to a location on your local machine.  Then create the following symbolic library before building: `ln -s libclntsh.so.12.1 libclntsh.so` (version number must vary).  
+This basically boils down to installing the Oracle Instant Client Basic or Basic Lite plus the SDK.  Use the ZIP installs and extract them to a location on your local machine.  Then create the following symbolic library before building: `ln -s libclntsh.so.12.1 libclntsh.so` (version number must vary).
 
 You only need to do this once.
 
 ## How to Build
 
-To build, you just [follow the normal instructions for building PHP with binary builder & Docker](https://github.com/dmikusa-pivotal/binary-builder/blob/master/README.md#running-within-docker).  The only exception is that you need to map the path where you extracted the Oracle instant client and SDK to `/oracle` in the docker container used by binary builder.
+To build, you just [follow the normal instructions for building PHP with binary builder & Docker](https://github.com/cloudfoundry/binary-builder/blob/master/README.md).  The only exception is that you need to map the path where you extracted the Oracle instant client and SDK to `/oracle` in the docker container used by binary builder.
 
 This is done by adding an additiona `-v` argument to the `docker run` command.
 
 Ex:
 
 ```
-docker run -w /binary-builder -v `pwd`:/binary-builder -v /path/to/oracle:/oracle -it cloudfoundry/cflinuxfs2 bash ./bin/binary-builder --name=php7 --version=7.0.9 --md5=32ea3ce54d7d5ed03c6c600dffd65813
+docker run -w /binary-builder -v `pwd`:/binary-builder -v /path/to/oracle:/oracle -it cloudfoundry/cflinuxfs2 bash ./bin/binary-builder --name=php7 --version=7.0.9 --md5=32ea3ce54d7d5ed03c6c600dffd65813  --php-extensions-file=./php7-extensions.yml
 ```
 
 ## What's Included

@@ -34,10 +34,21 @@ This generates a gzipped tarball in the binary-builder directory with the filena
 For example, if you were building ruby 2.2.3, you'd run the following commands:
 
 ```bash
-$ docker run -w /binary-builder -v `pwd`:/binary-builder -it cloudfoundry/cflinuxfs2:ruby-2.2.4 ./bin/binary-builder --name=ruby --version=2.2.3 --md5=150a5efc5f5d8a8011f30aa2594a7654 
+$ docker run -w /binary-builder -v `pwd`:/binary-builder -it cloudfoundry/cflinuxfs2:ruby-2.2.4 ./bin/binary-builder --name=ruby --version=2.2.3 --md5=150a5efc5f5d8a8011f30aa2594a7654
 $ ls
 ruby-2.2.3-linux-x64.tgz
 ```
+
+# Building PHP
+
+To build PHP, you also need to pass in a YAML file containing information about the various PHP extensions to be built as well. For example
+
+```bash
+docker run -w /binary-builder -v `pwd`:/binary-builder -it cloudfoundry/cflinuxfs2 bash
+./bin/binary-builder --name=php --version=5.6.14 --md5=ae625e0cfcfdacea3e7a70a075e47155 --php-extensions-file=./php-extensions.yml
+```
+
+For an example of what this file looks like, see: https://github.com/cloudfoundry/public-buildpacks-ci-robots/blob/master/binary-builds/php-extensions.yml
 
 # Contributing
 
