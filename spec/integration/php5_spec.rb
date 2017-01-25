@@ -1,16 +1,23 @@
 # encoding: utf-8
 require 'spec_helper'
 require 'fileutils'
+require 'open-uri'
 
 describe 'building a binary', :integration do
   context 'when php5 is specified' do
     before(:all) do
-      run_binary_builder('php', '5.6.14', '--md5=ae625e0cfcfdacea3e7a70a075e47155 --php-extensions-file=./spec/assets/php-extensions.yml')
+      @extensions_dir = Dir.mktmpdir(nil, './spec')
+      extensions_file = File.join(@extensions_dir, 'php-extensions.yml')
+      extensions_url  = 'https://raw.githubusercontent.com/cloudfoundry/public-buildpacks-ci-robots/master/binary-builds/php-extensions.yml'
+
+      File.write(extensions_file, open(extensions_url).read)
+      run_binary_builder('php', '5.6.14', "--md5=ae625e0cfcfdacea3e7a70a075e47155 --php-extensions-file=#{extensions_file}")
       @binary_tarball_location = Dir.glob(File.join(Dir.pwd, 'php-5.6.14-linux-x64-*.tgz')).first
     end
 
     after(:all) do
       FileUtils.rm(@binary_tarball_location)
+      FileUtils.rm_rf(@extensions_dir)
     end
 
     it 'builds the specified binary, tars it, and places it in your current working directory' do

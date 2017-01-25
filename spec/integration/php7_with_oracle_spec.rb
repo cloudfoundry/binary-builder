@@ -1,16 +1,23 @@
 # encoding: utf-8
 require 'spec_helper'
 require 'fileutils'
+require 'open-uri'
 
 describe 'building a binary', :run_oracle_php_tests do
   context 'when php7.1 is specified with oracle libraries' do
     before(:all) do
-      run_binary_builder('php7', '7.1.0', '--md5=ec2218f97b4edbc35a2d7919ff37a662  --php-extensions-file=./spec/assets/php7-extensions.yml')
+      @extensions_dir = Dir.mktmpdir(nil, './spec')
+      extensions_file = File.join(@extensions_dir, 'php7-extensions.yml')
+      extensions_url  = 'https://raw.githubusercontent.com/cloudfoundry/public-buildpacks-ci-robots/master/binary-builds/php7-extensions.yml'
+
+      File.write(extensions_file, open(extensions_url).read)
+      run_binary_builder('php7', '7.1.0', "--md5=ec2218f97b4edbc35a2d7919ff37a662  --php-extensions-file=#{extensions_file}")
       @binary_tarball_location = Dir.glob(File.join(Dir.pwd, 'php7-7.1.0-linux-x64-*.tgz')).first
     end
 
     after(:all) do
       FileUtils.rm(@binary_tarball_location)
+      FileUtils.rm_rf(@extensions_dir)
     end
 
     it 'can load the oci8.so and pdo_oci.so PHP extensions' do
