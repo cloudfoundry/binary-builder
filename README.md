@@ -41,7 +41,7 @@ ruby-2.2.3-linux-x64.tgz
 
 # Building PHP
 
-To build PHP, you also need to pass in a YAML file containing information about the various PHP extensions to be built as well. For example
+To build PHP, you also need to pass in a YAML file containing information about the various PHP extensions to be built. For example
 
 ```bash
 docker run -w /binary-builder -v `pwd`:/binary-builder -it cloudfoundry/cflinuxfs2 bash
