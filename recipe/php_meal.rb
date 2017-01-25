@@ -116,7 +116,7 @@ class PhpMeal
       when 'lua'
         recipe.instance_variable_set('@lua_path', @native_modules.detect{|r| r.name=='lua'}.path)
       when 'phalcon'
-        recipe.instance_variable_set('@php_version', 'php5')
+        recipe.instance_variable_set('@php_version', "php#{@major_version}")
       when 'phpiredis'
         recipe.instance_variable_set('@hiredis_path', @native_modules.detect{|r| r.name=='hiredis'}.path)
       end
