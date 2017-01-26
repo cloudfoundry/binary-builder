@@ -100,7 +100,7 @@ class Php5Recipe < BaseRecipe
       cp -a /usr/lib/libaspell.so* #{path}/lib
       cp -a /usr/lib/libpspell.so* #{path}/lib
       cp -a /usr/lib/x86_64-linux-gnu/libgearman.so* #{path}/lib
-      cp -a /usr/lib/x86_64-linux-gnu/libcassandra.so* #{path}/lib
+      cp -a /usr/local/lib/x86_64-linux-gnu/libcassandra.so* #{path}/lib
       cp -a /usr/lib/x86_64-linux-gnu/libuv.so* #{path}/lib
       cp -a /usr/local/lib/x86_64-linux-gnu/librabbitmq.so* #{path}/lib/
       cp -a /usr/lib/x86_64-linux-gnu/libsybdb.so* #{path}/lib/

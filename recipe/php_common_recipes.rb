@@ -99,6 +99,23 @@ class LibRdKafkaRecipe < BaseRecipe
   end
 end
 
+class CassandraCppDriverRecipe < BaseRecipe
+  def url
+    "https://github.com/datastax/cpp-driver/archive/#{version}.tar.gz"
+  end
+
+  def configure
+  end
+
+  def compile
+    execute('compile', ['bash', '-c', 'mkdir -p build && cd build && cmake .. && make'])
+  end
+
+  def install
+    execute('install', ['bash', '-c', 'cd build && make install'])
+  end
+end
+
 class LuaPeclRecipe < PeclRecipe
   def configure_options
     [
@@ -341,19 +358,4 @@ class XhprofPeclRecipe < PeclRecipe
   def work_path
     "#{super}/extension"
   end
-end
-
-def install_cassandra_dependencies
-  cassandra_version = "2.5.0"
-  system <<-eof
-    wget http://downloads.datastax.com/cpp-driver/ubuntu/14.04/dependencies/libuv/v1.8.0/libuv_1.8.0-1_amd64.deb
-    wget http://downloads.datastax.com/cpp-driver/ubuntu/14.04/dependencies/libuv/v1.8.0/libuv-dev_1.8.0-1_amd64.deb
-    wget http://downloads.datastax.com/cpp-driver/ubuntu/14.04/cassandra/v#{cassandra_version}/cassandra-cpp-driver_#{cassandra_version}-1_amd64.deb
-    wget http://downloads.datastax.com/cpp-driver/ubuntu/14.04/cassandra/v#{cassandra_version}/cassandra-cpp-driver-dev_#{cassandra_version}-1_amd64.deb
-
-    dpkg -i libuv_1.8.0-1_amd64.deb
-    dpkg -i libuv-dev_1.8.0-1_amd64.deb
-    dpkg -i cassandra-cpp-driver_#{cassandra_version}-1_amd64.deb
-    dpkg -i cassandra-cpp-driver-dev_#{cassandra_version}-1_amd64.deb
-  eof
 end

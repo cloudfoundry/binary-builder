@@ -36,8 +36,6 @@ class PhpMeal
       #{symlink_commands}
     eof
 
-    install_cassandra_dependencies
-
     php_recipe.cook
     php_recipe.activate
 
@@ -156,6 +154,7 @@ class PhpMeal
       libsnmp-dev
       libsqlite3-dev
       libssl-dev
+      libuv-dev
       libxml2-dev
       libzip-dev
       libzookeeper-mt-dev
