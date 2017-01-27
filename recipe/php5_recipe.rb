@@ -86,10 +86,6 @@ class Php5Recipe < BaseRecipe
     Dir["#{path}/lib/php/extensions/no-debug-non-zts-*"].first
   end
 
-  def archive_filename
-    "php-#{version}-linux-x64-#{Time.now.utc.to_i}.tgz"
-  end
-
   def setup_tar
   system <<-eof
       cp -a #{@hiredis_path}/lib/libhiredis.so* #{path}/lib/

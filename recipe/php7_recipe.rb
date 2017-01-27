@@ -82,10 +82,6 @@ class Php7Recipe < BaseRecipe
     Dir["#{path}/lib/php/extensions/no-debug-non-zts-*"].first
   end
 
-  def archive_filename
-    "php7-#{version}-linux-x64-#{Time.now.utc.to_i}.tgz"
-  end
-
   def setup_tar
     system <<-eof
       cp -a /usr/local/lib/x86_64-linux-gnu/librabbitmq.so* #{path}/lib/

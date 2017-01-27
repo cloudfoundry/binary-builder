@@ -12,7 +12,7 @@ describe 'building a binary', :run_oracle_php_tests do
 
       File.write(extensions_file, open(extensions_url).read)
       run_binary_builder('php', '5.6.14', "--md5=ae625e0cfcfdacea3e7a70a075e47155 --php-extensions-file=#{extensions_file}")
-      @binary_tarball_location = Dir.glob(File.join(Dir.pwd, 'php-5.6.14-linux-x64-*.tgz')).first
+      @binary_tarball_location = Dir.glob(File.join(Dir.pwd, 'php-5.6.14-linux-x64.tgz')).first
     end
 
     after(:all) do
