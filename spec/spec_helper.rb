@@ -88,4 +88,14 @@ RSpec.configure do |config|
   def tar_contains_file(filename)
     system("tar --wildcards -tf #{@binary_tarball_location} #{filename} >/dev/null 2>&1")
   end
+
+  def php_extensions_source(php_major_version)
+    return ENV['PHP_EXTENSIONS_SOURCE'] if ENV['PHP_EXTENSIONS_SOURCE']
+
+    if php_major_version == '5'
+      'https://raw.githubusercontent.com/cloudfoundry/public-buildpacks-ci-robots/master/binary-builds/php-extensions.yml'
+    else
+      'https://raw.githubusercontent.com/cloudfoundry/public-buildpacks-ci-robots/master/binary-builds/php7-extensions.yml'
+    end
+  end
 end
