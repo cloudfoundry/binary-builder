@@ -36,6 +36,12 @@ class PhpMeal
       #{symlink_commands}
     eof
 
+    if OraclePeclRecipe.oracle_sdk?
+      Dir.chdir('/oracle') do
+        system "ln -s libclntsh.so.* libclntsh.so"
+      end
+    end
+
     php_recipe.cook
     php_recipe.activate
 
@@ -178,15 +184,9 @@ class PhpMeal
   end
 
   def php_common_symlinks
-    common = ["sudo ln -fs /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h",
-     "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap.so /usr/lib/libldap.so",
-     "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap_r.so /usr/lib/libldap_r.so"]
-
-    if OraclePeclRecipe.oracle_sdk?
-      common + ["sudo ln -s /oracle/libclntsh.so.* /oracle/libclntsh.so"]
-    else
-      common
-    end
+     ["sudo ln -fs /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h",
+      "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap.so /usr/lib/libldap.so",
+      "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap_r.so /usr/lib/libldap_r.so"]
   end
 
 

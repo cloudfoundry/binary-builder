@@ -1,6 +1,7 @@
 # encoding: utf-8
-require 'open3'
 require 'fileutils'
+require 'open3'
+require 'tmpdir'
 
 RSpec.configure do |config|
   config.color = true
@@ -86,7 +87,17 @@ RSpec.configure do |config|
   end
 
   def tar_contains_file(filename)
-    system("tar --wildcards -tf #{@binary_tarball_location} #{filename} >/dev/null 2>&1")
+    expect(@binary_tarball_location).to be
+
+    o, status = Open3.capture2e("tar --wildcards --list --verbose -f #{@binary_tarball_location} #{filename}")
+    return false unless status.success?
+    o.split(/[\r\n]+/).all? do |line|
+      m = line.match(/(\S+) -> (\S+)$/)
+      return true unless m
+      oldfile, newfile = m[1,2]
+      return false if newfile.start_with?('/')
+      tar_contains_file(File.dirname(oldfile) + '/' + newfile)
+    end
   end
 
   def php_extensions_source(php_major_version)
