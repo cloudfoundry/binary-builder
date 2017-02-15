@@ -164,7 +164,8 @@ class PhpMeal
       libxml2-dev
       libzip-dev
       libzookeeper-mt-dev
-      snmp-mibs-downloader)
+      snmp-mibs-downloader
+      automake)
   end
 
   def symlink_commands
