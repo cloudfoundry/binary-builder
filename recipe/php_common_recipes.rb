@@ -1,5 +1,6 @@
 # encoding: utf-8
 require_relative 'base'
+require_relative '../lib/geoip_downloader'
 require 'uri'
 
 class PeclRecipe < BaseRecipe
@@ -31,6 +32,27 @@ class AmqpPeclRecipe < PeclRecipe
       "--with-php-config=#{@php_path}/bin/php-config"
     ]
   end
+end
+
+class GeoipRecipe < PeclRecipe
+    def cook
+        super
+        system <<-eof
+          cd #{@php_path}
+          mkdir -p geoipdb/bin
+          mkdir -p geoipdb/lib
+          mkdir -p geoipdb/dbs
+          cp /binary-builder/bin/download_geoip_db.rb ./geoipdb/bin/
+          cp /binary-builder/lib/geoip_downloader.rb ./geoipdb/lib/
+        eof
+        if File.exist? "BUNDLE_GEOIP_LITE" then
+            products = "GeoLite-Legacy-IPv6-City GeoLite-Legacy-IPv6-Country 506 517 533"
+            updater = MaxMindGeoIpUpdater.new('999999', '000000000000', File.join(@php_path, 'geoipdb', 'dbs'))
+            products.split(" ").each do |product|
+                updater.download_product(product)
+            end
+        end
+    end
 end
 
 class HiredisRecipe < BaseRecipe

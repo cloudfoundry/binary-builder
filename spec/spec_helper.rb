@@ -41,6 +41,16 @@ RSpec.configure do |config|
     end
   end
 
+  config.before(:all, :run_geolite_php_tests) do
+    file_to_enable_geolite_db = File.join(Dir.pwd, 'BUNDLE_GEOIP_LITE')
+    File.open(file_to_enable_geolite_db, 'w') { |f| f.puts "true" }
+  end
+
+  config.after(:all, :run_geolite_php_tests) do
+    file_to_enable_geolite_db = File.join(Dir.pwd, 'BUNDLE_GEOIP_LITE')
+    FileUtils.rm(file_to_enable_geolite_db)
+  end
+
   def cleanup_docker_artifacts(docker_container_name)
     `docker stop #{docker_container_name}`
     `docker rm #{docker_container_name}`
