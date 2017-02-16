@@ -95,6 +95,15 @@ class LibmemcachedRecipe < BaseRecipe
   def url
     "https://launchpad.net/libmemcached/1.0/#{version}/+download/libmemcached-#{version}.tar.gz"
   end
+
+  def patch
+    system <<-eof
+      cd #{work_path}
+      sed -i '\\|include tests/include.am|d' Makefile.am
+      aclocal
+      automake --add-missing
+    eof
+  end
 end
 
 class LibRdKafkaRecipe < BaseRecipe

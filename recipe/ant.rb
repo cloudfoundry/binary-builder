@@ -3,7 +3,7 @@ require_relative 'base'
 
 class AntRecipe < BaseRecipe
   def url
-    "https://www.apache.org/dist/ant/source/apache-ant-#{version}-src.tar.gz"
+    "https://archive.apache.org/dist/ant/source/apache-ant-#{version}-src.tar.gz"
   end
 
   def cook
