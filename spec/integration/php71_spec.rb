@@ -49,11 +49,6 @@ describe 'building a binary', :integration do
       # phalcon does not support php 7.1.x yet
       # https://github.com/phalcon/cphalcon/issues/12444
       expect(tar_contains_file('php/lib/php/extensions/*/phalcon.so')).to eq false
-
-      expect(tar_contains_file('php/lib/libGeoIP.so.1')).to eq true
-      expect(tar_contains_file('php/lib/php/extensions/*/geoip.so')).to eq true
-      expect(tar_contains_file('php/geoipdb/lib/geoip_downloader.rb')).to eq true
-      expect(tar_contains_file('php/geoipdb/bin/download_geoip_db.rb')).to eq true
     end
   end
 end
