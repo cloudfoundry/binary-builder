@@ -35,21 +35,37 @@ RSpec.configure do |config|
       dir_containing_oracle = File.join(Dir.pwd, 'oracle_client_libs')
       FileUtils.rm_rf(dir_containing_oracle)
     end
+
+    config.before(:all, :run_geolite_php_tests) do
+      directory_mapping = "-v #{Dir.pwd}:/binary-builder"
+      setup_docker_container(DOCKER_CONTAINER_NAME, directory_mapping)
+
+      file_to_enable_geolite_db = File.join(Dir.pwd, 'BUNDLE_GEOIP_LITE')
+      File.open(file_to_enable_geolite_db, 'w') { |f| f.puts "true" }
+    end
+
+    config.after(:all, :run_geolite_php_tests) do
+      cleanup_docker_artifacts(DOCKER_CONTAINER_NAME)
+
+      file_to_enable_geolite_db = File.join(Dir.pwd, 'BUNDLE_GEOIP_LITE')
+      FileUtils.rm(file_to_enable_geolite_db)
+    end
   else
     config.before(:all, :run_oracle_php_tests) do
       setup_oracle_libs('/')
     end
+
+    config.before(:all, :run_geolite_php_tests) do
+      file_to_enable_geolite_db = File.join(Dir.pwd, 'BUNDLE_GEOIP_LITE')
+      File.open(file_to_enable_geolite_db, 'w') { |f| f.puts "true" }
+    end
+
+    config.after(:all, :run_geolite_php_tests) do
+      file_to_enable_geolite_db = File.join(Dir.pwd, 'BUNDLE_GEOIP_LITE')
+      FileUtils.rm(file_to_enable_geolite_db)
+    end
   end
 
-  config.before(:all, :run_geolite_php_tests) do
-    file_to_enable_geolite_db = File.join(Dir.pwd, 'BUNDLE_GEOIP_LITE')
-    File.open(file_to_enable_geolite_db, 'w') { |f| f.puts "true" }
-  end
-
-  config.after(:all, :run_geolite_php_tests) do
-    file_to_enable_geolite_db = File.join(Dir.pwd, 'BUNDLE_GEOIP_LITE')
-    FileUtils.rm(file_to_enable_geolite_db)
-  end
 
   def cleanup_docker_artifacts(docker_container_name)
     `docker stop #{docker_container_name}`
