@@ -42,8 +42,8 @@ class GeoipRecipe < PeclRecipe
           mkdir -p geoipdb/bin
           mkdir -p geoipdb/lib
           mkdir -p geoipdb/dbs
-          cp /binary-builder/bin/download_geoip_db.rb ./geoipdb/bin/
-          cp /binary-builder/lib/geoip_downloader.rb ./geoipdb/lib/
+          cp #{File.expand_path(File.join(File.dirname(__FILE__), '..'))}/bin/download_geoip_db.rb ./geoipdb/bin/
+          cp #{File.expand_path(File.join(File.dirname(__FILE__), '..'))}/lib/geoip_downloader.rb ./geoipdb/lib/
         eof
         if File.exist? "BUNDLE_GEOIP_LITE" then
             products = "GeoLite-Legacy-IPv6-City GeoLite-Legacy-IPv6-Country 506 517 533"
