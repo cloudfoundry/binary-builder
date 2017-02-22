@@ -3,13 +3,14 @@ require 'spec_helper'
 require 'fileutils'
 require 'open-uri'
 
-describe 'building a binary', :integration do
-  context 'when php5 is specified' do
+describe 'building a binary', :run_geolite_php_tests do
+  context 'when php5 is specified with geolite databases' do
     before(:all) do
       @extensions_dir = Dir.mktmpdir(nil, './spec')
       extensions_file = File.join(@extensions_dir, 'php-extensions.yml')
-
-      File.write(extensions_file, open(php_extensions_source('5')).read)
+      extensions_url  = 'https://raw.githubusercontent.com/cloudfoundry/public-buildpacks-ci-robots/master/binary-builds/php-extensions.yml'
+      
+      File.write(extensions_file, open(extensions_url).read)
       run_binary_builder('php', '5.6.14', "--md5=ae625e0cfcfdacea3e7a70a075e47155 --php-extensions-file=#{extensions_file}")
       @binary_tarball_location = Dir.glob(File.join(Dir.pwd, 'php-5.6.14-linux-x64.tgz')).first
     end
@@ -19,18 +20,10 @@ describe 'building a binary', :integration do
       FileUtils.rm_rf(@extensions_dir)
     end
 
-    it 'builds the specified binary, tars it, and places it in your current working directory' do
-      expect(File).to exist(@binary_tarball_location)
-
-      php_version_cmd = %{./spec/assets/php-exerciser.sh 5.6.14 #{File.basename(@binary_tarball_location)} ./php/bin/php -r 'echo phpversion();'}
-
-      output, status = run(php_version_cmd)
-
-      expect(status).to be_success
-      expect(output).to include('5.6.14')
-    end
-
     it 'copies in *.so files for some of the compiled extensions' do
+      file_to_enable_geolite_db = File.join(Dir.pwd, 'BUNDLE_GEOIP_LITE')
+      expect(File.exist? file_to_enable_geolite_db).to eq true
+
       expect(tar_contains_file('php/lib/librabbitmq.so.4')).to eq true
       expect(tar_contains_file('php/lib/libhiredis.so.0.13')).to eq true
       expect(tar_contains_file('php/lib/libc-client.so.2007e')).to eq true
@@ -54,6 +47,12 @@ describe 'building a binary', :integration do
       expect(tar_contains_file('php/lib/php/extensions/*/geoip.so')).to eq true
       expect(tar_contains_file('php/geoipdb/lib/geoip_downloader.rb')).to eq true
       expect(tar_contains_file('php/geoipdb/bin/download_geoip_db.rb')).to eq true
+
+      expect(tar_contains_file('php/geoipdb/dbs/GeoLiteCityv6.dat')).to eq true
+      expect(tar_contains_file('php/geoipdb/dbs/GeoLiteASNum.dat')).to eq true
+      expect(tar_contains_file('php/geoipdb/dbs/GeoLiteCountry.dat')).to eq true
+      expect(tar_contains_file('php/geoipdb/dbs/GeoIPv6.dat')).to eq true
+      expect(tar_contains_file('php/geoipdb/dbs/GeoLiteCity.dat')).to eq true
     end
   end
 end
