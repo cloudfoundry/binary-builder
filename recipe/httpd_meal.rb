@@ -29,7 +29,7 @@ class AprUtilRecipe < BaseRecipe
       '--with-mysql',
       '--with-pgsql',
       '--with-gdbm',
-      '--with-ldap'
+#      '--with-ldap'
     ]
   end
 
@@ -79,6 +79,7 @@ class HTTPdRecipe < BaseRecipe
       mkdir -p lib
       cp "#{@apr_path}/lib/libapr-1.so.0" ./lib
       cp "#{@apr_util_path}/lib/libaprutil-1.so.0" ./lib
+      cp "#{@apr_util_path}/lib/libexpat.so.0" ./lib
       mkdir -p "./lib/apr-util-1"
       cp "#{@apr_util_path}/lib/apr-util-1/"*.so ./lib/apr-util-1/
       mkdir -p "./lib/iconv"
