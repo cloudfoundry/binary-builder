@@ -1,7 +1,7 @@
 # encoding: utf-8
 source 'https://rubygems.org'
 
-ruby '2.3.1'
+ruby '~> 2.3'
 
 gem 'mini_portile', git: 'https://github.com/cf-buildpacks-eng/mini_portile'
 
