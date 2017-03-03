@@ -20,7 +20,8 @@ recipes = {
      'godep' => GodepMeal,
      'glide' => GlideRecipe,
      'go' => GoRecipe,
-     'dotnet' => DotNetRecipe
+     'dotnet' => DotNetRecipe,
+     'hwc' => HwcRecipe
 }
 
 options = {}
@@ -82,7 +83,7 @@ Bundler.with_clean_env do
   puts "Source URL: #{recipe.url}"
 
   recipe.cook
-  ArchiveRecipe.new(recipe).tar!
+  ArchiveRecipe.new(recipe).compress!
 
   puts 'Source YAML:'
   puts YAMLPresenter.new(recipe).to_yaml

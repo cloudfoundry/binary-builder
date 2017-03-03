@@ -19,7 +19,7 @@ describe ArchiveRecipe do
       allow(YAMLPresenter).to receive(:new).and_return('')
 
       expect(recipe).to receive(:setup_tar)
-      described_class.new(recipe).tar!
+      described_class.new(recipe).compress!
     end
   end
 
@@ -29,7 +29,7 @@ describe ArchiveRecipe do
       allow(YAMLPresenter).to receive(:new).and_return('')
 
       expect do
-        described_class.new(recipe).tar!
+        described_class.new(recipe).compress!
       end.not_to raise_error
     end
   end
