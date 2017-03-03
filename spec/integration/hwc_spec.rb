@@ -31,8 +31,9 @@ describe 'building a binary', :integration do
       Dir.chdir(@unzip_dir) do
         FileUtils.cp(@binary_zip_location, Dir.pwd)
         system "unzip hwc-1.0.1-windows-amd64.zip"
-        file_output = `file hwc.exe`.strip
-        expect(file_output).to eq('hwc.exe: PE32+ executable for MS Windows (console) Mono/.Net assembly')
+        file_output = `file hwc.exe`
+        expect(file_output).to include('hwc.exe: PE32+ executable')
+        expect(file_output).to include('for MS Windows')
       end
     end
   end
