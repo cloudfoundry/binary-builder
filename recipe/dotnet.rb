@@ -31,6 +31,7 @@ class DotNetRecipe < BaseRecipe
               CMD
 
     Dir.chdir("#{tmp_path}/cli") do
+      ENV['DropSuffix'] = 'true'
       raise 'Could not build dotnet' unless system('./build.sh /t:Compile')
     end
   end
