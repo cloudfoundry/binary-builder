@@ -3,6 +3,7 @@ require_relative 'ant'
 require_relative 'jruby'
 require_relative 'maven'
 require 'fileutils'
+require 'digest'
 
 class JRubyMeal
   attr_reader :name, :version
@@ -21,10 +22,18 @@ class JRubyMeal
     java_jdk_dir = '/opt/java'
     java_jdk_tar_file = File.join(java_jdk_dir, 'openjdk-8-jdk.tar.gz')
     java_jdk_bin_dir = File.join(java_jdk_dir, 'bin')
+    java_jdk_sha256 = '6468075c92cd9bfa64f79c381dd4a09664521bd43e19aeb4ea87c4274bc6102e'
     java_buildpack_java_sdk = "https://java-buildpack.cloudfoundry.org/openjdk-jdk/trusty/x86_64/openjdk-1.8.0_121.tar.gz"
 
     FileUtils.mkdir_p(java_jdk_dir)
     raise "Downloading openjdk-8-jdk failed." unless system("wget #{java_buildpack_java_sdk} -O #{java_jdk_tar_file}")
+
+    downloaded_sha = Digest::SHA256.file(java_jdk_tar_file).hexdigest
+
+    if java_jdk_sha256 != downloaded_sha
+      raise "sha256 verification failed: expected #{java_jdk_sha256}, got #{downloaded_sha}"
+    end
+
     raise "Untarring openjdk-8-jdk failed." unless system("tar xvf #{java_jdk_tar_file} -C #{java_jdk_dir}")
 
     ENV['JAVA_HOME'] = java_jdk_dir
