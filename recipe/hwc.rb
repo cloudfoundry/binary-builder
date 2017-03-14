@@ -1,5 +1,8 @@
 # encoding: utf-8
 require_relative 'base'
+require_relative '../lib/install_go'
+require 'yaml'
+require 'digest'
 
 class HwcRecipe < BaseRecipe
   attr_reader :name, :version
@@ -8,13 +11,7 @@ class HwcRecipe < BaseRecipe
     download unless downloaded?
     extract
 
-    # Installs go 1.8 binary to /usr/local/go/bin
-    Dir.chdir("/usr/local") do
-      go_download = "https://storage.googleapis.com/golang/go1.8.linux-amd64.tar.gz"
-      go_tar = "go.tar.gz"
-      system("curl -L #{go_download} -o #{go_tar}")
-      system("tar xf #{go_tar}")
-    end
+    install_go_compiler
 
     FileUtils.rm_rf("#{tmp_path}/hwc")
     FileUtils.mv(Dir.glob("#{tmp_path}/hwc-*/hwc").first, "#{tmp_path}/hwc")

@@ -8,13 +8,7 @@ class GodepMeal < BaseRecipe
     download unless downloaded?
     extract
 
-    # Installs go 1.6.2 binary to /usr/local/go/bin
-    Dir.chdir("/usr/local") do
-      go_download = "https://storage.googleapis.com/golang/go1.6.2.linux-amd64.tar.gz"
-      go_tar = "go.tar.gz"
-      system("curl -L #{go_download} -o #{go_tar}")
-      system("tar xf #{go_tar}")
-    end
+    install_go_compiler
 
     FileUtils.rm_rf("#{tmp_path}/godep")
     FileUtils.mv(Dir.glob("#{tmp_path}/godep-*").first, "#{tmp_path}/godep")
