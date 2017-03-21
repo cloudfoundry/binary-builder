@@ -7,8 +7,8 @@ describe 'building a binary', :integration do
   context 'when hwc is specified' do
 
     before(:all) do
-      run_binary_builder('hwc', '1.0.1', '--sha256=43839c40ffc0833192c2dac3fcc02ae7015ccab1df7717d2fc1c6c684368d81f')
-      @binary_zip_location = File.join(Dir.pwd, 'hwc-1.0.1-windows-amd64.zip')
+      run_binary_builder('hwc', '2.0.0', '--sha256=7de05bf5baed5518b4880a982f7da60a8951c4a5950677d907aec8496a0cd952')
+      @binary_zip_location = File.join(Dir.pwd, 'hwc-2.0.0-windows-amd64.zip')
       @unzip_dir = Dir.mktmpdir
     end
 
@@ -20,7 +20,7 @@ describe 'building a binary', :integration do
     it 'builds the specified binary, zips it, and places it in your current working directory' do
       expect(File).to exist(@binary_zip_location)
 
-      zip_file_cmd = "file hwc-1.0.1-windows-amd64.zip"
+      zip_file_cmd = "file hwc-2.0.0-windows-amd64.zip"
       output, status = run(zip_file_cmd)
 
       expect(status).to be_success
@@ -30,7 +30,7 @@ describe 'building a binary', :integration do
     it 'builds a windows binary' do
       Dir.chdir(@unzip_dir) do
         FileUtils.cp(@binary_zip_location, Dir.pwd)
-        system "unzip hwc-1.0.1-windows-amd64.zip"
+        system "unzip hwc-2.0.0-windows-amd64.zip"
         file_output = `file hwc.exe`
         expect(file_output).to include('hwc.exe: PE32+ executable')
         expect(file_output).to include('for MS Windows')

@@ -14,7 +14,7 @@ class HwcRecipe < BaseRecipe
     install_go_compiler
 
     FileUtils.rm_rf("#{tmp_path}/hwc")
-    FileUtils.mv(Dir.glob("#{tmp_path}/hwc-*/hwc").first, "#{tmp_path}/hwc")
+    FileUtils.mv(Dir.glob("#{tmp_path}/hwc-*").first, "#{tmp_path}/hwc")
     Dir.chdir("#{tmp_path}/hwc") do
       system(
         {"GOPATH" => "/tmp",
