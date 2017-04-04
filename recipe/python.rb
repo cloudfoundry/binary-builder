@@ -7,7 +7,8 @@ class PythonRecipe < BaseRecipe
     [
       '--enable-shared',
       '--with-ensurepip=no',
-      "--prefix=#{prefix_path}"
+      "--prefix=#{prefix_path}",
+      '--enable-unicode=ucs4'
     ]
   end
 
