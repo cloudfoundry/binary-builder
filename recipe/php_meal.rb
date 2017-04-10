@@ -136,14 +136,15 @@ class PhpMeal
   end
 
   def php5_apt_packages
-    php_common_apt_packages + %w(automake freetds-dev libgearman-dev libsybdb5)
+    # php_common_apt_packages + %w(automake freetds-dev libgearman-dev libsybdb5)
+    php_common_apt_packages + %w(automake freetds-devel)
   end
 
   def php7_apt_packages
     php_common_apt_packages + %w(libmemcached-dev)
   end
 
-  def php_common_apt_packages
+  def php_common_apt_packages_orig
     %w(libaspell-dev
       libc-client2007e-dev
       libcurl4-openssl-dev
@@ -169,6 +170,30 @@ class PhpMeal
       libgeoip-dev)
   end
 
+  def php_common_apt_packages
+    %w(aspell-devel
+      libc-client2007e_suse
+      libexpat-devel
+      gdbm-devel
+      gmp-devel
+      openldap2-devel
+      libldb-devel
+      libmcrypt-devel
+      libpng12-devel
+      libpng12-compat-devel
+      libpspell15
+      readline-devel
+      sqlite3-devel
+      libopenssl-devel
+      libuv-devel
+      libxml2-devel
+      libzip-devel
+      automake
+      freetype2-devel
+      libxslt-devel
+      libGeoIP-devel)
+  end
+
   def symlink_commands
     if @major_version == '5'
       php5_symlinks.join("\n")
@@ -178,7 +203,9 @@ class PhpMeal
   end
 
   def php5_symlinks
-    php_common_symlinks + ["sudo ln -fs /usr/lib/x86_64-linux-gnu/libsybdb.so /usr/lib/libsybdb.so"]
+    # php_common_symlinks + ["sudo ln -fs /usr/lib/x86_64-linux-gnu/libsybdb.so /usr/lib/libsybdb.so"]
+    # php_common_symlinks
+    ["sudo ln -fs /usr/lib64/libsybdb.so /usr/lib/libsybdb.so"]
   end
 
   def php7_symlinks
