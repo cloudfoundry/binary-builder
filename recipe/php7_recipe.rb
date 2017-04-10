@@ -47,7 +47,8 @@ class Php7Recipe < BaseRecipe
       '--with-openssl=shared',
       '--enable-fpm',
       '--enable-pcntl=shared',
-      '--with-readline'
+      '--with-readline',
+      '--with-libdir=lib64'
     ]
   end
 
@@ -84,17 +85,17 @@ class Php7Recipe < BaseRecipe
 
   def setup_tar
     system <<-eof
-      cp -a /usr/local/lib/x86_64-linux-gnu/librabbitmq.so* #{path}/lib/
+      cp -a /usr/local/lib64/librabbitmq.so* #{path}/lib/
       cp -a #{@hiredis_path}/lib/libhiredis.so* #{path}/lib/
-      cp -a /usr/lib/libc-client.so* #{path}/lib/
-      cp -a /usr/lib/libmcrypt.so* #{path}/lib
-      cp -a /usr/lib/libaspell.so* #{path}/lib
-      cp -a /usr/lib/libpspell.so* #{path}/lib
-      cp -a /usr/lib/x86_64-linux-gnu/libmemcached.so* #{path}/lib
-      cp -a /usr/local/lib/x86_64-linux-gnu/libcassandra.so* #{path}/lib
-      cp -a /usr/lib/x86_64-linux-gnu/libuv.so* #{path}/lib
+      cp -a /usr/lib64/libc-client.so* #{path}/lib/
+      cp -a /usr/lib64/libmcrypt.so* #{path}/lib
+      cp -a /usr/lib64/libaspell.so* #{path}/lib
+      cp -a /usr/lib64/libpspell.so* #{path}/lib
+      cp -a /usr/lib64/libmemcached.so* #{path}/lib
+      cp -a /usr/local/lib64/libcassandra.so* #{path}/lib
+      cp -a /usr/lib64/libuv.so* #{path}/lib
       cp -a /usr/lib/librdkafka.so* #{path}/lib
-      cp -a /usr/lib/x86_64-linux-gnu/libGeoIP.so* #{path}/lib/
+      cp -a /usr/lib64/libGeoIP.so* #{path}/lib/
     eof
 
     if IonCubeRecipe.build_ioncube?(version)

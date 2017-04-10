@@ -191,7 +191,12 @@ class PhpMeal
       automake
       freetype2-devel
       libxslt-devel
-      libGeoIP-devel)
+      libGeoIP-devel
+      ImageMagick-devel
+      cyrus-sasl-devel
+      imap-devel
+      krb5-mini-devel
+      net-snmp-devel)
   end
 
   def symlink_commands
@@ -213,9 +218,10 @@ class PhpMeal
   end
 
   def php_common_symlinks
-     ["sudo ln -fs /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h",
-      "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap.so /usr/lib/libldap.so",
-      "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap_r.so /usr/lib/libldap_r.so"]
+  #   ["sudo ln -fs /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h",
+  #    "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap.so /usr/lib/libldap.so",
+  #    "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap_r.so /usr/lib/libldap_r.so"]
+    []
   end
 
 

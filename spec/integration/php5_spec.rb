@@ -33,14 +33,13 @@ describe 'building a binary', :integration do
     it 'copies in *.so files for some of the compiled extensions' do
       expect(tar_contains_file('php/lib/librabbitmq.so.4')).to eq true
       expect(tar_contains_file('php/lib/libhiredis.so.0.13')).to eq true
-      expect(tar_contains_file('php/lib/libc-client.so.2007e')).to eq true
+      expect(tar_contains_file('php/lib/libc-client.so.2007e*')).to eq true
       expect(tar_contains_file('php/lib/libmcrypt.so.4')).to eq true
       expect(tar_contains_file('php/lib/libaspell.so.15')).to eq true
       expect(tar_contains_file('php/lib/libpspell.so.15')).to eq true
       expect(tar_contains_file('php/lib/libmemcached.so.11')).to eq true
-      expect(tar_contains_file('php/lib/libgearman.so.7')).to eq true
       expect(tar_contains_file('php/lib/libcassandra.so.2')).to eq true
-      expect(tar_contains_file('php/lib/libuv.so.0.10')).to eq true
+      expect(tar_contains_file('php/lib/libuv.so.1')).to eq true
       expect(tar_contains_file('php/lib/libsybdb.so.5')).to eq true
       expect(tar_contains_file('php/lib/librdkafka.so.1')).to eq true
 
