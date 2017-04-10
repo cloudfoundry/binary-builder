@@ -29,7 +29,7 @@ class AprUtilRecipe < BaseRecipe
       '--with-mysql',
       '--with-pgsql',
       '--with-gdbm',
-#      '--with-ldap'
+      '--with-ldap'
     ]
   end
 
@@ -98,7 +98,17 @@ class HTTPdMeal
     @options = options
   end
 
+  def apt_packages
+    %w(gdbm-devel
+       openldap2-devel)
+  end
+
   def cook
+    system <<-eof
+      sudo zypper refresh
+      sudo zypper install -y #{apt_packages.join(" ")}
+    eof
+
     apr_recipe.cook
     apr_iconv_recipe.cook
     apr_util_recipe.cook
