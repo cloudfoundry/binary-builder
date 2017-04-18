@@ -1,5 +1,4 @@
 # encoding: utf-8
-require_relative 'ant'
 require_relative 'jruby'
 require_relative 'maven'
 require 'fileutils'
@@ -39,9 +38,6 @@ class JRubyMeal
     ENV['JAVA_HOME'] = java_jdk_dir
     ENV['PATH'] = "#{ENV['PATH']}:#{java_jdk_bin_dir}"
 
-    ant.cook
-    ant.activate
-
     maven.cook
     maven.activate
 
@@ -67,9 +63,8 @@ class JRubyMeal
   private
 
   def files_hashs
-    ant.send(:files_hashs) +
-      maven.send(:files_hashs) +
-      jruby.send(:files_hashs)
+    maven.send(:files_hashs) +
+    jruby.send(:files_hashs)
   end
 
   def jruby
@@ -77,10 +72,6 @@ class JRubyMeal
   end
 
   def maven
-    @maven ||= MavenRecipe.new('maven', '3.3.9', md5: '030ce5b3d369f01aca6249b694d4ce03')
-  end
-
-  def ant
-    @ant ||= AntRecipe.new('ant', '1.10.0', md5: '2260301bb7734e34d8b96f1a5fd7979c')
+    @maven ||= MavenRecipe.new('maven', '3.5.0', md5: '1bfcb1f297f14d673ce4fcaf897c5206')
   end
 end
