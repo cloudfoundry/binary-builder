@@ -36,7 +36,7 @@ class HwcRecipe < BaseRecipe
   end
 
   def tmp_path
-    '/tmp/src/github.com/cloudfoundry-incubator'
+    '/tmp/src/code.cloudfoundry.org'
   end
 
   def archive_filename
