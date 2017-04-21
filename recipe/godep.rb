@@ -1,5 +1,6 @@
 # encoding: utf-8
 require_relative 'base'
+require_relative '../lib/install_go'
 
 class GodepMeal < BaseRecipe
   attr_reader :name, :version
