@@ -14,7 +14,7 @@ class MaxMindGeoIpUpdater
         @client_ip = nil
         @challenge_digest = nil
     end
-    
+
     def get_filename(product_id)
         uri = URI.parse("#{@proto}://#{@host}/app/update_getfilename")
         uri.query = URI.encode_www_form({ :product_id => product_id})
@@ -38,9 +38,10 @@ class MaxMindGeoIpUpdater
             :user_id => @user_id,
             :edition_id => product_id
         })
+
         Net::HTTP.start(uri.host, uri.port) do |http|
-            req = Net::HTTP::Get.new(uri)
-            
+            req = Net::HTTP::Get.new(uri.request_uri)
+
             http.request(req) do |resp|
                 file = Tempfile.new('geiop_db_download')
                 begin
