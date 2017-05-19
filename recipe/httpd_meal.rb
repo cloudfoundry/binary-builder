@@ -79,6 +79,7 @@ class HTTPdRecipe < BaseRecipe
       mkdir -p lib
       cp "#{@apr_path}/lib/libapr-1.so.0" ./lib
       cp "#{@apr_util_path}/lib/libaprutil-1.so.0" ./lib
+      cp "#{@apr_util_path}/lib/libexpat.so.0" ./lib
       mkdir -p "./lib/apr-util-1"
       cp "#{@apr_util_path}/lib/apr-util-1/"*.so ./lib/apr-util-1/
       mkdir -p "./lib/iconv"
@@ -97,7 +98,17 @@ class HTTPdMeal
     @options = options
   end
 
+  def apt_packages
+    %w(gdbm-devel
+       openldap2-devel)
+  end
+
   def cook
+    system <<-eof
+      sudo zypper refresh
+      sudo zypper install -y #{apt_packages.join(" ")}
+    eof
+
     apr_recipe.cook
     apr_iconv_recipe.cook
     apr_util_recipe.cook

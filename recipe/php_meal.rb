@@ -136,7 +136,7 @@ class PhpMeal
   end
 
   def php5_apt_packages
-    php_common_apt_packages + %w(automake freetds-dev libgearman-dev libsybdb5)
+    php_common_apt_packages + %w(automake freetds-devel)
   end
 
   def php7_apt_packages
@@ -144,29 +144,32 @@ class PhpMeal
   end
 
   def php_common_apt_packages
-    %w(libaspell-dev
-      libc-client2007e-dev
-      libcurl4-openssl-dev
-      libexpat1-dev
-      libgdbm-dev
-      libgmp-dev
-      libjpeg-dev
-      libldap2-dev
-      libmcrypt-dev
-      libpng12-dev
-      libpspell-dev
-      libreadline-dev
-      libsasl2-dev
-      libsnmp-dev
-      libsqlite3-dev
-      libssl-dev
-      libuv-dev
-      libxml2-dev
-      libzip-dev
-      libzookeeper-mt-dev
-      snmp-mibs-downloader
+    %w(aspell-devel
+      libc-client2007e_suse
+      libexpat-devel
+      gdbm-devel
+      gmp-devel
+      openldap2-devel
+      libldb-devel
+      libmcrypt-devel
+      libpng12-devel
+      libpng12-compat-devel
+      libpspell15
+      readline-devel
+      sqlite3-devel
+      libopenssl-devel
+      libuv-devel
+      libxml2-devel
+      libzip-devel
       automake
-      libgeoip-dev)
+      freetype2-devel
+      libxslt-devel
+      libGeoIP-devel
+      ImageMagick-devel
+      cyrus-sasl-devel
+      imap-devel
+      krb5-mini-devel
+      net-snmp-devel)
   end
 
   def symlink_commands
@@ -178,19 +181,12 @@ class PhpMeal
   end
 
   def php5_symlinks
-    php_common_symlinks + ["sudo ln -fs /usr/lib/x86_64-linux-gnu/libsybdb.so /usr/lib/libsybdb.so"]
+    ["sudo ln -fs /usr/lib64/libsybdb.so /usr/lib/libsybdb.so"]
   end
 
   def php7_symlinks
-    php_common_symlinks
+    []
   end
-
-  def php_common_symlinks
-     ["sudo ln -fs /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h",
-      "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap.so /usr/lib/libldap.so",
-      "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap_r.so /usr/lib/libldap_r.so"]
-  end
-
 
   def should_cook?(recipe)
     case recipe.name

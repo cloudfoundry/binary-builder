@@ -51,7 +51,8 @@ class Php5Recipe < BaseRecipe
       '--with-openssl=shared',
       '--enable-fpm',
       '--enable-pcntl=shared',
-      '--with-readline=shared'
+      '--with-readline=shared',
+      '--with-libdir=lib64'
     ]
   end
 
@@ -91,17 +92,17 @@ class Php5Recipe < BaseRecipe
       cp -a #{@hiredis_path}/lib/libhiredis.so* #{path}/lib/
       cp #{@ioncube_path}/ioncube/ioncube_loader_lin_#{major_version}.so #{zts_path}/ioncube.so
       cp -a #{@libmemcached_path}/lib/libmemcached.so* #{path}/lib/
-      cp -a /usr/lib/libc-client.so* #{path}/lib/
-      cp -a /usr/lib/libmcrypt.so* #{path}/lib
-      cp -a /usr/lib/libaspell.so* #{path}/lib
-      cp -a /usr/lib/libpspell.so* #{path}/lib
-      cp -a /usr/lib/x86_64-linux-gnu/libgearman.so* #{path}/lib
-      cp -a /usr/local/lib/x86_64-linux-gnu/libcassandra.so* #{path}/lib
-      cp -a /usr/lib/x86_64-linux-gnu/libuv.so* #{path}/lib
-      cp -a /usr/local/lib/x86_64-linux-gnu/librabbitmq.so* #{path}/lib/
-      cp -a /usr/lib/x86_64-linux-gnu/libsybdb.so* #{path}/lib/
+      cp -a /usr/lib64/libc-client.so* #{path}/lib/
+      cp -a /usr/lib64/libmcrypt.so* #{path}/lib
+      cp -a /usr/lib64/libaspell.so* #{path}/lib
+      cp -a /usr/lib64/libpspell.so* #{path}/lib
+      # cp -a /usr/lib/x86_64-linux-gnu/libgearman.so* #{path}/lib
+      cp -a /usr/local/lib64/libcassandra.so* #{path}/lib
+      cp -a /usr/lib64/libuv.so* #{path}/lib
+      cp -a /usr/local/lib64/librabbitmq.so* #{path}/lib/
+      cp -a /usr/lib64/libsybdb.so* #{path}/lib/
       cp -a /usr/lib/librdkafka.so* #{path}/lib
-      cp -a /usr/lib/x86_64-linux-gnu/libGeoIP.so* #{path}/lib/
+      cp -a /usr/lib64/libGeoIP.so* #{path}/lib/
 
       # Remove unused files
       rm "#{path}/etc/php-fpm.conf.default"
