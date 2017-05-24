@@ -168,7 +168,7 @@ class PhpMeal
       ImageMagick-devel
       cyrus-sasl-devel
       imap-devel
-      krb5-mini-devel
+      krb5-devel
       net-snmp-devel)
   end
 
