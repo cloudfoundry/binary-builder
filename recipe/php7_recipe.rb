@@ -92,7 +92,7 @@ class Php7Recipe < BaseRecipe
       cp -a /usr/lib/libpspell.so* #{path}/lib
       cp -a /usr/lib/x86_64-linux-gnu/libmemcached.so* #{path}/lib
       cp -a /usr/local/lib/x86_64-linux-gnu/libcassandra.so* #{path}/lib
-      cp -a /usr/lib/x86_64-linux-gnu/libuv.so* #{path}/lib
+      cp -a /usr/local/lib/libuv.so* #{path}/lib
       cp -a /usr/lib/librdkafka.so* #{path}/lib
       cp -a /usr/lib/x86_64-linux-gnu/libGeoIP.so* #{path}/lib/
     eof

@@ -10,7 +10,8 @@ describe 'building a binary', :integration do
       extensions_file = File.join(@extensions_dir, 'php7-extensions.yml')
 
       File.write(extensions_file, open(php_extensions_source('7')).read)
-      run_binary_builder('php7', '7.1.0', "--md5=ec2218f97b4edbc35a2d7919ff37a662 --php-extensions-file=#{extensions_file}")
+      _, status = run_binary_builder('php7', '7.1.0', "--md5=ec2218f97b4edbc35a2d7919ff37a662 --php-extensions-file=#{extensions_file}")
+      expect(status).to be_success
       @binary_tarball_location = Dir.glob(File.join(Dir.pwd, 'php7-7.1.0-linux-x64.tgz')).first
     end
 
@@ -38,7 +39,7 @@ describe 'building a binary', :integration do
       expect(tar_contains_file('php/lib/libpspell.so.15')).to eq true
       expect(tar_contains_file('php/lib/libmemcached.so.10')).to eq true
       expect(tar_contains_file('php/lib/libcassandra.so.2')).to eq true
-      expect(tar_contains_file('php/lib/libuv.so.0.10')).to eq true
+      expect(tar_contains_file('php/lib/libuv.so.1.0.0')).to eq true
       expect(tar_contains_file('php/lib/librdkafka.so.1')).to eq true
 
       expect(tar_contains_file('php/lib/php/extensions/*/apcu.so')).to eq true

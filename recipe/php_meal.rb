@@ -33,6 +33,7 @@ class PhpMeal
       sudo apt-get update
       sudo apt-get -y upgrade
       sudo apt-get -y install #{apt_packages}
+      #{install_libuv}
       #{symlink_commands}
     eof
 
@@ -136,7 +137,7 @@ class PhpMeal
   end
 
   def php5_apt_packages
-    php_common_apt_packages + %w(automake freetds-dev libgearman-dev libsybdb5)
+    php_common_apt_packages + %w(freetds-dev libgearman-dev libsybdb5)
   end
 
   def php7_apt_packages
@@ -160,13 +161,26 @@ class PhpMeal
       libsnmp-dev
       libsqlite3-dev
       libssl-dev
-      libuv-dev
+      libtool
       libxml2-dev
       libzip-dev
       libzookeeper-mt-dev
       snmp-mibs-downloader
       automake
       libgeoip-dev)
+  end
+
+  def install_libuv
+    %q((
+       cd /tmp
+       wget http://dist.libuv.org/dist/v1.12.0/libuv-v1.12.0.tar.gz
+       tar zxf libuv-v1.12.0.tar.gz
+       cd libuv-v1.12.0
+       sh autogen.sh
+       ./configure
+       make install
+       )
+    )
   end
 
   def symlink_commands
