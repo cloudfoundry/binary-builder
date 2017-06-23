@@ -32,7 +32,7 @@ describe 'building a binary', :run_geolite_php_tests do
       expect(tar_contains_file('php/lib/libmemcached.so.11')).to eq true
       expect(tar_contains_file('php/lib/libgearman.so.7')).to eq true
       expect(tar_contains_file('php/lib/libcassandra.so.2')).to eq true
-      expect(tar_contains_file('php/lib/libuv.so.0.10')).to eq true
+      expect(tar_contains_file('php/lib/libuv.so.1.0.0')).to eq true
       expect(tar_contains_file('php/lib/libsybdb.so.5')).to eq true
       expect(tar_contains_file('php/lib/librdkafka.so.1')).to eq true
 
