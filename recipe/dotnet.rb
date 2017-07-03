@@ -37,11 +37,11 @@ class DotNetRecipe < BaseRecipe
   end
 
   def archive_files
-    ["#{tmp_path}/cli/artifacts/ubuntu.14.04-x64/stage2/*"]
+    ["#{tmp_path}/cli/artifacts/*-x64/stage2/*"]
   end
 
   def archive_filename
-    dotnet_version = `#{tmp_path}/cli/artifacts/ubuntu.14.04-x64/stage2/dotnet --version`.strip
+    dotnet_version = `#{tmp_path}/cli/artifacts/*-x64/stage2/dotnet --version`.strip
     "#{name}.#{dotnet_version}.linux-amd64.tar.gz"
   end
 
