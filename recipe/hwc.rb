@@ -13,18 +13,23 @@ class HwcRecipe < BaseRecipe
 
     install_go_compiler
 
+    system <<-eof
+      sudo apt-get update
+      sudo apt-get -y upgrade
+      sudo apt-get -y install mingw-w64
+    eof
+
     FileUtils.rm_rf("#{tmp_path}/hwc")
     FileUtils.mv(Dir.glob("#{tmp_path}/hwc-*").first, "#{tmp_path}/hwc")
     Dir.chdir("#{tmp_path}/hwc") do
       system(
         {"GOPATH" => "/tmp",
-         "PATH" => "#{ENV["PATH"]}:/usr/local/go/bin",
-         "GOOS" => "windows"},
-        "/usr/local/go/bin/go build"
+         "PATH" => "#{ENV["PATH"]}:/usr/local/go/bin"},
+      "./scripts/build.sh"
       ) or raise "Could not build hwc"
     end
 
-    FileUtils.mv("#{tmp_path}/hwc/hwc.exe", "/tmp/hwc.exe")
+    FileUtils.mv("#{tmp_path}/hwc/hwc-rel/hwc.exe", "/tmp/hwc.exe")
   end
 
   def archive_files
