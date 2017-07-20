@@ -41,6 +41,7 @@ describe 'building a binary', :integration do
       expect(tar_contains_file('php/lib/libcassandra.so.2')).to eq true
       expect(tar_contains_file('php/lib/libuv.so.1.0.0')).to eq true
       expect(tar_contains_file('php/lib/librdkafka.so.1')).to eq true
+      expect(tar_contains_file('php/lib/libodbc.so')).to eq true
 
       expect(tar_contains_file('php/lib/php/extensions/*/apcu.so')).to eq true
       # removing assertion until ioncube has PHP 7.1 support
@@ -50,6 +51,8 @@ describe 'building a binary', :integration do
       # phalcon does not support php 7.1.x yet
       # https://github.com/phalcon/cphalcon/issues/12444
       expect(tar_contains_file('php/lib/php/extensions/*/phalcon.so')).to eq false
+      expect(tar_contains_file('php/lib/php/extensions/*/odbc.so')).to eq true
+      expect(tar_contains_file('php/lib/php/extensions/*/pdo_odbc.so')).to eq true
 
       expect(tar_contains_file('php/lib/libGeoIP.so.1')).to eq true
       expect(tar_contains_file('php/lib/php/extensions/*/geoip.so')).to eq true
