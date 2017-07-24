@@ -106,15 +106,6 @@ class LibmemcachedRecipe < BaseRecipe
   end
 end
 
-# We need to compile from source until Ubuntu packages version 2.3.0+
-#  The unixODBC library version changed from 1 to 2 at this point, so
-#  newer ODBC drivers won't work with the older library.
-class UnixOdbcRecipe < BaseRecipe
-  def url
-    "http://www.unixodbc.org/unixODBC-#{version}.tar.gz"
-  end
-end
-
 class LibRdKafkaRecipe < BaseRecipe
   def url
     "https://github.com/edenhill/librdkafka/archive/v#{version}.tar.gz"
@@ -195,72 +186,6 @@ class MemcachedPeclRecipe < PeclRecipe
       '--enable-memcached-json'
     ]
   end
-end
-
-class FakePeclRecipe < PeclRecipe
-  def download
-    # this copys an extension folder out of the PHP source director (i.e. `ext/<name>`)
-    # it pretends to download it by making a zip of the extension files
-    # that way the rest of the PeclRecipe works normally
-    files_hashs.each do |file|
-      path = URI(file[:url]).path.rpartition('-')[0] # only need path before the `-`, see url above
-      system <<-eof
-        echo 'tar czf "#{file[:local_path]}" -C "#{File.dirname(path)}" "#{File.basename(path)}"'
-        tar czf "#{file[:local_path]}" -C "#{File.dirname(path)}" "#{File.basename(path)}"
-      eof
-    end
-  end
-end
-
-class OdbcRecipe < FakePeclRecipe
-  def url
-    "file://#{@php_source}/ext/odbc-#{version}.tar.gz"
-  end
-
-  def configure_options
-    [
-      "--with-unixODBC=shared,#{@unixodbc_path}"
-    ]
-  end
-
-  def patch
-    # patching same issue mentioned here ->
-    #   https://github.com/docker-library/php/issues/103#issuecomment-271434109
-    system <<-eof
-      cd #{work_path}
-      echo 'AC_DEFUN([PHP_ALWAYS_SHARED],[])dnl' > temp.m4
-      echo >> temp.m4
-      cat config.m4 >> temp.m4
-      mv temp.m4 config.m4
-    eof
-  end
-
-  def setup_tar
-    system <<-eof
-      cp -a #{@unixodbc_path}/lib/libodbc.so* #{@php_path}/lib/
-      cp -a #{@unixodbc_path}/lib/libodbcinst.so* #{@php_path}/lib/
-    eof
-  end
-end
-
-class PdoOdbcRecipe < FakePeclRecipe
-  def url
-    "file://#{@php_source}/ext/pdo_odbc-#{version}.tar.gz"
-  end
-
-  def configure_options
-    [
-      "--with-pdo-odbc=unixODBC,#{@unixodbc_path}"
-    ]
-  end
-
-  def setup_tar
-    system <<-eof
-      cp -a #{@unixodbc_path}/lib/libodbc.so* #{@php_path}/lib/
-      cp -a #{@unixodbc_path}/lib/libodbcinst.so* #{@php_path}/lib/
-    eof
-  end
-
 end
 
 class OraclePdoRecipe < PeclRecipe
