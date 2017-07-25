@@ -20,7 +20,7 @@ class PhpMeal
     (@native_modules + @extensions).each do |recipe|
       recipe.instance_variable_set('@php_path', php_recipe.path)
 
-      if recipe.name == 'pdo_oci'
+      if recipe.name == 'pdo_oci' || recipe.name == 'odbc' || recipe.name == 'pdo_odbc'
         recipe.instance_variable_set('@version', @version)
         recipe.instance_variable_set('@php_source', "#{php_recipe.send(:tmp_path)}/php-#{@version}")
         recipe.instance_variable_set('@files', [{url: recipe.url, md5: nil}])
@@ -79,6 +79,8 @@ class PhpMeal
       @extensions.detect{|r| r.name=='oci8'}.setup_tar
       @extensions.detect{|r| r.name=='pdo_oci'}.setup_tar
     end
+    @extensions.detect{|r| r.name=='odbc'}&.setup_tar
+    @extensions.detect{|r| r.name=='pdo_odbc'}&.setup_tar
   end
 
   private
@@ -124,6 +126,10 @@ class PhpMeal
         recipe.instance_variable_set('@php_version', "php#{@major_version}")
       when 'phpiredis'
         recipe.instance_variable_set('@hiredis_path', @native_modules.detect{|r| r.name=='hiredis'}.path)
+      when 'odbc'
+        recipe.instance_variable_set('@unixodbc_path', @native_modules.detect{|r| r.name=='unixodbc'}.path)
+      when 'pdo_odbc'
+        recipe.instance_variable_set('@unixodbc_path', @native_modules.detect{|r| r.name=='unixodbc'}.path)
       end
     end
   end
