@@ -62,8 +62,8 @@ aySUQcOvO67Z14d9E9ziX/E24KWl6xRymmy9VhzawgSmf//3yZVaD6C/8om3qMw=
                                                         'sha256' => '19381959d50c4a5f3b9c84d594a5f9ffb3809786919b3058281f4c87e1f4b245'
                                                       },
                                                       {
-                                                        'url'    => 'http://apache.mirrors.tds.net/apr/apr-util-1.5.4.tar.gz',
-                                                        'sha256' => '976a12a59bc286d634a21d7be0841cc74289ea9077aa1af46be19d1a6e844c19'
+                                                        'url'    => 'http://apache.mirrors.tds.net/apr/apr-util-1.6.0.tar.gz',
+                                                        'sha256' => '483ef4d59e6ac9a36c7d3fd87ad7b9db7ad8ae29c06b9dd8ff22dda1cc416389'
                                                       },
                                                       {
                                                         'url'    => 'https://archive.apache.org/dist/httpd/httpd-2.4.12.tar.bz2',
@@ -84,8 +84,8 @@ aySUQcOvO67Z14d9E9ziX/E24KWl6xRymmy9VhzawgSmf//3yZVaD6C/8om3qMw=
                                                         'sha256' => '19381959d50c4a5f3b9c84d594a5f9ffb3809786919b3058281f4c87e1f4b245'
                                                       },
                                                       {
-                                                        'url'    => 'http://apache.mirrors.tds.net/apr/apr-util-1.5.4.tar.gz',
-                                                        'sha256' => '976a12a59bc286d634a21d7be0841cc74289ea9077aa1af46be19d1a6e844c19'
+                                                        'url'    => 'http://apache.mirrors.tds.net/apr/apr-util-1.6.0.tar.gz',
+                                                        'sha256' => '483ef4d59e6ac9a36c7d3fd87ad7b9db7ad8ae29c06b9dd8ff22dda1cc416389'
                                                       },
                                                       {
                                                         'url'    => 'https://archive.apache.org/dist/httpd/httpd-2.4.12.tar.bz2',
