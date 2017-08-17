@@ -100,6 +100,7 @@ class HTTPdMeal
 
   def apt_packages
     %w(gdbm-devel
+       libexpat-devel
        openldap2-devel)
   end
 
