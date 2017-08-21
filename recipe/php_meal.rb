@@ -147,7 +147,7 @@ class PhpMeal
   end
 
   def php7_apt_packages
-    php_common_apt_packages + %w(libmemcached-dev)
+    php_common_apt_packages
   end
 
   def php_common_apt_packages
