@@ -17,7 +17,9 @@ class NginxRecipe < BaseRecipe
       '--without-http_uwsgi_module',
       '--without-http_scgi_module',
       '--with-pcre',
-      '--with-pcre-jit'
+      '--with-pcre-jit',
+      '--with-cc-opt=-fPIE -pie',
+      '--with-ld-opt=-fPIE -pie -z now',
     ]
   end
 
