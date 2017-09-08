@@ -20,6 +20,7 @@ recipes = {
      'godep' => GodepMeal,
      'glide' => GlideRecipe,
      'go' => GoRecipe,
+     'dep' => DepRecipe,
      'dotnet' => DotNetRecipe,
      'hwc' => HwcRecipe
 }
