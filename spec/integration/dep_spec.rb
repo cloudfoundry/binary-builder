@@ -5,7 +5,7 @@ require 'fileutils'
 describe 'building a binary', :integration do
   context 'when dep is specified' do
     before(:all) do
-      run_binary_builder('dep', 'v0.3.0', '--sha256=b8a43e8c95fee236ae8f366b2f7411f35908b981195699abdd47340053e6dd7f')
+      run_binary_builder('dep', 'v0.3.0', '--sha256=7d816ffb14f57c4b01352676998a8cda9e4fb24eaec92bd79526e1045c5a0c83')
       @binary_tarball_location = File.join(Dir.pwd, 'dep-v0.3.0-linux-amd64.tar.gz')
     end
 
