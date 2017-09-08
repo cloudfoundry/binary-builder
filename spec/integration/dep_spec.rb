@@ -24,7 +24,7 @@ describe 'building a binary', :integration do
     end
 
     it 'includes the license in the tar file.' do
-      expect(tar_contains_file('go/LICENSE')).to eq true
+      expect(tar_contains_file('bin/LICENSE')).to eq true
     end
   end
 end

@@ -22,7 +22,7 @@ class DepRecipe < BaseRecipe
   end
 
   def archive_files
-    ['/tmp/bin/dep', '/tmp/License']
+    ['/tmp/bin/dep', '/tmp/LICENSE']
   end
 
   def archive_path_name
