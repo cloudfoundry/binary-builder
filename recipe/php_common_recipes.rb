@@ -361,7 +361,7 @@ end
 
 class SuhosinPeclRecipe < PeclRecipe
   def url
-    "http://download.suhosin.org/suhosin-#{version}.tar.gz"
+    "https://github.com/sektioneins/suhosin/archive/#{version}.tar.gz"
   end
 end
 
