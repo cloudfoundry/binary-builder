@@ -44,4 +44,16 @@ class BaseRecipe < MiniPortile
   def tmp_path
     "/tmp/#{@host}/ports/#{@name}/#{@version}"
   end
+
+  def download_file(url, full_path, count = 3)
+    super
+
+    if @sources_export_dir
+      target_filename = File.basename(full_path)
+      target_filename.prepend("#{name}-#{}") unless target_filename.downcase.include?(name)
+
+      FileUtils.mkdir_p @sources_export_dir
+      FileUtils.cp full_path, File.join(@sources_export_dir, target_filename)
+    end
+  end
 end

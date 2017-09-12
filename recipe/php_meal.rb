@@ -92,7 +92,8 @@ class PhpMeal
       @native_modules << klass.new(
         hash['name'],
         hash['version'],
-        md5: hash['md5']
+        md5: hash['md5'],
+        sources_export_dir: @options[:sources_export_dir]
       )
     end
   end
@@ -107,7 +108,8 @@ class PhpMeal
       @extensions << klass.new(
         hash['name'],
         hash['version'],
-        md5: hash['md5']
+        md5: hash['md5'],
+        sources_export_dir: @options[:sources_export_dir]
       )
     end
 
@@ -223,6 +225,7 @@ class PhpMeal
     php_recipe_options[:hiredis_path] = hiredis_recipe.path unless hiredis_recipe.nil?
     php_recipe_options[:libmemcached_path] = libmemcached_recipe.path unless libmemcached_recipe.nil?
     php_recipe_options[:ioncube_path] = ioncube_recipe.path unless ioncube_recipe.nil?
+    php_recipe_options[:sources_export_dir] = @options[:sources_export_dir]
 
     php_recipe_options.merge(DetermineChecksum.new(@options).to_h)
 
