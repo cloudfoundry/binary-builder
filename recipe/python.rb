@@ -7,9 +7,16 @@ class PythonRecipe < BaseRecipe
     [
       '--enable-shared',
       '--with-ensurepip=no',
+      '--with-dbmliborder=bdb:gdbm',
       "--prefix=#{prefix_path}",
       '--enable-unicode=ucs4'
     ]
+  end
+
+  def cook
+    install_apt('libdb-dev libgdbm-dev')
+
+    super
   end
 
   def archive_files
@@ -28,5 +35,20 @@ class PythonRecipe < BaseRecipe
 
   def prefix_path
     '/app/.heroku/vendor'
+  end
+
+  private
+
+  def install_apt(packages)
+    STDOUT.print "Running 'install dependencies' for #{@name} #{@version}... "
+    STDOUT.flush
+    apt_output = `sudo apt-get update && sudo apt-get -y install #{packages}`
+    if $?.success?
+      STDOUT.puts "OK"
+    else
+      STDOUT.puts "ERROR, output was:"
+      STDOUT.puts apt_output
+      raise "Failed to complete install dependencies task"
+    end
   end
 end
