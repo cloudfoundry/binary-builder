@@ -53,6 +53,9 @@ optparser = OptionParser.new do |opts|
   opts.on('--php-extensions-file=FILE', 'yaml file containing PHP extensions + versions') do |n|
     options[:php_extensions_file] = n
   end
+  opts.on('--sources-export-dir=DIR', 'directory where source files will be stored after download') do |n|
+    options[:sources_export_dir] = n
+  end
 end
 optparser.parse!
 
@@ -69,9 +72,12 @@ raise "Unsupported recipe [#{options[:name]}], supported options are [#{recipes.
 
 recipe_options = DetermineChecksum.new(options).to_h
 
-if options[:php_extensions_file]
-  recipe_options[:php_extensions_file] = options[:php_extensions_file]
+[:php_extensions_file, :sources_export_dir].each do |option|
+  if options[option]
+    recipe_options[option] = options[option]
+  end
 end
+
 recipe = recipes[options[:name]].new(
   options[:name],
   options[:version],

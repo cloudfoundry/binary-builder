@@ -77,10 +77,12 @@ class JRubyMeal
   end
 
   def maven
-    @maven ||= MavenRecipe.new('maven', '3.3.9', md5: '030ce5b3d369f01aca6249b694d4ce03')
+    @maven ||= MavenRecipe.new('maven', '3.3.9', md5: '030ce5b3d369f01aca6249b694d4ce03',
+      sources_export_dir: @options[:sources_export_dir])
   end
 
   def ant
-    @ant ||= AntRecipe.new('ant', '1.10.0', md5: '2260301bb7734e34d8b96f1a5fd7979c')
+    @ant ||= AntRecipe.new('ant', '1.10.0', md5: '2260301bb7734e34d8b96f1a5fd7979c',
+      sources_export_dir: @options[:sources_export_dir])
   end
 end
