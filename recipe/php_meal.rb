@@ -157,6 +157,7 @@ class PhpMeal
       libexpat1-dev
       libgdbm-dev
       libgmp-dev
+      libgpgme11-dev
       libjpeg-dev
       libldap2-dev
       libmcrypt-dev
