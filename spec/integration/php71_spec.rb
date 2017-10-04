@@ -37,7 +37,7 @@ describe 'building a binary', :integration do
       expect(tar_contains_file('php/lib/libhiredis.so.0.13')).to eq true
       expect(tar_contains_file('php/lib/libmcrypt.so.4')).to eq true
       expect(tar_contains_file('php/lib/libpspell.so.15')).to eq true
-      expect(tar_contains_file('php/lib/libmemcached.so.10')).to eq true
+      expect(tar_contains_file('php/lib/libmemcached.so.11')).to eq true
       expect(tar_contains_file('php/lib/libcassandra.so.2')).to eq true
       expect(tar_contains_file('php/lib/libuv.so.1.0.0')).to eq true
       expect(tar_contains_file('php/lib/librdkafka.so.1')).to eq true
