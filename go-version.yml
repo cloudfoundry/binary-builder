@@ -1,3 +1,3 @@
 go:
-  - version: 1.9
-    sha256: d70eadefce8e160638a9a6db97f7192d8463069ab33138893ad3bf31b0650a79
+  - version: 1.9.1
+    sha256: 4e5bbb5e92ef7d8afe15c8121b7989753e94bd2ddb047f6b4e0069bd4a187e56
