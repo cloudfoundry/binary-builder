@@ -5,8 +5,8 @@ require 'fileutils'
 describe 'building a binary', :integration do
   context 'when jruby is specified' do
     before(:all) do
-      output = run_binary_builder('jruby', '9.1.6.0_ruby-2.3.1', '--sha256=b648dc46bec6c91ce48c0d7da09972f4f63dd7b7579d374e94fde17c219b05ae')
-      @binary_tarball_location = File.join(Dir.pwd, 'jruby-9.1.6.0_ruby-2.3.1-linux-x64.tgz')
+      output = run_binary_builder('jruby', '9.1.13.0_ruby-2.3.3', '--sha256=b34f6920c5664204a6486118a47f4ad84060bd82b6a7e214451e876fd560be2b')
+      @binary_tarball_location = File.join(Dir.pwd, 'jruby-9.1.13.0_ruby-2.3.3-linux-x64.tgz')
     end
 
     after(:all) do
@@ -20,7 +20,7 @@ describe 'building a binary', :integration do
       output, status = run(jruby_version_cmd)
 
       expect(status).to be_success
-      expect(output).to include('java 2.3.1')
+      expect(output).to include('java 2.3.3')
     end
   end
 end
