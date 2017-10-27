@@ -6,6 +6,7 @@ require_relative 'base'
 class NodeRecipe < BaseRecipe
   def computed_options
     [
+      '--openssl-use-def-ca-store',
       '--prefix=/'
     ]
   end
