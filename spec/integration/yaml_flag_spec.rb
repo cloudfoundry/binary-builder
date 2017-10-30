@@ -53,45 +53,40 @@ aySUQcOvO67Z14d9E9ziX/E24KWl6xRymmy9VhzawgSmf//3yZVaD6C/8om3qMw=
     it 'prints a yaml representation of the source used to build the binary to stdout' do
       yaml_source = @output.match(/Source YAML:(.*)/m)[1]
       expect(YAML.load(yaml_source)).to match_array([
-                                                      {
-                                                        'url'    => 'http://apache.mirrors.tds.net/apr/apr-1.6.3.tar.gz',
-                                                        'sha256' => 'b65e40713da57d004123b6319828be7f1273fbc6490e145874ee1177e112c459'
-                                                      },
-                                                      {
-                                                        'url'    => 'http://apache.mirrors.tds.net/apr/apr-iconv-1.2.1.tar.gz',
-                                                        'sha256' => '19381959d50c4a5f3b9c84d594a5f9ffb3809786919b3058281f4c87e1f4b245'
-                                                      },
-                                                      {
-                                                        'url'    => 'http://apache.mirrors.tds.net/apr/apr-util-1.6.0.tar.gz',
-                                                        'sha256' => '483ef4d59e6ac9a36c7d3fd87ad7b9db7ad8ae29c06b9dd8ff22dda1cc416389'
-                                                      },
-                                                      {
-                                                        'url'    => 'https://archive.apache.org/dist/httpd/httpd-2.4.12.tar.bz2',
-                                                        'sha256' => 'ad6d39edfe4621d8cc9a2791f6f8d6876943a9da41ac8533d77407a2e630eae4'
-                                                      }
-                                                    ])
+        {
+          "url"=>"https://archive.apache.org/dist/httpd/httpd-2.4.12.tar.bz2",
+          "sha256"=>"ad6d39edfe4621d8cc9a2791f6f8d6876943a9da41ac8533d77407a2e630eae4"
+        }, {
+          "url"=>"http://apache.mirrors.tds.net/apr/apr-1.6.3.tar.gz",
+          "sha256"=>"8fdabcc0004216c3588b7dca0f23d104dfe012a47e2bb6f13827534a6ee73aa7"
+        }, {
+          "url"=>"http://apache.mirrors.tds.net/apr/apr-iconv-1.2.2.tar.gz",
+          "sha256"=>"ce94c7722ede927ce1e5a368675ace17d96d60ff9b8918df216ee5c1298c6a5e"
+        }, {
+          "url"=>"http://apache.mirrors.tds.net/apr/apr-util-1.6.1.tar.gz",
+          "sha256"=>"b65e40713da57d004123b6319828be7f1273fbc6490e145874ee1177e112c459"
+        }
+      ])
     end
 
     it 'includes the yaml representation of the source inside the resulting tarball' do
       yaml_source = `tar xzf httpd-2.4.12-linux-x64.tgz sources.yml -O`
       expect(YAML.load(yaml_source)).to match_array([
-                                                      {
-                                                        'url'    => 'http://apache.mirrors.tds.net/apr/apr-1.6.3.tar.gz',
-                                                        'sha256' => 'b65e40713da57d004123b6319828be7f1273fbc6490e145874ee1177e112c459'
-                                                      },
-                                                      {
-                                                        'url'    => 'http://apache.mirrors.tds.net/apr/apr-iconv-1.2.1.tar.gz',
-                                                        'sha256' => '19381959d50c4a5f3b9c84d594a5f9ffb3809786919b3058281f4c87e1f4b245'
-                                                      },
-                                                      {
-                                                        'url'    => 'http://apache.mirrors.tds.net/apr/apr-util-1.6.0.tar.gz',
-                                                        'sha256' => '483ef4d59e6ac9a36c7d3fd87ad7b9db7ad8ae29c06b9dd8ff22dda1cc416389'
-                                                      },
-                                                      {
-                                                        'url'    => 'https://archive.apache.org/dist/httpd/httpd-2.4.12.tar.bz2',
-                                                        'sha256' => 'ad6d39edfe4621d8cc9a2791f6f8d6876943a9da41ac8533d77407a2e630eae4'
-                                                      }
-                                                    ])
+        {
+          "url"=>"https://archive.apache.org/dist/httpd/httpd-2.4.12.tar.bz2",
+          "sha256"=>"ad6d39edfe4621d8cc9a2791f6f8d6876943a9da41ac8533d77407a2e630eae4"
+        }, {
+          "url"=>"http://apache.mirrors.tds.net/apr/apr-1.6.3.tar.gz",
+          "sha256"=>"8fdabcc0004216c3588b7dca0f23d104dfe012a47e2bb6f13827534a6ee73aa7"
+        }, {
+          "url"=>"http://apache.mirrors.tds.net/apr/apr-iconv-1.2.2.tar.gz",
+          "sha256"=>"ce94c7722ede927ce1e5a368675ace17d96d60ff9b8918df216ee5c1298c6a5e"
+        },
+        {
+          "url"=>"http://apache.mirrors.tds.net/apr/apr-util-1.6.1.tar.gz",
+          "sha256"=>"b65e40713da57d004123b6319828be7f1273fbc6490e145874ee1177e112c459"
+        }
+      ])
     end
   end
 end
