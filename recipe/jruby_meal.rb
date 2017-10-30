@@ -72,6 +72,6 @@ class JRubyMeal
   end
 
   def maven
-    @maven ||= MavenRecipe.new('maven', '3.5.0', md5: '1bfcb1f297f14d673ce4fcaf897c5206')
+    @maven ||= MavenRecipe.new('maven', '3.5.2', md5: '08c769d4348a88bf9f224d84fa9d2b2b')
   end
 end
