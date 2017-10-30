@@ -143,17 +143,17 @@ class HTTPdMeal
   end
 
   def apr_util_recipe
-    @apr_util_recipe ||= AprUtilRecipe.new('apr-util', '1.6.0', apr_path: apr_recipe.path,
+    @apr_util_recipe ||= AprUtilRecipe.new('apr-util', '1.6.1', apr_path: apr_recipe.path,
                                                                 apr_iconv_path: apr_iconv_recipe.path,
-                                                                md5: '3b03dbff60728a4f4c33f5d929e8b35a')
+                                                                md5: 'bd502b9a8670a8012c4d90c31a84955f')
   end
 
   def apr_iconv_recipe
-    @apr_iconv_recipe ||= AprIconvRecipe.new('apr-iconv', '1.2.1', apr_path: apr_recipe.path,
-                                                                   md5: '4a27a1480e6862543396e59c4ffcdeb4')
+    @apr_iconv_recipe ||= AprIconvRecipe.new('apr-iconv', '1.2.2', apr_path: apr_recipe.path,
+                                                                   md5: '60ae6f95ee4fdd413cf7472fd9c776e3')
   end
 
   def apr_recipe
-    @apr_recipe ||= AprRecipe.new('apr', '1.6.2', md5: '8672e78514e3fcef2643127c524bf0f9')
+    @apr_recipe ||= AprRecipe.new('apr', '1.6.3', md5: '57c6cc26a31fe420c546ad2234f22db4')
   end
 end
