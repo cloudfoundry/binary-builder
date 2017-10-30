@@ -54,8 +54,8 @@ aySUQcOvO67Z14d9E9ziX/E24KWl6xRymmy9VhzawgSmf//3yZVaD6C/8om3qMw=
       yaml_source = @output.match(/Source YAML:(.*)/m)[1]
       expect(YAML.load(yaml_source)).to match_array([
                                                       {
-                                                        'url'    => 'http://apache.mirrors.tds.net/apr/apr-1.6.2.tar.gz',
-                                                        'sha256' => '4fc24506c968c5faf57614f5d0aebe0e9d0b90afa47a883e1a1ca94f15f4a42e'
+                                                        'url'    => 'http://apache.mirrors.tds.net/apr/apr-1.6.3.tar.gz',
+                                                        'sha256' => 'b65e40713da57d004123b6319828be7f1273fbc6490e145874ee1177e112c459'
                                                       },
                                                       {
                                                         'url'    => 'http://apache.mirrors.tds.net/apr/apr-iconv-1.2.1.tar.gz',
@@ -76,8 +76,8 @@ aySUQcOvO67Z14d9E9ziX/E24KWl6xRymmy9VhzawgSmf//3yZVaD6C/8om3qMw=
       yaml_source = `tar xzf httpd-2.4.12-linux-x64.tgz sources.yml -O`
       expect(YAML.load(yaml_source)).to match_array([
                                                       {
-                                                        'url'    => 'http://apache.mirrors.tds.net/apr/apr-1.6.2.tar.gz',
-                                                        'sha256' => '4fc24506c968c5faf57614f5d0aebe0e9d0b90afa47a883e1a1ca94f15f4a42e'
+                                                        'url'    => 'http://apache.mirrors.tds.net/apr/apr-1.6.3.tar.gz',
+                                                        'sha256' => 'b65e40713da57d004123b6319828be7f1273fbc6490e145874ee1177e112c459'
                                                       },
                                                       {
                                                         'url'    => 'http://apache.mirrors.tds.net/apr/apr-iconv-1.2.1.tar.gz',
