@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/cf-buildpacks-eng/mini_portile
-  revision: 0a1df8881bb6eb58788631f2aaa913766bd5a6dc
+  revision: f320da31a2046f7b4ab156b3a94367f31de0d5e9
   specs:
     mini_portile (0.7.0.rc4)
 
