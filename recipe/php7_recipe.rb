@@ -3,7 +3,7 @@ require_relative 'php_common_recipes'
 
 class Php7Recipe < BaseRecipe
   def configure_options
-    [
+    options = [
       '--disable-static',
       '--enable-shared',
       '--enable-ftp=shared',
@@ -49,6 +49,10 @@ class Php7Recipe < BaseRecipe
       '--enable-pcntl=shared',
       '--with-readline'
     ]
+    if major_version == '7.2'
+      options << '--with-password-argon2'
+    end
+    options
   end
 
   def url
