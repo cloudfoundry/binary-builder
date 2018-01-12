@@ -32,7 +32,11 @@ class DotNetRecipe < BaseRecipe
 
     Dir.chdir("#{tmp_path}/cli") do
       ENV['DropSuffix'] = 'true'
-      raise 'Could not build dotnet' unless system('./build.sh')
+      if version == '2.1.4'
+        system(%q(sed -i 's/WriteDynamicPropsToStaticPropsFiles "${args\[@\]}"/WriteDynamicPropsToStaticPropsFiles/' run-build.sh))
+	system(%q(git diff))
+      end
+      raise 'Could not build dotnet' unless system('./build.sh /t:Compile')
     end
   end
 
