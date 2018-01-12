@@ -32,7 +32,8 @@ class DotNetRecipe < BaseRecipe
 
     Dir.chdir("#{tmp_path}/cli") do
       ENV['DropSuffix'] = 'true'
-      if version == '2.1.4'
+      puts "Version: #{version}"
+      if version == '2.1.4' || version == 'v2.1.4'
         system(%q(sed -i 's/WriteDynamicPropsToStaticPropsFiles "${args\[@\]}"/WriteDynamicPropsToStaticPropsFiles/' run-build.sh))
 	system(%q(git diff))
       end
