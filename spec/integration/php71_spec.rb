@@ -44,9 +44,7 @@ describe 'building a binary', :integration do
       expect(tar_contains_file('php/lib/libodbc.so')).to eq true
 
       expect(tar_contains_file('php/lib/php/extensions/*/apcu.so')).to eq true
-      # removing assertion until ioncube has PHP 7.1 support
-      # Once this is done, this spec can probably be merged back with the 7.0.x specs
-      #expect(tar_contains_file('php/lib/php/extensions/*/ioncube.so')).to eq true
+      expect(tar_contains_file('php/lib/php/extensions/*/ioncube.so')).to eq true
       expect(tar_contains_file('php/lib/php/extensions/*/phpiredis.so')).to eq true
       # phalcon does not support php 7.1.x yet
       # https://github.com/phalcon/cphalcon/issues/12444
