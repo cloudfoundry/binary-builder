@@ -20,7 +20,7 @@ class PhpMeal
     (@native_modules + @extensions).each do |recipe|
       recipe.instance_variable_set('@php_path', php_recipe.path)
 
-      if recipe.name == 'pdo_oci' || recipe.name == 'odbc' || recipe.name == 'pdo_odbc'
+      if recipe.name == 'pdo_oci' || recipe.name == 'odbc' || recipe.name == 'pdo_odbc' || recipe.name == 'readline'
         recipe.instance_variable_set('@version', @version)
         recipe.instance_variable_set('@php_source', "#{php_recipe.send(:tmp_path)}/php-#{@version}")
         recipe.instance_variable_set('@files', [{url: recipe.url, md5: nil}])
@@ -143,11 +143,11 @@ class PhpMeal
   end
 
   def php5_apt_packages
-    php_common_apt_packages + %w(freetds-dev libgearman-dev libsybdb5)
+    php_common_apt_packages + %w(freetds-dev libgearman-dev libsybdb5 libreadline-dev)
   end
 
   def php7_apt_packages
-    php_common_apt_packages
+    php_common_apt_packages + %w(libedit-dev)
   end
 
   def php_common_apt_packages
@@ -163,7 +163,6 @@ class PhpMeal
       libmcrypt-dev
       libpng12-dev
       libpspell-dev
-      libreadline-dev
       libsasl2-dev
       libsnmp-dev
       libsqlite3-dev
