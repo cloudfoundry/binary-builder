@@ -47,7 +47,11 @@ class Php7Recipe < BaseRecipe
       '--with-openssl=shared',
       '--enable-fpm',
       '--enable-pcntl=shared',
-      '--with-readline'
+      '--with-readline',
+      '--enable-sysvsem=shared',
+      '--enable-sysvshm=shared',
+      '--enable-sysvmsg=shared',
+      '--enable-shmop=shared'
     ]
   end
 
