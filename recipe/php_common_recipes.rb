@@ -262,6 +262,12 @@ class PdoOdbcRecipe < FakePeclRecipe
 
 end
 
+class ReadlineRecipe < FakePeclRecipe
+  def url
+    "file://#{@php_source}/ext/readline-#{version}.tar.gz"
+  end
+end
+
 class OraclePdoRecipe < PeclRecipe
   def url
     "file://#{@php_source}/ext/pdo_oci-#{version}.tar.gz"
