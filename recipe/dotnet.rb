@@ -32,7 +32,7 @@ class DotNetRecipe < BaseRecipe
 
     Dir.chdir("#{tmp_path}/cli") do
       ENV['DropSuffix'] = 'true'
-      if version == '2.1.4'
+      if version == '2.1.4' || version == 'v2.1.101'
         runbuildsh = File.open('run-build.sh', 'r') { |f| f.read }
         runbuildsh.gsub!('WriteDynamicPropsToStaticPropsFiles "${args[@]}"', 'WriteDynamicPropsToStaticPropsFiles')
         File.open('run-build.sh', 'w') { |f| f.write runbuildsh }
