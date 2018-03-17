@@ -376,6 +376,12 @@ class PHPProtobufPeclRecipe < PeclRecipe
   end
 end
 
+class TidewaysXhprofRecipe < PeclRecipe
+  def url
+    "https://github.com/tideways/php-xhprof-extension/archive/v#{version}.tar.gz"
+  end
+end
+
 class RabbitMQRecipe < BaseRecipe
   def url
     "https://github.com/alanxz/rabbitmq-c/archive/v#{version}.tar.gz"
