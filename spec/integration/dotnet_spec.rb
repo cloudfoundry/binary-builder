@@ -4,9 +4,12 @@ require 'fileutils'
 
 describe 'building a binary', :integration do
   context 'when dotnet is specified' do
+    let dotnet_version = '2.1.102'
+    let dotnet_sha = '8d409357dbac391dad0270f34058856e562b1b8e'
+
     before(:all) do
-      run_binary_builder('dotnet', 'v1.0.1', '--git-commit-sha=005db40cd17afb1c435bcce66d6c703220e6602c')
-      @binary_tarball_location = File.join(Dir.pwd, 'dotnet.1.0.1.linux-amd64.tar.gz')
+      run_binary_builder('dotnet', "v#{dotnet_version}", "--git-commit-sha=#{dotnet_sha}")
+      @binary_tarball_location = File.join(Dir.pwd, "dotnet.#{dotnet_version}.linux-amd64.tar.gz")
     end
 
     after(:all) do
@@ -16,11 +19,11 @@ describe 'building a binary', :integration do
     it 'builds the specified binary, tars it, and places it in your current working directory' do
       expect(File).to exist(@binary_tarball_location)
 
-      dotnet_version_cmd = './spec/assets/binary-exerciser.sh dotnet.1.0.1.linux-amd64.tar.gz ./dotnet --version'
+      dotnet_version_cmd = "./spec/assets/binary-exerciser.sh dotnet.#{dotnet_version}.linux-amd64.tar.gz ./dotnet --version"
       output, status = run(dotnet_version_cmd)
 
       expect(status).to be_success
-      expect(output).to include('1.0.1')
+      expect(output).to include(dotnet_version)
     end
 
    it 'returns true' do
