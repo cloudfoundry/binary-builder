@@ -5,6 +5,9 @@ require "digest"
 require "tempfile"
 
 class MaxMindGeoIpUpdater
+    @@FREE_LICENSE = '000000000000'
+    @@FREE_USER = '999999'
+
     def initialize(user_id, license, output_dir)
         @proto = 'http'
         @host = 'updates.maxmind.com'
@@ -13,6 +16,14 @@ class MaxMindGeoIpUpdater
         @output_dir = output_dir
         @client_ip = nil
         @challenge_digest = nil
+    end
+
+    def self.FREE_LICENSE
+        @@FREE_LICENSE
+    end
+
+    def self.FREE_USER
+        @@FREE_USER
     end
 
     def get_filename(product_id)
@@ -43,21 +54,75 @@ class MaxMindGeoIpUpdater
             req = Net::HTTP::Get.new(uri.request_uri)
 
             http.request(req) do |resp|
-                file = Tempfile.new('geiop_db_download')
+                file = Tempfile.new('geoip_db_download')
                 begin
                     if resp['content-type'] == 'text/plain; charset=utf-8'
-                        puts "\talready up-to-date."
+                        puts "\tAlready up-to-date."
                     else
                         resp.read_body do |chunk|
                             file.write(chunk)
                         end
                         file.rewind
                         extract_file(file, file_path)
-                        puts "\tdatabase updated."
+                        puts "\tDatabase updated."
                     end
                 ensure
                     file.close()
                     file.unlink()
+                end
+            end
+        end
+    end
+
+    def download_free_database(product_id, file_path)
+        products = {
+            "GeoLite-Legacy-IPv6-City" => {
+                uri: "http://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz",
+                md5: "bc6c9ba16fe9a063588db7b3e3603137"
+            },
+            "GeoLite-Legacy-IPv6-Country" => {
+                uri: "http://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz",
+                md5: "c019ddd52c87d4f05bc13cf858a22f8e"
+            },
+            "506" => {
+                uri: "http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz",
+                md5: "d538e57ad9268fdc7955c6cf9a37c4a9"
+            },
+            "517" => {
+                uri: "http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz",
+                md5: "25a61aba0974ff4e74e315f7dd3fa1b0"
+            },
+            "533" => {
+                uri: "http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz",
+                md5: "d700c137232f8e077ac8db8577f699d9"
+            }
+        }
+
+        if !products.include?(product_id)
+            puts "\tProduct '#{product_id}' is not available under free license. Available products are: #{products.keys().join(', ')}."
+        else
+            product = products[product_id]
+            uri = URI.parse(product[:uri])
+            Net::HTTP.start(uri.host, uri.port) do |http|
+                req = Net::HTTP::Get.new(uri.request_uri)
+
+                http.request(req) do |resp|
+                    file = Tempfile.new('geoip_db_download')
+                    begin
+                        resp.read_body do |chunk|
+                            file.write(chunk)
+                        end
+                        file.rewind
+                        downloaded_md5 = db_digest(file.path)
+                        if downloaded_md5 != product[:md5]
+                            raise "Downloaded checksum (#{downloaded_md5}) did not match expected checksum (#{product[:md5]})."
+                        end
+                        extract_file(file, file_path)
+                        puts "\tDatabase updated."
+                    ensure
+                        file.close()
+                        file.unlink()
+                    end
                 end
             end
         end
@@ -83,8 +148,16 @@ class MaxMindGeoIpUpdater
         puts "\tfile_name: #{file_name}"
         puts "\tip: #{client_ip}"
         puts "\tdb: #{db_digest}"
-        puts "\tchallenge: #{challenge_digest}"
-        download_database(db_digest, challenge_digest, product_id, file_path)
+
+        if @license == @@FREE_LICENSE
+            # As of April 1, 2018, free legacy databases are no longer available through the GeoIP update
+            # API. Therefore, we'll fetch them from static URLs they've provided.
+            # This will NOT work using free GeoIP2 databases.
+            download_free_database(product_id, file_path)
+        else
+            puts "\tchallenge: #{challenge_digest}"
+            download_database(db_digest, challenge_digest, product_id, file_path)
+        end
     end
 
     def db_digest(path)

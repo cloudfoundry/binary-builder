@@ -30,12 +30,13 @@ optparser = OptionParser.new do |opts|
 end
 optparser.parse!
 
-options[:user] ||= '999999'
-options[:license] ||= '000000000000'
+options[:user] ||= MaxMindGeoIpUpdater.FREE_USER
+options[:license] ||= MaxMindGeoIpUpdater.FREE_LICENSE
 options[:output_dir] ||= '.'
-options[:products] ||= "GeoLite-Legacy-IPv6-City GeoLite-Legacy-IPv6-Country 506 517 533"
+options[:products] ||= 'GeoLite-Legacy-IPv6-City GeoLite-Legacy-IPv6-Country 506 517 533'
 
 updater = MaxMindGeoIpUpdater.new(options[:user], options[:license], options[:output_dir])
+
 options[:products].split(" ").each do |product|
     updater.download_product(product)
 end

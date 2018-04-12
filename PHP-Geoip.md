@@ -14,4 +14,4 @@ When you build PHP binaries with GeoIP support you get the following included wi
 
 1. The `geoip` extension (from PECL)
 2. The library file `geoipdb/lib/geoip_downloader.rb` and script `geoipdb/bin/download_geoip_db.rb` which can be run at a later date to download a copy of the geoip databases from MaxMind.  By default they will download the "lite" or open source versions but the script can be configured to use a user id & license key to download paid versions as well.
-3. If bundled, the geoip databases will be under `geoipdb/dbs`.  If not bundled, that directory will be empty.  If bundled, the following databases will be included:  GeoLiteCityv6.dat, GeoLiteASNum.dat, GeoLiteCountry.dat, GeoIPv6.dat and GeoLiteCity.dat.
+3. If bundled, the geoip databases will be under `geoipdb/dbs`.  If not bundled, that directory will be empty.  If bundled, the following databases will be included:  `GeoLiteCityv6.dat`, `GeoLiteASNum.dat`, `GeoLiteCountry.dat`, `GeoIPv6.dat`, and `GeoLiteCity.dat`.

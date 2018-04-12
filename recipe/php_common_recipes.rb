@@ -47,7 +47,7 @@ class GeoipRecipe < PeclRecipe
         eof
         if File.exist? "BUNDLE_GEOIP_LITE" then
             products = "GeoLite-Legacy-IPv6-City GeoLite-Legacy-IPv6-Country 506 517 533"
-            updater = MaxMindGeoIpUpdater.new('999999', '000000000000', File.join(@php_path, 'geoipdb', 'dbs'))
+            updater = MaxMindGeoIpUpdater.new(MaxMindGeoIpUpdater.FREE_USER, MaxMindGeoIpUpdater.FREE_LICENSE, File.join(@php_path, 'geoipdb', 'dbs'))
             products.split(" ").each do |product|
                 updater.download_product(product)
             end
