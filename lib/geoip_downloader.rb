@@ -75,34 +75,18 @@ class MaxMindGeoIpUpdater
     end
 
     def download_free_database(product_id, file_path)
-        products = {
-            "GeoLite-Legacy-IPv6-City" => {
-                uri: "http://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz",
-                md5: "bc6c9ba16fe9a063588db7b3e3603137"
-            },
-            "GeoLite-Legacy-IPv6-Country" => {
-                uri: "http://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz",
-                md5: "c019ddd52c87d4f05bc13cf858a22f8e"
-            },
-            "506" => {
-                uri: "http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz",
-                md5: "d538e57ad9268fdc7955c6cf9a37c4a9"
-            },
-            "517" => {
-                uri: "http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz",
-                md5: "25a61aba0974ff4e74e315f7dd3fa1b0"
-            },
-            "533" => {
-                uri: "http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz",
-                md5: "d700c137232f8e077ac8db8577f699d9"
-            }
+        product_uris = {
+            "GeoLite-Legacy-IPv6-City" => "http://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz",
+            "GeoLite-Legacy-IPv6-Country" => "http://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz",
+            "506" => "http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz",
+            "517" => "http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz",
+            "533" => "http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz"
         }
 
-        if !products.include?(product_id)
-            puts "\tProduct '#{product_id}' is not available under free license. Available products are: #{products.keys().join(', ')}."
+        if !product_uris.include?(product_id)
+            puts "\tProduct '#{product_id}' is not available under free license. Available products are: #{product_uris.keys().join(', ')}."
         else
-            product = products[product_id]
-            uri = URI.parse(product[:uri])
+            uri = URI.parse(product_uris[product_id])
             Net::HTTP.start(uri.host, uri.port) do |http|
                 req = Net::HTTP::Get.new(uri.request_uri)
 
@@ -113,10 +97,6 @@ class MaxMindGeoIpUpdater
                             file.write(chunk)
                         end
                         file.rewind
-                        downloaded_md5 = db_digest(file.path)
-                        if downloaded_md5 != product[:md5]
-                            raise "Downloaded checksum (#{downloaded_md5}) did not match expected checksum (#{product[:md5]})."
-                        end
                         extract_file(file, file_path)
                         puts "\tDatabase updated."
                     ensure
