@@ -5,8 +5,8 @@ require 'fileutils'
 describe 'building a binary', :integration do
   context 'when jruby is specified' do
     before(:all) do
-      output = run_binary_builder('jruby', '9.1.13.0_ruby-2.3.3', '--sha256=b34f6920c5664204a6486118a47f4ad84060bd82b6a7e214451e876fd560be2b')
-      @binary_tarball_location = File.join(Dir.pwd, 'jruby-9.1.13.0_ruby-2.3.3-linux-x64.tgz')
+      output = run_binary_builder('jruby', '9.1.17.0', '--sha256=b66d7c14f85075afdabb5ebf5950804c5a5d5c1d05ab833f580f04ee709b5773')
+      @binary_tarball_location = File.join(Dir.pwd, 'jruby-9.1.17.0_ruby-2.3-linux-x64.tgz')
     end
 
     after(:all) do
