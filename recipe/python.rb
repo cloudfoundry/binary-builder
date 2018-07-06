@@ -17,7 +17,7 @@ class PythonRecipe < BaseRecipe
   end
 
   def cook
-    install_apt('libdb-dev libgdbm-dev tk8.6-dev')
+    install_apt('libdb-dev libffi-dev libgdbm-dev tk8.6-dev')
 
     run('apt-get -y --force-yes -d install --reinstall libtcl8.6 libtk8.6 libxss1') or raise 'Failed to download libtcl8.6 libtk8.6 libxss1'
     FileUtils.mkdir_p prefix_path
