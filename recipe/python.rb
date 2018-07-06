@@ -26,6 +26,13 @@ class PythonRecipe < BaseRecipe
       run("dpkg -x #{path} #{prefix_path}") or raise "Could not extract #{path}"
     end
 
+    # Try to install newer openssl by using debian package
+    run('wget http://security.debian.org/debian-security/pool/updates/main/o/openssl/openssl_1.1.0f-3+deb9u2_amd64.deb')
+    Dir.glob('openssl_*.deb').each do |path|
+      STDOUT.puts("dpkg -x #{path} #{prefix_path}")
+      run("dpkg -x #{path} #{prefix_path}") or raise "Could not extract #{path}"
+    end
+
     super
   end
 
