@@ -380,6 +380,17 @@ class PHPIRedisRecipe < PeclRecipe
   end
 end
 
+class RedisPeclRecipe < PeclRecipe
+  def configure_options
+    [
+      "--with-php-config=#{@php_path}/bin/php-config",
+      "--enable-redis-igbinary",
+      "--enable-redis-lzf",
+      "--with-liblzf=no"
+    ]
+  end
+end
+
 class PHPProtobufPeclRecipe < PeclRecipe
   def url
     "https://github.com/allegro/php-protobuf/archive/v#{version}.tar.gz"
