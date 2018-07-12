@@ -15,7 +15,7 @@ class DepRecipe < BaseRecipe
     Dir.chdir("#{tmp_path}/dep") do
       system(
         {"GOPATH" => "#{tmp_path}/dep/deps/_workspace:/tmp"},
-        "/usr/local/go/bin/go get ./..."
+        "/usr/local/go/bin/go get -asmflags -trimpath ./..."
       ) or raise "Could not install dep"
     end
     FileUtils.mv("#{tmp_path}/dep/LICENSE", "/tmp/LICENSE")
