@@ -95,14 +95,24 @@ class LibmemcachedRecipe < BaseRecipe
     "https://launchpad.net/libmemcached/1.0/#{version}/+download/libmemcached-#{version}.tar.gz"
   end
 
-  def patch
-    system <<-eof
-      cd #{work_path}
-      sed -i '\\|include tests/include.am|d' Makefile.am
-      aclocal
-      automake --add-missing
-    eof
+  def configure
+    return if configured?
+
+    cache_file = File.join(tmp_path, 'configure.options_cache')
+    File.open(cache_file, "w") { |f| f.write computed_options.to_s }
+
+    ENV['CXXFLAGS'] = '-fpermissive'
+    execute('configure', %w(./configure) + computed_options)
   end
+
+# def patch
+#   system <<-eof
+#     cd #{work_path}
+#     sed -i '\\|include tests/include.am|d' Makefile.am
+#     aclocal
+#     automake --add-missing
+#   eof
+# end
 end
 
 # We need to compile from source until Ubuntu packages version 2.3.0+
@@ -421,7 +431,7 @@ class SnmpRecipe
       mkdir -p mibs
       cp "/usr/lib/x86_64-linux-gnu/libnetsnmp.so.30" lib/
       # copy mibs that are packaged freely
-      cp /usr/share/snmp/mibs/* mibs
+      cp -r /usr/share/snmp/mibs/* mibs
       # copy mibs downloader & smistrip, will download un-free mibs
       cp /usr/bin/download-mibs bin
       cp /usr/bin/smistrip bin

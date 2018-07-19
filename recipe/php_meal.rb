@@ -138,7 +138,7 @@ class PhpMeal
     if @major_version == '5'
       php5_apt_packages.join(" ")
     else
-      php7_apt_packages.join(" ")
+      php7_apt_packages_cflinuxfs3.join(" ")
     end
   end
 
@@ -148,6 +148,14 @@ class PhpMeal
 
   def php7_apt_packages
     php_common_apt_packages + %w(libedit-dev)
+  end
+
+  def php7_apt_packages_cflinuxfs2
+    php7_apt_packages
+  end
+
+  def php7_apt_packages_cflinuxfs3
+    %w(libkrb5-dev) + php7_apt_packages
   end
 
   def php_common_apt_packages
@@ -161,7 +169,7 @@ class PhpMeal
       libjpeg-dev
       libldap2-dev
       libmcrypt-dev
-      libpng12-dev
+      libpng-dev
       libpspell-dev
       libsasl2-dev
       libsnmp-dev

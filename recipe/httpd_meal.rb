@@ -44,6 +44,7 @@ class HTTPdRecipe < BaseRecipe
       '--prefix=/app/httpd',
       "--with-apr=#{@apr_path}",
       "--with-apr-util=#{@apr_util_path}",
+      '--with-ssl=/usr/lib/x86_64-linux-gnu',
       '--enable-mpms-shared=worker event',
       '--enable-mods-shared=reallyall',
       '--disable-isapi',
