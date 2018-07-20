@@ -206,11 +206,13 @@ class PhpMeal
   end
 
   def php5_symlinks
-    php_common_symlinks + ["sudo ln -fs /usr/lib/x86_64-linux-gnu/libsybdb.so /usr/lib/libsybdb.so"]
+    php_common_symlinks +
+        ["sudo ln -fs /usr/lib/x86_64-linux-gnu/libsybdb.so /usr/lib/libsybdb.so"]
   end
 
   def php7_symlinks
-    php_common_symlinks
+    php_common_symlinks +
+      ["sudo ln -s /usr/include/x86_64-linux-gnu/curl /usr/local/include/curl"]
   end
 
   def php_common_symlinks
