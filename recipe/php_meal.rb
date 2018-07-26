@@ -135,21 +135,19 @@ class PhpMeal
   end
 
   def apt_packages
-    stack = os.getenv('STACK')
-
     packages = php_common_apt_packages
     if @major_version == '5'
       packages += php5_apt_packages
-      if stack == 'cflinuxfs2'
+      if ENV['STACK'] == 'cflinuxfs2'
         packages += php5_cflinuxfs2_apt_packages
-      elsif stack == 'cflinuxfs3'
+      elsif ENV['STACK'] == 'cflinuxfs3'
         packages += php5_cflinuxfs3_apt_packages
       end
     else
       packages += php7_apt_packages
-      if stack == 'cflinuxfs2'
+      if ENV['STACK'] == 'cflinuxfs2'
         packages += php7_cflinuxfs2_apt_packages
-      elsif stack == 'cflinuxfs3'
+      elsif ENV['STACK'] == 'cflinuxfs3'
         packages += php7_cflinuxfs3_apt_packages
       end
     end
