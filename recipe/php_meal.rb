@@ -135,33 +135,54 @@ class PhpMeal
   end
 
   def apt_packages
+    stack = os.getenv('STACK')
+
+    packages = php_common_apt_packages
     if @major_version == '5'
-      php5_apt_packages.join(" ")
+      packages += php5_apt_packages
+      if stack == 'cflinuxfs2'
+        packages += php5_cflinuxfs2_apt_packages
+      elsif stack == 'cflinuxfs3'
+        packages += php5_cflinuxfs3_apt_packages
+      end
     else
-      php7_apt_packages_cflinuxfs3.join(" ")
+      packages += php7_apt_packages
+      if stack == 'cflinuxfs2'
+        packages += php7_cflinuxfs2_apt_packages
+      elsif stack == 'cflinuxfs3'
+        packages += php7_cflinuxfs3_apt_packages
+      end
     end
+    return packages.join(" ")
   end
 
   def php5_apt_packages
-    php_common_apt_packages + %w(libkrb5-dev) + %w(freetds-dev libgearman-dev libsybdb5 libreadline-dev)
+    %w(freetds-dev libgearman-dev libsybdb5 libreadline-dev)
   end
 
   def php7_apt_packages
-    php_common_apt_packages + %w(libedit-dev)
+    %w(libedit-dev)
   end
 
-  def php7_apt_packages_cflinuxfs2
-    php7_apt_packages
+  def php5_cflinuxfs3_apt_packages
+    %w(libkrb5-dev libssl1.0-dev)
   end
 
-  def php7_apt_packages_cflinuxfs3
-    %w(libkrb5-dev) + php7_apt_packages
+  def php5_cflinuxfs2_apt_packages
+    %w(libssl-dev libcurl4-openssl-dev)
+  end
+
+  def php7_cflinuxfs3_apt_packages
+    %w(libkrb5-dev libssl-dev libcurl4-openssl-dev)
+  end
+
+  def php7_cflinuxfs2_apt_packages
+    %w(libssl-dev libcurl4-openssl-dev)
   end
 
   def php_common_apt_packages
     %w(libaspell-dev
       libc-client2007e-dev
-      libcurl4-openssl-dev
       libexpat1-dev
       libgdbm-dev
       libgmp-dev
@@ -174,7 +195,6 @@ class PhpMeal
       libsasl2-dev
       libsnmp-dev
       libsqlite3-dev
-      libssl-dev
       libtool
       libxml2-dev
       libzip-dev
@@ -207,8 +227,7 @@ class PhpMeal
 
   def php5_symlinks
     php_common_symlinks +
-      ["sudo ln -s /usr/include/x86_64-linux-gnu/curl /usr/local/include/curl", # This is required for php 5.6.x on cflinuxfs3
-         "sudo ln -fs /usr/lib/x86_64-linux-gnu/libsybdb.so /usr/lib/libsybdb.so"]
+        ["sudo ln -fs /usr/lib/x86_64-linux-gnu/libsybdb.so /usr/lib/libsybdb.so"]
   end
 
   def php7_symlinks
@@ -218,7 +237,8 @@ class PhpMeal
   end
 
   def php_common_symlinks
-     ["sudo ln -fs /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h",
+    ["sudo ln -s /usr/include/x86_64-linux-gnu/curl /usr/local/include/curl", # This is required for php 5.6.X, 7.0.X, and 7.1.x on cflinuxfs3
+      "sudo ln -fs /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h",
       "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap.so /usr/lib/libldap.so",
       "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap_r.so /usr/lib/libldap_r.so"]
   end
