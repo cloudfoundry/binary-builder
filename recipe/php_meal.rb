@@ -143,7 +143,7 @@ class PhpMeal
   end
 
   def php5_apt_packages
-    php_common_apt_packages + %w(freetds-dev libgearman-dev libsybdb5 libreadline-dev)
+    php_common_apt_packages + %w(libkrb5-dev) + %w(freetds-dev libgearman-dev libsybdb5 libreadline-dev)
   end
 
   def php7_apt_packages
@@ -207,7 +207,8 @@ class PhpMeal
 
   def php5_symlinks
     php_common_symlinks +
-        ["sudo ln -fs /usr/lib/x86_64-linux-gnu/libsybdb.so /usr/lib/libsybdb.so"]
+      ["sudo ln -s /usr/include/x86_64-linux-gnu/curl /usr/local/include/curl", # This is required for php 5.6.x on cflinuxfs3
+         "sudo ln -fs /usr/lib/x86_64-linux-gnu/libsybdb.so /usr/lib/libsybdb.so"]
   end
 
   def php7_symlinks
