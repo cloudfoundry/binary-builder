@@ -231,7 +231,8 @@ class PhpMeal
   def php7_symlinks
     php_common_symlinks +
         ["sudo ln -s /usr/include/x86_64-linux-gnu/curl /usr/local/include/curl", # This is required for php 7.0.X and 7.1.x on cflinuxfs3
-         "sudo ln -s /usr/lib/x86_64-linux-gnu/libaspell.* /usr/lib"]
+         "sudo ln -s /usr/lib/x86_64-linux-gnu/libaspell.* /usr/lib",
+         "sudo ln -s /usr/lib/x86_64-linux-gnu/libpspell.* /usr/lib"]
   end
 
   def php_common_symlinks
