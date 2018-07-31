@@ -86,13 +86,17 @@ class Php7Recipe < BaseRecipe
   end
 
   def setup_tar
+    lib_dir = `lsb_release -r | awk '{print $2}'`.strip == '18.04' ?
+                  '/usr/lib/x86_64-linux-gnu' :
+                  '/usr/lib'
+
     system <<-eof
       cp -a /usr/local/lib/x86_64-linux-gnu/librabbitmq.so* #{path}/lib/
       cp -a #{@hiredis_path}/lib/libhiredis.so* #{path}/lib/
       cp -a /usr/lib/libc-client.so* #{path}/lib/
       cp -a /usr/lib/libmcrypt.so* #{path}/lib
-      cp -a /usr/lib/x86_64-linux-gnu/libaspell.so* #{path}/lib
-      cp -a /usr/lib/x86_64-linux-gnu/libpspell.so* #{path}/lib
+      cp -a #{lib_dir}/libaspell.so* #{path}/lib
+      cp -a #{lib_dir}/libpspell.so* #{path}/lib
       cp -a #{@libmemcached_path}/lib/libmemcached.so* #{path}/lib/
       cp -a /usr/local/lib/x86_64-linux-gnu/libcassandra.so* #{path}/lib
       cp -a /usr/local/lib/libuv.so* #{path}/lib
