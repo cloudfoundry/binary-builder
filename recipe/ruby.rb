@@ -13,6 +13,12 @@ class RubyRecipe < BaseRecipe
     ]
   end
 
+  def cook
+    run('apt-get update') or raise 'Failed to apt-get update'
+    run('apt-get -y install libffi-dev') or raise 'Failed to install libffi-dev'
+    super
+  end
+
   def prefix_path
     "/app/vendor/ruby-#{version}"
   end

@@ -99,10 +99,12 @@ class HTTPdMeal
   end
 
   def cook
+    run('apt', 'update') or raise 'Failed to apt update'
+    run('apt-get', 'install', '-y', 'libldap2-dev') or raise 'Failed to install libldap2-dev'
+
     apr_recipe.cook
     apr_iconv_recipe.cook
     apr_util_recipe.cook
-
     httpd_recipe.cook
   end
 
