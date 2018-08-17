@@ -130,6 +130,17 @@ class HTTPdMeal
 
   private
 
+  def run(command)
+    output = `#{command}`
+    if $?.success?
+      return true
+    else
+      STDOUT.puts "ERROR, output was:"
+      STDOUT.puts output
+      return false
+    end
+  end
+
   def files_hashs
     httpd_recipe.send(:files_hashs) +
       apr_recipe.send(:files_hashs)       +
