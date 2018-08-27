@@ -18,6 +18,7 @@ class NginxRecipe < BaseRecipe
       '--without-http_scgi_module',
       '--with-pcre',
       '--with-pcre-jit',
+      '--with-compat',
       '--with-cc-opt=-fPIE -pie',
       '--with-ld-opt=-fPIE -pie -z now',
     ]
