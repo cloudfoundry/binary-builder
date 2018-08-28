@@ -70,6 +70,12 @@ class HiredisRecipe < BaseRecipe
   end
 end
 
+class LibSodiumRecipe < BaseRecipe
+  def url
+    "https://github.com/jedisct1/libsodium/releases/download/#{version}/libsodium-#{version}.tar.gz"
+  end
+end
+
 class IonCubeRecipe < BaseRecipe
   def url
     "http://downloads3.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64_#{version}.tar.gz"
@@ -248,6 +254,26 @@ class OdbcRecipe < FakePeclRecipe
     system <<-eof
       cp -a #{@unixodbc_path}/lib/libodbc.so* #{@php_path}/lib/
       cp -a #{@unixodbc_path}/lib/libodbcinst.so* #{@php_path}/lib/
+    eof
+  end
+end
+
+class SodiumRecipe < FakePeclRecipe
+  def url
+    "file://#{@php_source}/ext/sodium-#{version}.tar.gz"
+  end
+  
+  def configure_options
+    ENV['LDFLAGS'] = "-L#{@libsodium_path}/lib"
+    [
+      "--with-php-config=#{@php_path}/bin/php-config",
+      "--with-sodium=#{@libsodium_path}"
+    ]
+  end
+
+  def setup_tar
+    system <<-eof
+      cp -a #{@libsodium_path}/lib/libsodium.so* #{@php_path}/lib/
     eof
   end
 end

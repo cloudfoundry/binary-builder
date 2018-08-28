@@ -20,7 +20,7 @@ class PhpMeal
     (@native_modules + @extensions).each do |recipe|
       recipe.instance_variable_set('@php_path', php_recipe.path)
 
-      if recipe.name == 'pdo_oci' || recipe.name == 'odbc' || recipe.name == 'pdo_odbc' || recipe.name == 'readline'
+      if recipe.name == 'pdo_oci' || recipe.name == 'odbc' || recipe.name == 'pdo_odbc' || recipe.name == 'readline' || recipe.name == 'sodium'
         recipe.instance_variable_set('@version', @version)
         recipe.instance_variable_set('@php_source', "#{php_recipe.send(:tmp_path)}/php-#{@version}")
         recipe.instance_variable_set('@files', [{url: recipe.url, md5: nil}])
@@ -82,6 +82,7 @@ class PhpMeal
     end
     @extensions.detect{|r| r.name=='odbc'}&.setup_tar
     @extensions.detect{|r| r.name=='pdo_odbc'}&.setup_tar
+    @extensions.detect{|r| r.name=='sodium'}&.setup_tar
   end
 
   private
@@ -131,6 +132,8 @@ class PhpMeal
         recipe.instance_variable_set('@unixodbc_path', @native_modules.detect{|r| r.name=='unixodbc'}.path)
       when 'pdo_odbc'
         recipe.instance_variable_set('@unixodbc_path', @native_modules.detect{|r| r.name=='unixodbc'}.path)
+      when 'sodium'
+        recipe.instance_variable_set('@libsodium_path', @native_modules.detect{|r| r.name=='libsodium'}.path)
       end
     end
   end
