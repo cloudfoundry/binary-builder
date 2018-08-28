@@ -18,6 +18,7 @@ class Php7Recipe < BaseRecipe
       '--with-bz2=shared',
       '--with-curl=shared',
       '--enable-dba=shared',
+      '--with-password-argon2=/usr/local',
       '--with-cdb',
       '--with-gdbm',
       '--with-mcrypt=shared',
@@ -100,6 +101,7 @@ class Php7Recipe < BaseRecipe
       cp -a #{@libmemcached_path}/lib/libmemcached.so* #{path}/lib/
       cp -a /usr/local/lib/x86_64-linux-gnu/libcassandra.so* #{path}/lib
       cp -a /usr/local/lib/libuv.so* #{path}/lib
+      cp -a /usr/local/lib/libargon2.so* #{path}/lib
       cp -a /usr/lib/librdkafka.so* #{path}/lib
       cp -a /usr/lib/x86_64-linux-gnu/libGeoIP.so* #{path}/lib/
       cp -a /usr/lib/x86_64-linux-gnu/libgpgme.so* #{path}/lib/
