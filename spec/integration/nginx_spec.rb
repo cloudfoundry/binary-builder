@@ -25,7 +25,7 @@ aySUQcOvO67Z14d9E9ziX/E24KWl6xRymmy9VhzawgSmf//3yZVaD6C/8om3qMw=
     it 'builds the specified binary, tars it, and places it in your current working directory' do
       expect(File).to exist(@binary_tarball_location)
 
-      httpd_version_cmd = './spec/assets/binary-exerciser.sh nginx-1.9.4-linux-x64.tgz ./nginx/sbin/nginx -v'
+      httpd_version_cmd = './spec/assets/binary-exerciser.sh nginx-static-1.9.4-linux-x64.tgz ./nginx/sbin/nginx -v'
       output, status = run(httpd_version_cmd)
 
       expect(status).to be_success
