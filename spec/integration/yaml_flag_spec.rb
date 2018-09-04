@@ -5,7 +5,7 @@ require 'yaml'
 describe 'building a binary', :integration do
   context 'when a recipe is specified' do
     before(:all) do
-      @output, = run_binary_builder('nginx', '1.9.4', '--gpg-rsa-key-id=A1C052F8 --gpg-signature="-----BEGIN PGP SIGNATURE-----
+      @output, = run_binary_builder('nginx-static', '1.9.4', '--gpg-rsa-key-id=A1C052F8 --gpg-signature="-----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
 iQEcBAABCAAGBQJV002uAAoJEFIKmZOhwFL41AcH/2VX1/5mD3dAUXfDaYMG92IV
