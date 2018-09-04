@@ -15,7 +15,7 @@ zAZ014ADQ5yfH+Ma40K997AxZeCVGU+A5IEHGoZ2i8pyqx0Jhh6cbpC18yHu5ciN
 aySUQcOvO67Z14d9E9ziX/E24KWl6xRymmy9VhzawgSmf//3yZVaD6C/8om3qMw=
 =zjw3
 -----END PGP SIGNATURE-----"')
-      @binary_tarball_location = File.join(Dir.pwd, 'nginx-1.9.4-linux-x64.tgz')
+      @binary_tarball_location = File.join(Dir.pwd, 'nginx-static-1.9.4-linux-x64.tgz')
     end
 
     after(:all) do
