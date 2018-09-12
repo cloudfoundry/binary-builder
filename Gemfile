@@ -12,6 +12,7 @@ group :test do
 end
 
 group :development do
-  gem 'rubocop'
-  gem 'rubocop-rspec'
+  gem 'rainbow', '~> 2.1.0'
+  gem 'rubocop', '~> 0.43.0'
+  gem 'rubocop-rspec', '~> 1.7.0'
 end
