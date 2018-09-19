@@ -130,9 +130,9 @@ RSpec.configure do |config|
     return ENV['PHP_EXTENSIONS_SOURCE'] if ENV['PHP_EXTENSIONS_SOURCE']
 
     if php_major_version == '5'
-      'https://raw.githubusercontent.com/cloudfoundry/public-buildpacks-ci-robots/master/binary-builds/php-extensions.yml'
+      'https://raw.githubusercontent.com/cloudfoundry/buildpacks-ci/master/tasks/build-binary-new/php-extensions.yml'
     else
-      'https://raw.githubusercontent.com/cloudfoundry/public-buildpacks-ci-robots/master/binary-builds/php7-extensions.yml'
+      'https://raw.githubusercontent.com/cloudfoundry/buildpacks-ci/master/tasks/build-binary-new/php7-extensions.yml'
     end
   end
 end
