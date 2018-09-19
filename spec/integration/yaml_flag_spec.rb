@@ -16,7 +16,7 @@ zAZ014ADQ5yfH+Ma40K997AxZeCVGU+A5IEHGoZ2i8pyqx0Jhh6cbpC18yHu5ciN
 aySUQcOvO67Z14d9E9ziX/E24KWl6xRymmy9VhzawgSmf//3yZVaD6C/8om3qMw=
 =zjw3
 -----END PGP SIGNATURE-----"')
-      @binary_tarball_location = File.join(Dir.pwd, 'nginx-1.9.4-linux-x64.tgz')
+      @binary_tarball_location = File.join(Dir.pwd, 'nginx-static-1.9.4-linux-x64.tgz')
     end
 
     after(:all) do
@@ -34,7 +34,7 @@ aySUQcOvO67Z14d9E9ziX/E24KWl6xRymmy9VhzawgSmf//3yZVaD6C/8om3qMw=
     end
 
     it 'includes the yaml representation of the source inside the resulting tarball' do
-      yaml_source = `tar xzf nginx-1.9.4-linux-x64.tgz sources.yml -O`
+      yaml_source = `tar xzf nginx-static-1.9.4-linux-x64.tgz sources.yml -O`
       expect(YAML.load(yaml_source)).to eq([
                                              {
                                                'url'    => 'http://nginx.org/download/nginx-1.9.4.tar.gz',
