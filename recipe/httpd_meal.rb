@@ -168,6 +168,6 @@ class HTTPdMeal
   end
 
   def apr_recipe
-    @apr_recipe ||= AprRecipe.new('apr', '1.6.3', md5: '57c6cc26a31fe420c546ad2234f22db4')
+    @apr_recipe ||= AprRecipe.new('apr', '1.6.5', md5: '0759294408daace192c935b7c9e76e04')
   end
 end
