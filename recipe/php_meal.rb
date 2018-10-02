@@ -220,6 +220,7 @@ class PhpMeal
   end
 
   def install_argon2
+    return '' if ENV['STACK'] == 'cflinuxfs3'
     %q((
       cd /tmp
       curl -L -O https://github.com/P-H-C/phc-winner-argon2/archive/20171227.tar.gz
