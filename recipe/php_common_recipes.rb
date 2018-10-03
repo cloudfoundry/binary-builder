@@ -213,6 +213,10 @@ class MemcachedPeclRecipe < PeclRecipe
 end
 
 class FakePeclRecipe < PeclRecipe
+  def url
+    "file://#{@php_source}/ext/#{name}-#{version}.tar.gz"
+  end
+
   def download
     # this copys an extension folder out of the PHP source director (i.e. `ext/<name>`)
     # it pretends to download it by making a zip of the extension files
@@ -228,10 +232,6 @@ class FakePeclRecipe < PeclRecipe
 end
 
 class OdbcRecipe < FakePeclRecipe
-  def url
-    "file://#{@php_source}/ext/odbc-#{version}.tar.gz"
-  end
-
   def configure_options
     [
       "--with-unixODBC=shared,#{@unixodbc_path}"
@@ -259,10 +259,6 @@ class OdbcRecipe < FakePeclRecipe
 end
 
 class SodiumRecipe < FakePeclRecipe
-  def url
-    "file://#{@php_source}/ext/sodium-#{version}.tar.gz"
-  end
-  
   def configure_options
     ENV['LDFLAGS'] = "-L#{@libsodium_path}/lib"
     [
@@ -279,10 +275,6 @@ class SodiumRecipe < FakePeclRecipe
 end
 
 class PdoOdbcRecipe < FakePeclRecipe
-  def url
-    "file://#{@php_source}/ext/pdo_odbc-#{version}.tar.gz"
-  end
-
   def configure_options
     [
       "--with-pdo-odbc=unixODBC,#{@unixodbc_path}"
@@ -298,30 +290,7 @@ class PdoOdbcRecipe < FakePeclRecipe
 
 end
 
-class ReadlineRecipe < FakePeclRecipe
-  def url
-    "file://#{@php_source}/ext/readline-#{version}.tar.gz"
-  end
-end
-
-class OraclePdoRecipe < PeclRecipe
-  def url
-    "file://#{@php_source}/ext/pdo_oci-#{version}.tar.gz"
-  end
-
-  def download
-    # this copys an extension folder out of the PHP source director (i.e. `ext/<name>`)
-    # it pretends to download it by making a zip of the extension files
-    # that way the rest of the PeclRecipe works normally
-    files_hashs.each do |file|
-      path = URI(file[:url]).path.rpartition('-')[0] # only need path before the `-`, see url above
-      system <<-eof
-        echo 'tar czf "#{file[:local_path]}" -C "#{File.dirname(path)}" "#{File.basename(path)}"'
-        tar czf "#{file[:local_path]}" -C "#{File.dirname(path)}" "#{File.basename(path)}"
-      eof
-    end
-  end
-
+class OraclePdoRecipe < FakePeclRecipe
   def configure_options
     [
       "--with-pdo-oci=shared,instantclient,/oracle,#{OraclePdoRecipe.oracle_version}"
