@@ -203,7 +203,11 @@ class PhpMeal
       libzookeeper-mt-dev
       snmp-mibs-downloader
       automake
-      libgeoip-dev)
+      libgeoip-dev
+      libtidy-dev
+      libenchant-dev
+      firebird-dev
+      librecode-dev)
   end
 
   def install_libuv
