@@ -9,7 +9,9 @@ class PhpMeal
   def initialize(name, version, options)
     @name    = name
     @version = version
-    @major_version = version.split('.').first
+    version_parts = version.split('.')
+    @major_version = version_parts[0]
+    @minor_version = version_parts[1]
     @options = options
     @native_modules = []
     @extensions = []
@@ -224,6 +226,7 @@ class PhpMeal
   end
 
   def install_argon2
+    return '' if ENV['STACK'] == 'cflinuxfs3' || @major_version == '5' || (@major_version == '7' && @minor_version.to_i < 2)
     %q((
       cd /tmp
       curl -L -O https://github.com/P-H-C/phc-winner-argon2/archive/20171227.tar.gz
