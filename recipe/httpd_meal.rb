@@ -117,7 +117,7 @@ class HTTPdMeal
 
   def cook
     run('apt update') or raise 'Failed to apt update'
-    run('apt-get install -y libldap2-dev libjansson-dev libcjose-dev libhiredis-dev') or raise 'Failed to install libldap2-dev'
+    run('apt-get install -y libldap2-dev') or raise 'Failed to install libldap2-dev'
 
     apr_recipe.cook
     apr_iconv_recipe.cook
@@ -133,7 +133,10 @@ class HTTPdMeal
       fi
     eof
 
-    mod_auth_openidc_recipe.cook unless ENV['STACK'] == 'cflinuxfs2'
+    if ENV['STACK'] == 'cflinuxfs3'
+      run('apt-get install -y libjansson-dev libcjose-dev libhiredis-dev') or raise 'Failed to install additional dependencies'
+      mod_auth_openidc_recipe.cook
+    end
   end
 
   def url
@@ -170,11 +173,16 @@ class HTTPdMeal
   end
 
   def files_hashs
-    httpd_recipe.send(:files_hashs) +
+    hashes = httpd_recipe.send(:files_hashs) +
       apr_recipe.send(:files_hashs)       +
       apr_iconv_recipe.send(:files_hashs) +
-      apr_util_recipe.send(:files_hashs) +
-      mod_auth_openidc_recipe.send(:files_hashs)
+      apr_util_recipe.send(:files_hashs)
+
+    if ENV['STACK'] == 'cflinuxfs3'
+      hashes += mod_auth_openidc_recipe.send(:files_hashs)
+    end
+
+    hashes
   end
 
   def mod_auth_openidc_recipe
