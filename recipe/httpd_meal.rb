@@ -74,7 +74,7 @@ class HTTPdRecipe < BaseRecipe
     system <<-eof
       cd #{path}
 
-      rm -rf build/ cgi-bin/ error/ icons/ include/ man/ manual/ htdocs/
+      rm -rf cgi-bin/ error/ icons/ include/ man/ manual/ htdocs/
       rm -rf conf/extra/* conf/httpd.conf conf/httpd.conf.bak conf/magic conf/original
 
       mkdir -p lib
