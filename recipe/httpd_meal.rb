@@ -85,7 +85,24 @@ class HTTPdRecipe < BaseRecipe
       mkdir -p "./lib/iconv"
       cp "#{@apr_iconv_path}/lib/libapriconv-1.so.0" ./lib
       cp "#{@apr_iconv_path}/lib/iconv/"*.so ./lib/iconv/
+      cp /usr/lib/x86_64-linux-gnu/libcjose.so* ./lib/
+      cp /usr/lib/x86_64-linux-gnu/libhiredis.so* ./lib/
+      cp /usr/lib/x86_64-linux-gnu/libjansson.so* ./lib/
     eof
+  end
+end
+
+class ModAuthOpenidcRecipe < BaseRecipe
+  def url
+    "https://github.com/zmartzone/mod_auth_openidc/releases/download/v#{version}/mod_auth_openidc-#{version}.tar.gz"
+  end
+
+  def configure_options
+    ENV['APR_LIBS'] = `#{@apr_path}/bin/apr-1-config --link-ld --libs`
+    ENV['APR_CFLAGS'] = `#{@apr_path}/bin/apr-1-config --cflags --includes`
+    [
+      "--with-apxs2=#{@httpd_path}/bin/apxs"
+    ]
   end
 end
 
@@ -100,12 +117,23 @@ class HTTPdMeal
 
   def cook
     run('apt update') or raise 'Failed to apt update'
-    run('apt-get install -y libldap2-dev') or raise 'Failed to install libldap2-dev'
+    run('apt-get install -y libldap2-dev libjansson-dev libcjose-dev libhiredis-dev') or raise 'Failed to install libldap2-dev'
 
     apr_recipe.cook
     apr_iconv_recipe.cook
     apr_util_recipe.cook
     httpd_recipe.cook
+
+    # this symlink is needed so that modules can call `apxs`
+    #  putting it here because we only need to do it once
+    system <<-eof
+      cd /app
+      if ! [ -L "/app/httpd" ]; then
+        ln -s "#{httpd_recipe.path}" httpd
+      fi
+    eof
+
+    mod_auth_openidc_recipe.cook unless ENV['STACK'] == 'cflinuxfs2'
   end
 
   def url
@@ -145,7 +173,15 @@ class HTTPdMeal
     httpd_recipe.send(:files_hashs) +
       apr_recipe.send(:files_hashs)       +
       apr_iconv_recipe.send(:files_hashs) +
-      apr_util_recipe.send(:files_hashs)
+      apr_util_recipe.send(:files_hashs) +
+      mod_auth_openidc_recipe.send(:files_hashs)
+  end
+
+  def mod_auth_openidc_recipe
+    @mod_auth_openidc ||= ModAuthOpenidcRecipe.new('mod-auth-openidc', '2.3.8',
+      httpd_path: httpd_recipe.path,
+      apr_path: apr_recipe.path,
+      md5: 'd6abc2f68dabf5d2557400af2499f500')
   end
 
   def httpd_recipe
