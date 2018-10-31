@@ -21,10 +21,10 @@ class PhpMeal
 
     (@native_modules + @extensions).each do |recipe|
       recipe.instance_variable_set('@php_path', php_recipe.path)
+      recipe.instance_variable_set('@php_source', "#{php_recipe.send(:tmp_path)}/php-#{@version}")
 
-      if recipe.name == 'pdo_oci' || recipe.name == 'odbc' || recipe.name == 'pdo_odbc' || recipe.name == 'readline' || recipe.name == 'sodium'
+      if recipe.is_a? FakePeclRecipe
         recipe.instance_variable_set('@version', @version)
-        recipe.instance_variable_set('@php_source', "#{php_recipe.send(:tmp_path)}/php-#{@version}")
         recipe.instance_variable_set('@files', [{url: recipe.url, md5: nil}])
       end
     end
@@ -205,7 +205,11 @@ class PhpMeal
       libzookeeper-mt-dev
       snmp-mibs-downloader
       automake
-      libgeoip-dev)
+      libgeoip-dev
+      libtidy-dev
+      libenchant-dev
+      firebird-dev
+      librecode-dev)
   end
 
   def install_libuv
