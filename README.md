@@ -48,7 +48,7 @@ docker run -w /binary-builder -v `pwd`:/binary-builder -it cloudfoundry/cflinuxf
 ./bin/binary-builder --name=php --version=5.6.14 --md5=ae625e0cfcfdacea3e7a70a075e47155 --php-extensions-file=./php-extensions.yml
 ```
 
-For an example of what this file looks like, see: https://github.com/cloudfoundry/public-buildpacks-ci-robots/blob/master/binary-builds/php-extensions.yml
+For an example of what this file looks like, see: [PHP 5](https://github.com/cloudfoundry/buildpacks-ci/blob/master/tasks/build-binary-new/php-extensions.yml), [PHP 7.0 & 7.1](https://github.com/cloudfoundry/buildpacks-ci/blob/master/tasks/build-binary-new/php7-extensions.yml) & [PHP 7.2](https://github.com/cloudfoundry/buildpacks-ci/blob/master/tasks/build-binary-new/php72-extensions.yml).
 
 # Contributing
 
