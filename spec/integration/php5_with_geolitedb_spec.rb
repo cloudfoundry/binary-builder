@@ -24,7 +24,7 @@ describe 'building a binary', :run_geolite_php_tests do
       expect(File.exist? file_to_enable_geolite_db).to eq true
 
       expect(tar_contains_file('php/lib/librabbitmq.so.4')).to eq true
-      expect(tar_contains_file('php/lib/libhiredis.so.0.14')).to eq true
+      expect(tar_contains_file('php/lib/libhiredis.so.0.13')).to eq true
       expect(tar_contains_file('php/lib/libc-client.so.2007e')).to eq true
       expect(tar_contains_file('php/lib/libmcrypt.so.4')).to eq true
       expect(tar_contains_file('php/lib/libaspell.so.15')).to eq true
