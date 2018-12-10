@@ -51,7 +51,8 @@ class Php7Recipe < BaseRecipe
       '--enable-sysvsem=shared',
       '--enable-sysvshm=shared',
       '--enable-sysvmsg=shared',
-      '--enable-shmop=shared'
+      '--enable-shmop=shared',
+      "#{ENV['STACK'] == 'cflinuxfs3' ? '--with-pdo_sqlsrv=shared' : ''}"
     ]
   end
 
