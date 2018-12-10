@@ -177,7 +177,7 @@ class PhpMeal
   end
 
   def php7_cflinuxfs3_apt_packages
-    %w(libkrb5-dev libssl-dev libcurl4-openssl-dev)
+    %w(libkrb5-dev libssl-dev libcurl4-openssl-dev unixodbc-dev)
   end
 
   def php7_cflinuxfs2_apt_packages
