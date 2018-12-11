@@ -109,6 +109,8 @@ class PhpMeal
     php_extensions_hash = YAML.load_file(@options[:php_extensions_file])
 
     php_extensions_hash['extensions'].each do |hash|
+      next if ['sqlsrv', 'pdo_sqlsrv'].include?(hash['name']) && ENV['STACK'] != 'cflinuxfs3'
+
       klass = Kernel.const_get(hash['klass'])
 
       @extensions << klass.new(
