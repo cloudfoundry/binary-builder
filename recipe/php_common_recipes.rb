@@ -34,6 +34,25 @@ class AmqpPeclRecipe < PeclRecipe
   end
 end
 
+class MaxMindRecipe < BaseRecipe
+    def url
+      "https://github.com/maxmind/MaxMind-DB-Reader-php/archive/v#{version}.tar.gz"
+    end
+
+    def configure
+      cd ext
+      phpize
+      ./configure
+    end
+
+    def install
+      make
+      make test
+      sudo make install
+    end
+
+end
+
 class GeoipRecipe < PeclRecipe
     def cook
         super
