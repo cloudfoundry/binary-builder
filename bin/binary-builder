@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+gem update --system
 gem install bundler --no-rdoc --no-ri
 bundle config mirror.https://rubygems.org ${RUBYGEM_MIRROR}
 bundle install
