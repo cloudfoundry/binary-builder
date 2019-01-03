@@ -46,17 +46,8 @@ class MaxMindRecipe < BaseRecipe
     end
 
     def configure
-      cd ext
-      phpize
-      ./configure
+      execute('compile', ['bash', '-c', 'cd ext && phpize && ./configure && make && make test && sudo make install'])
     end
-
-    def install
-      make
-      make test
-      sudo make install
-    end
-
 end
 
 class GeoipRecipe < PeclRecipe
