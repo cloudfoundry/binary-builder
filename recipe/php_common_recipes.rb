@@ -45,8 +45,25 @@ class MaxMindRecipe < BaseRecipe
       "https://github.com/maxmind/MaxMind-DB-Reader-php/archive/v#{version}.tar.gz"
     end
 
+    def configure_options
+      [
+        "--with-php-config=#{@php_path}/bin/php-config"
+      ]
+    end
+
     def configure
-      execute('compile', ['bash', '-c', 'cd ext && phpize && ./configure && make && make test && sudo make install'])
+      return if configured?
+
+      execute('configure', %w(bash -c cd ext && phpize))
+      execute('configure', %w(bash -c cd ext && configure) + computed_options)
+    end
+
+    def compile
+      execute('compile', ['bash', '-c', 'cd ext && make'])
+    end
+
+    def install
+      execute('install', ['bash', '-c', 'cd ext && make install'])
     end
 end
 
