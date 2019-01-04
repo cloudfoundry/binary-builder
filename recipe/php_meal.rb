@@ -167,7 +167,7 @@ class PhpMeal
   end
 
   def php7_apt_packages
-    %w(libedit-dev libmaxminddb-dev)
+    %w(libedit-dev)
   end
 
   def php5_cflinuxfs3_apt_packages
@@ -179,7 +179,7 @@ class PhpMeal
   end
 
   def php7_cflinuxfs3_apt_packages
-    %w(libkrb5-dev libssl-dev libcurl4-openssl-dev unixodbc-dev)
+    %w(libkrb5-dev libssl-dev libcurl4-openssl-dev unixodbc-dev libmaxminddb-dev)
   end
 
   def php7_cflinuxfs2_apt_packages
@@ -275,6 +275,8 @@ class PhpMeal
        IonCubeRecipe.build_ioncube?(version)
     when 'oci8', 'pdo_oci'
        OraclePeclRecipe.oracle_sdk?
+    when 'maxmind', 'libmaxmind'
+       ENV['STACK'] == 'cflinuxfs3' ? true : false
     else
        true
     end
