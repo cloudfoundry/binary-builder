@@ -41,30 +41,26 @@ class LibMaxMindRecipe < BaseRecipe
 end
 
 class MaxMindRecipe < BaseRecipe
-    def url
-      "https://github.com/maxmind/MaxMind-DB-Reader-php/archive/v#{version}.tar.gz"
-    end
+  def url
+    "https://github.com/maxmind/MaxMind-DB-Reader-php/archive/v#{version}.tar.gz"
+  end
 
-    def configure_options
-      [
-        "--with-php-config=#{@php_path}/bin/php-config"
-      ]
-    end
+  def work_path
+    File.join(tmp_path, "MaxMind-DB-Reader-php-#{version}", 'ext')
+  end
 
-    def configure
-      return if configured?
+  def configure_options
+    [
+      "--with-php-config=#{@php_path}/bin/php-config"
+    ]
+  end
 
-      execute('configure', %w(bash -c cd ext && phpize))
-      execute('configure', %w(bash -c cd ext && configure) + computed_options)
-    end
+  def configure
+    return if configured?
 
-    def compile
-      execute('compile', ['bash', '-c', 'cd ext && make'])
-    end
-
-    def install
-      execute('install', ['bash', '-c', 'cd ext && make install'])
-    end
+    execute('configure', %w(bash -c phpize))
+    execute('configure', %w(sh configure) + computed_options)
+  end
 end
 
 class GeoipRecipe < PeclRecipe
