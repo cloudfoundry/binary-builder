@@ -167,7 +167,7 @@ class PhpMeal
   end
 
   def php7_apt_packages
-    %w(libedit-dev)
+    %w(libedit-dev libmaxminddb-dev)
   end
 
   def php5_cflinuxfs3_apt_packages
