@@ -77,10 +77,7 @@ class MaxMindGeoIpUpdater
     def download_free_database(product_id, file_path)
         product_uris = {
             "GeoLite-Legacy-IPv6-City" => "http://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz",
-            "GeoLite-Legacy-IPv6-Country" => "http://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz",
-            "506" => "http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz",
-            "517" => "http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz",
-            "533" => "http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz"
+            "GeoLite-Legacy-IPv6-Country" => "http://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz"
         }
 
         if !product_uris.include?(product_id)
