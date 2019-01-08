@@ -21,7 +21,7 @@ class BundlerRecipe < BaseRecipe
         FileUtils.rm_rf("#{tmpdir}/*")
 
         in_gem_env(tmpdir) do
-          system("unset RUBYOPT; gem install bundler --version #{version} --no-ri --no-rdoc --env-shebang")
+          system("unset RUBYOPT; gem install bundler --version #{version} --no-document --env-shebang")
           system("rm -f bundler-#{version}.gem")
           system("rm -rf cache/bundler-#{version}.gem")
           system("tar czvf #{current_dir}/#{archive_filename} .")
