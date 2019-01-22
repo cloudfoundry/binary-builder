@@ -18,7 +18,7 @@ This tool provides a mechanism for building binaries for the Cloud Foundry build
 
 # Usage
 
-The scripts are meant to be run on a Cloud Foundry [stack](https://docs.cloudfoundry.org/concepts/stacks.html).
+The scripts are meant to be run as root on a Cloud Foundry [stack](https://docs.cloudfoundry.org/concepts/stacks.html).
 
 ## Running within Docker
 

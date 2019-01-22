@@ -32,9 +32,9 @@ class PhpMeal
 
   def cook
     system <<-eof
-      sudo apt-get update
-      sudo apt-get -y upgrade
-      sudo apt-get -y install #{apt_packages}
+      apt-get update
+      apt-get -y upgrade
+      apt-get -y install #{apt_packages}
       #{install_libuv}
       #{install_argon2}
       #{symlink_commands}
