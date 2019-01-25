@@ -7,7 +7,7 @@ class PythonRecipe < BaseRecipe
   def computed_options
     [
       '--enable-shared',
-      '--with-ensurepip=no',
+      '--with-ensurepip=yes',
       '--with-dbmliborder=bdb:gdbm',
       '--with-tcltk-includes="-I/usr/include/tcl8.6"',
       '--with-tcltk-libs="-L/usr/lib/x86_64-linux-gnu -ltcl8.6 -L/usr/lib/x86_64-linux-gnu -ltk8.6"',
