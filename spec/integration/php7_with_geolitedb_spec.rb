@@ -45,7 +45,6 @@ describe 'building a binary', :run_geolite_php_tests do
       expect(tar_contains_file('php/geoipdb/lib/geoip_downloader.rb')).to eq true
       expect(tar_contains_file('php/geoipdb/bin/download_geoip_db.rb')).to eq true
       expect(tar_contains_file('php/geoipdb/dbs/GeoLiteCityv6.dat')).to eq true
-      expect(tar_contains_file('php/geoipdb/dbs/GeoLiteCountry.dat')).to eq true
     end
   end
 end
