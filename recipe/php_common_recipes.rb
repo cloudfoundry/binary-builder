@@ -187,6 +187,7 @@ class LibzipRecipe < BaseRecipe
   def url
     "https://libzip.org/download/libzip-#{version}.tar.gz"
   end
+
   def configure
   end
 
