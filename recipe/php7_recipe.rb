@@ -40,6 +40,7 @@ class Php7Recipe < BaseRecipe
       '--with-ldap=shared',
       '--with-ldap-sasl',
       '--with-zlib=shared',
+      '--with-libzip=shared',
       '--with-xsl=shared',
       '--with-snmp=shared',
       '--enable-mbstring=shared',
