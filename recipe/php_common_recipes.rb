@@ -183,24 +183,6 @@ class LibRdKafkaRecipe < BaseRecipe
   end
 end
 
-class LibzipRecipe < BaseRecipe
-  def url
-    "https://libzip.org/download/libzip-#{version}.tar.gz"
-  end
-
-  def configure
-  end
-
-  def compile
-    execute('compile', ['bash', '-c', 'mkdir -p build && cd build && cmake .. && make'])
-  end
-
-  def install
-    execute('install', ['bash', '-c', 'cd build && make install'])
-  end
-
-end
-
 class CassandraCppDriverRecipe < BaseRecipe
   def url
     "https://github.com/datastax/cpp-driver/archive/#{version}.tar.gz"
