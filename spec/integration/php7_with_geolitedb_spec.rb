@@ -19,12 +19,12 @@ describe 'building a binary', :run_geolite_php_tests do
       FileUtils.rm_rf(@extensions_dir)
     end
 
-    it 'has created the BUNDLE_GEOIP_LITE file' do
+    skip '[#164344453] SKIP has created the BUNDLE_GEOIP_LITE file' do
         file_to_enable_geolite_db = File.join(Dir.pwd, 'BUNDLE_GEOIP_LITE')
         expect(File.exist? file_to_enable_geolite_db).to eq true
     end
 
-    it 'copies in *.so files for some of the compiled extensions' do
+    skip '[#164344453] SKIP copies in *.so files for some of the compiled extensions' do
       expect(tar_contains_file('php/lib/librabbitmq.so.4')).to eq true
       expect(tar_contains_file('php/lib/libc-client.so.2007e')).to eq true
       expect(tar_contains_file('php/lib/libhiredis.so.0.13')).to eq true
