@@ -1,6 +1,5 @@
 # encoding: utf-8
 require_relative 'php_common_recipes'
-require_relative 'php5_recipe'
 require_relative 'php7_recipe'
 
 class PhpMeal
@@ -144,38 +143,17 @@ class PhpMeal
 
   def apt_packages
     packages = php_common_apt_packages
-    if @major_version == '5'
-      packages += php5_apt_packages
-      if ENV['STACK'] == 'cflinuxfs2'
-        packages += php5_cflinuxfs2_apt_packages
-      elsif ENV['STACK'] == 'cflinuxfs3'
-        packages += php5_cflinuxfs3_apt_packages
-      end
-    else
-      packages += php7_apt_packages
-      if ENV['STACK'] == 'cflinuxfs2'
-        packages += php7_cflinuxfs2_apt_packages
-      elsif ENV['STACK'] == 'cflinuxfs3'
-        packages += php7_cflinuxfs3_apt_packages
-      end
+    packages += php7_apt_packages
+    if ENV['STACK'] == 'cflinuxfs2'
+      packages += php7_cflinuxfs2_apt_packages
+    elsif ENV['STACK'] == 'cflinuxfs3'
+      packages += php7_cflinuxfs3_apt_packages
     end
     return packages.join(" ")
   end
 
-  def php5_apt_packages
-    %w(freetds-dev libgearman-dev libsybdb5 libreadline-dev)
-  end
-
   def php7_apt_packages
     %w(libedit-dev)
-  end
-
-  def php5_cflinuxfs3_apt_packages
-    %w(libkrb5-dev libssl1.0-dev)
-  end
-
-  def php5_cflinuxfs2_apt_packages
-    %w(libssl-dev libcurl4-openssl-dev)
   end
 
   def php7_cflinuxfs3_apt_packages
@@ -228,7 +206,7 @@ class PhpMeal
   end
 
   def install_argon2
-    return '' if ENV['STACK'] == 'cflinuxfs3' || @major_version == '5' || (@major_version == '7' && @minor_version.to_i < 2)
+    return '' if ENV['STACK'] == 'cflinuxfs3' || (@major_version == '7' && @minor_version.to_i < 2)
     %q((
       cd /tmp
       curl -L -O https://github.com/P-H-C/phc-winner-argon2/archive/20171227.tar.gz
@@ -242,25 +220,16 @@ class PhpMeal
   end
 
   def symlink_commands
-    if @major_version == '5'
-      php5_symlinks.join("\n")
-    else
-      php7_symlinks.join("\n")
-    end
-  end
-
-  def php5_symlinks
-    php_common_symlinks +
-        ["sudo ln -fs /usr/lib/x86_64-linux-gnu/libsybdb.so /usr/lib/libsybdb.so"]
+    php7_symlinks.join("\n")
   end
 
   def php7_symlinks
     php_common_symlinks +
-        ["sudo ln -s /usr/include/x86_64-linux-gnu/curl /usr/local/include/curl"] # This is required for php 7.0.X and 7.1.x on cflinuxfs3
+        ["sudo ln -s /usr/include/x86_64-linux-gnu/curl /usr/local/include/curl"] # This is required for php 7.1.x on cflinuxfs3
   end
 
   def php_common_symlinks
-    ["sudo ln -s /usr/include/x86_64-linux-gnu/curl /usr/local/include/curl", # This is required for php 5.6.X, 7.0.X, and 7.1.x on cflinuxfs3
+    ["sudo ln -s /usr/include/x86_64-linux-gnu/curl /usr/local/include/curl", # This is required for php 7.1.x on cflinuxfs3
       "sudo ln -fs /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h",
       "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap.so /usr/lib/libldap.so",
       "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap_r.so /usr/lib/libldap_r.so"]
@@ -307,10 +276,6 @@ class PhpMeal
 
     php_recipe_options.merge(DetermineChecksum.new(@options).to_h)
 
-    if @major_version == '5'
-      @php_recipe ||= Php5Recipe.new(@name, @version, php_recipe_options)
-    else
-      @php_recipe ||= Php7Recipe.new(@name, @version, php_recipe_options)
-    end
+    @php_recipe ||= Php7Recipe.new(@name, @version, php_recipe_options)
   end
 end

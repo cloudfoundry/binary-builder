@@ -139,15 +139,6 @@ class LibmemcachedRecipe < BaseRecipe
     ENV['CXXFLAGS'] = '-fpermissive'
     execute('configure', %w(./configure) + computed_options)
   end
-
-# def patch
-#   system <<-eof
-#     cd #{work_path}
-#     sed -i '\\|include tests/include.am|d' Makefile.am
-#     aclocal
-#     automake --add-missing
-#   eof
-# end
 end
 
 # We need to compile from source until Ubuntu packages version 2.3.0+
@@ -268,8 +259,6 @@ class OdbcRecipe < FakePeclRecipe
   end
 
   def patch
-    # patching same issue mentioned here ->
-    #   https://github.com/docker-library/php/issues/103#issuecomment-271434109
     system <<-eof
       cd #{work_path}
       echo 'AC_DEFUN([PHP_ALWAYS_SHARED],[])dnl' > temp.m4
