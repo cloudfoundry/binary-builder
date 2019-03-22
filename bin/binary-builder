@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-gem update --system
+gem update --system --no-document
 gem install bundler --no-document -f
 bundle config mirror.https://rubygems.org ${RUBYGEM_MIRROR}
 bundle install
