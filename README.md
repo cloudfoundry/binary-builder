@@ -50,9 +50,9 @@ docker run -w /binary-builder -v `pwd`:/binary-builder -it cloudfoundry/cflinuxf
 
 For an example of what this file looks like, see: [PHP 5](https://github.com/cloudfoundry/buildpacks-ci/blob/master/tasks/build-binary-new/php-extensions.yml), [PHP 7.0 & 7.1](https://github.com/cloudfoundry/buildpacks-ci/blob/master/tasks/build-binary-new/php7-extensions.yml) & [PHP 7.2](https://github.com/cloudfoundry/buildpacks-ci/blob/master/tasks/build-binary-new/php72-extensions.yml).
 
-## Building nginx
+# Building nginx
 
-NGinx uses GPG keys to verify the source tarball, so you'll need something like the following code to build the NGinx binary:
+Nginx uses GPG keys to verify the source tarball, so you'll need something like the following code to build the NGinx binary:
 
 ```
 version=1.15.9
