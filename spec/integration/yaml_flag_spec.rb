@@ -57,8 +57,8 @@ aySUQcOvO67Z14d9E9ziX/E24KWl6xRymmy9VhzawgSmf//3yZVaD6C/8om3qMw=
           "url"=>"https://archive.apache.org/dist/httpd/httpd-2.4.12.tar.bz2",
           "sha256"=>"ad6d39edfe4621d8cc9a2791f6f8d6876943a9da41ac8533d77407a2e630eae4"
         }, {
-          "url"=>"http://apache.mirrors.tds.net/apr/apr-1.6.5.tar.gz",
-          "sha256"=>"70dcf9102066a2ff2ffc47e93c289c8e54c95d8dda23b503f9e61bb0cbd2d105"
+          "url"=>"http://apache.mirrors.tds.net/apr/apr-1.7.0.tar.gz",
+          "sha256"=>"48e9dbf45ae3fdc7b491259ffb6ccf7d63049ffacbc1c0977cced095e4c2d5a2"
         }, {
           "url"=>"http://apache.mirrors.tds.net/apr/apr-iconv-1.2.2.tar.gz",
           "sha256"=>"ce94c7722ede927ce1e5a368675ace17d96d60ff9b8918df216ee5c1298c6a5e"
@@ -76,8 +76,8 @@ aySUQcOvO67Z14d9E9ziX/E24KWl6xRymmy9VhzawgSmf//3yZVaD6C/8om3qMw=
           "url"=>"https://archive.apache.org/dist/httpd/httpd-2.4.12.tar.bz2",
           "sha256"=>"ad6d39edfe4621d8cc9a2791f6f8d6876943a9da41ac8533d77407a2e630eae4"
         }, {
-          "url"=>"http://apache.mirrors.tds.net/apr/apr-1.6.5.tar.gz",
-          "sha256"=>"70dcf9102066a2ff2ffc47e93c289c8e54c95d8dda23b503f9e61bb0cbd2d105"
+          "url"=>"http://apache.mirrors.tds.net/apr/apr-1.7.0.tar.gz",
+          "sha256"=>"48e9dbf45ae3fdc7b491259ffb6ccf7d63049ffacbc1c0977cced095e4c2d5a2"
         }, {
           "url"=>"http://apache.mirrors.tds.net/apr/apr-iconv-1.2.2.tar.gz",
           "sha256"=>"ce94c7722ede927ce1e5a368675ace17d96d60ff9b8918df216ee5c1298c6a5e"
