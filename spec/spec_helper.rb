@@ -125,14 +125,4 @@ RSpec.configure do |config|
       tar_contains_file(File.dirname(oldfile) + '/' + newfile)
     end
   end
-
-  def php_extensions_source(php_major_version)
-    return ENV['PHP_EXTENSIONS_SOURCE'] if ENV['PHP_EXTENSIONS_SOURCE']
-
-    if php_major_version == '5'
-      'https://raw.githubusercontent.com/cloudfoundry/buildpacks-ci/master/tasks/build-binary-new/php-extensions.yml'
-    else
-      'https://raw.githubusercontent.com/cloudfoundry/buildpacks-ci/master/tasks/build-binary-new/php7-extensions.yml'
-    end
-  end
 end
