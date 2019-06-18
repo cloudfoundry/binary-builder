@@ -327,7 +327,6 @@ class OraclePdoRecipe < FakePeclRecipe
       cp -an /oracle/libipc1.so #{@php_path}/lib
       cp -an /oracle/libmql1.so #{@php_path}/lib
       cp -an /oracle/libnnz12.so #{@php_path}/lib
-      cp -an /oracle/libociicus.so #{@php_path}/lib
       cp -an /oracle/libons.so #{@php_path}/lib
       cp -an /oracle/libocci.so.12.1 #{@php_path}/lib
       cp -an /oracle/libociei.so #{@php_path}/lib
