@@ -1,5 +1,5 @@
 # encoding: utf-8
-require_relative 'openssl_recipe'
+require_relative '../lib/openssl_replace'
 require_relative 'base'
 
 class NginxRecipe < BaseRecipe
@@ -7,8 +7,7 @@ class NginxRecipe < BaseRecipe
   def initialize(name, version, options = {})
     super name, version, options
     # override openssl in container
-    OpenSSLRecipe.new('openssl', 'OpenSSL_1_1_0g',
-                      { sha256: '8e9516b8635bb9113c51a7b5b27f9027692a56b104e75b709e588c3ffd6a0422' }).cook
+    OpenSSLReplace.replace_openssl
   end
 
   def computed_options
