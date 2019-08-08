@@ -5,42 +5,33 @@ require 'yaml'
 describe 'building a binary', :integration do
   context 'when a recipe is specified' do
     before(:all) do
-      @output, = run_binary_builder('nginx-static', '1.9.4', '--gpg-rsa-key-id=A1C052F8 --gpg-signature="-----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAABCAAGBQJV002uAAoJEFIKmZOhwFL41AcH/2VX1/5mD3dAUXfDaYMG92IV
-aA8vHlsvXpCEPfCYBnPGYYFa/P0qPyw6hsWXZhWEGEm+BqZK6dWCLFaxTVTtsjOE
-vhSR+LL+FNxYmGbK2lYq61PDDL45x5Qnhy3WK1e40F7CqmElSfMOjLuCNC7xR9Jc
-zAZ014ADQ5yfH+Ma40K997AxZeCVGU+A5IEHGoZ2i8pyqx0Jhh6cbpC18yHu5ciN
-0o4E4cLSFFckYB3FnUpDowRonBDNUpDRJVKMo5cvvskc/GWVUVomPuWyNGFPPmMJ
-aySUQcOvO67Z14d9E9ziX/E24KWl6xRymmy9VhzawgSmf//3yZVaD6C/8om3qMw=
-=zjw3
------END PGP SIGNATURE-----"')
-      @binary_tarball_location = File.join(Dir.pwd, 'nginx-static-1.9.4-linux-x64.tgz')
+        @output, _ = run_binary_builder('go', '1.6.3', '--sha256=6326aeed5f86cf18f16d6dc831405614f855e2d416a91fd3fdc334f772345b00')
+        @tarball_name = 'go1.6.3.linux-amd64.tar.gz'
+        @binary_tarball_location = File.join(Dir.pwd, @tarball_name)
     end
 
     after(:all) do
-      FileUtils.rm(@binary_tarball_location)
+      # FileUtils.rm(@binary_tarball_location)
     end
 
     it 'prints a yaml representation of the source used to build the binary to stdout' do
       yaml_source = @output.match(/Source YAML:(.*)/m)[1]
       expect(YAML.load(yaml_source)).to eq([
-                                             {
-                                               'url'    => 'http://nginx.org/download/nginx-1.9.4.tar.gz',
-                                               'sha256' => '479b0c03747ee6b2d4a21046f89b06d178a2881ea80cfef160451325788f2ba8'
-                                             }
-                                           ])
+                                            {
+                                              "sha256"=>"6326aeed5f86cf18f16d6dc831405614f855e2d416a91fd3fdc334f772345b00",
+                                              "url"=>"https://storage.googleapis.com/golang/go1.6.3.src.tar.gz"
+                                            }
+                                          ])
     end
 
     it 'includes the yaml representation of the source inside the resulting tarball' do
-      yaml_source = `tar xzf nginx-static-1.9.4-linux-x64.tgz sources.yml -O`
+      yaml_source = `tar xzf #{@tarball_name} -O sources.yml`
       expect(YAML.load(yaml_source)).to eq([
-                                             {
-                                               'url'    => 'http://nginx.org/download/nginx-1.9.4.tar.gz',
-                                               'sha256' => '479b0c03747ee6b2d4a21046f89b06d178a2881ea80cfef160451325788f2ba8'
-                                             }
-                                           ])
+                                              {
+                                                "sha256"=>"6326aeed5f86cf18f16d6dc831405614f855e2d416a91fd3fdc334f772345b00",
+                                                "url"=>"https://storage.googleapis.com/golang/go1.6.3.src.tar.gz"
+                                              }
+                                          ])
     end
   end
 
