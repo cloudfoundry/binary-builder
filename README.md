@@ -22,10 +22,11 @@ The scripts are meant to be run as root on a Cloud Foundry [stack](https://docs.
 
 ## Running within Docker
 
-To run `binary-builder` from within the cflinuxfs2 rootfs, use [Docker](https://docker.io):
+To run `binary-builder` from within the cflinuxfs3 rootfs, use [Docker](https://docker.io):
 
 ```bash
-docker run -w /binary-builder -v `pwd`:/binary-builder -it cloudfoundry/cflinuxfs2 bash
+docker run -w /binary-builder -v `pwd`:/binary-builder -it cloudfoundry/cflinuxfs3 bash
+export STACK=cflinuxfs3
 ./bin/binary-builder --name=[binary_name] --version=[binary_version] --(md5|sha256)=[checksum_value]
 ```
 
@@ -34,7 +35,7 @@ This generates a gzipped tarball in the binary-builder directory with the filena
 For example, if you were building ruby 2.2.3, you'd run the following commands:
 
 ```bash
-$ docker run -w /binary-builder -v `pwd`:/binary-builder -it cloudfoundry/cflinuxfs2:ruby-2.2.4 ./bin/binary-builder --name=ruby --version=2.2.3 --md5=150a5efc5f5d8a8011f30aa2594a7654
+$ docker run -w /binary-builder -v `pwd`:/binary-builder -it cloudfoundry/cflinuxfs3:ruby-2.2.4 ./bin/binary-builder --name=ruby --version=2.2.3 --md5=150a5efc5f5d8a8011f30aa2594a7654
 $ ls
 ruby-2.2.3-linux-x64.tgz
 ```
@@ -44,8 +45,9 @@ ruby-2.2.3-linux-x64.tgz
 To build PHP, you also need to pass in a YAML file containing information about the various PHP extensions to be built. For example
 
 ```bash
-docker run -w /binary-builder -v `pwd`:/binary-builder -it cloudfoundry/cflinuxfs2 bash
-./bin/binary-builder --name=php --version=5.6.14 --md5=ae625e0cfcfdacea3e7a70a075e47155 --php-extensions-file=./php-extensions.yml
+docker run -w /binary-builder -v `pwd`:/binary-builder -it cloudfoundry/cflinuxfs3 bash
+export STACK=cflinuxfs3
+./bin/binary-builder --name=php --version=7.1.29 --md5=ae625e0cfcfdacea3e7a70a075e47155 --php-extensions-file=./php71-extensions.yml
 ```
 
 For an example of what this file looks like, see: [PHP 5](https://github.com/cloudfoundry/buildpacks-ci/blob/master/tasks/build-binary-new/php-extensions.yml), [PHP 7.0 & 7.1](https://github.com/cloudfoundry/buildpacks-ci/blob/master/tasks/build-binary-new/php7-extensions.yml) & [PHP 7.2](https://github.com/cloudfoundry/buildpacks-ci/blob/master/tasks/build-binary-new/php72-extensions.yml).
@@ -60,7 +62,7 @@ gpg_signature_url="http://nginx.org/download/nginx-${version}.tar.gz.asc"
 gpg_signature=`curl -sL ${gpg_signature_url}`
 
 docker run -w /binary-builder -v `pwd`:/binary-builder \
-  -it cloudfoundry/cflinuxfs2 ./bin/binary-builder \
+  -it cloudfoundry/cflinuxfs3 ./bin/binary-builder \
   --name=nginx-static --gpg-rsa-key-id=A1C052F8 \
   --version=$version --gpg-signature="${gpg_signature}"
 ```

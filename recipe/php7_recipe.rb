@@ -89,12 +89,8 @@ class Php7Recipe < BaseRecipe
   end
 
   def setup_tar
-    lib_dir   = `lsb_release -r | awk '{print $2}'`.strip == '18.04' ?
-      '/usr/lib/x86_64-linux-gnu' :
-      '/usr/lib'
-    argon_dir = `lsb_release -r | awk '{print $2}'`.strip == '18.04' ?
-      '/usr/lib/x86_64-linux-gnu' :
-      '/usr/local/lib'
+    lib_dir   = "#{ENV['STACK'] == 'cflinuxfs3' ? '/usr/lib/x86_64-linux-gnu' : '/usr/lib'}"
+    argon_dir = "#{ENV['STACK'] == 'cflinuxfs3' ? '/usr/lib/x86_64-linux-gnu' : '/usr/lib'}"
 
     system <<-eof
       cp -a /usr/local/lib/x86_64-linux-gnu/librabbitmq.so* #{path}/lib/

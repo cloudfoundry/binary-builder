@@ -21,7 +21,9 @@ This is done by adding an additiona `-v` argument to the `docker run` command.
 Ex:
 
 ```
-docker run -w /binary-builder -v `pwd`:/binary-builder -v /path/to/oracle:/oracle -it cloudfoundry/cflinuxfs2 bash ./bin/binary-builder --name=php7 --version=7.0.9 --md5=32ea3ce54d7d5ed03c6c600dffd65813  --php-extensions-file=./php7-extensions.yml
+docker run -w /binary-builder -v `pwd`:/binary-builder -v /path/to/oracle:/oracle -it cloudfoundry/cflinuxfs3 bash
+export STACK=cflinuxfs3 
+./bin/binary-builder --name=php --version=7.1.29 --md5=ae625e0cfcfdacea3e7a70a075e47155 --php-extensions-file=./php71-extensions.yml
 ```
 
 ## What's Included
