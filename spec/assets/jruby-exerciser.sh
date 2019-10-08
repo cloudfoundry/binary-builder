@@ -5,7 +5,7 @@ mkdir -p /tmp/binary-exerciser
 current_dir=`pwd`
 cd /tmp/binary-exerciser
 
-tar xzf $current_dir/jruby-9.1.17.0_ruby-2.3-linux-x64.tgz
+tar xzf $current_dir/jruby-9.2.8.0_ruby-2.5-linux-x64.tgz
 JAVA_HOME=/opt/java
 PATH=$PATH:$JAVA_HOME/bin
 ./bin/jruby -e 'puts "#{RUBY_PLATFORM} #{RUBY_VERSION}"'
