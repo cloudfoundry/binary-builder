@@ -21,7 +21,7 @@ describe 'building a binary', :run_oracle_php_tests do
       php_oracle_module_arguments = '-dextension=oci8.so -dextension=pdo_oci.so -dextension=pdo.so'
       php_info_modules_command = '-r "phpinfo(INFO_MODULES);"'
 
-      php_info_with_oracle_modules = %{./spec/assets/php-exerciser.sh 7.1.0 #{File.basename(@binary_tarball_location)} ./php/bin/php #{php_oracle_module_arguments} #{php_info_modules_command}}
+      php_info_with_oracle_modules = %{./spec/assets/php-exerciser.sh #{File.basename(@binary_tarball_location)} ./php/bin/php #{php_oracle_module_arguments} #{php_info_modules_command}}
 
       output, status = run(php_info_with_oracle_modules)
 
