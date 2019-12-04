@@ -87,7 +87,7 @@ RSpec.configure do |config|
   end
 
   def setup_docker_container(docker_container_name, directory_mapping)
-    docker_image = "cloudfoundry/#{ENV.fetch('STACK', 'cflinuxfs2')}"
+    docker_image = "cloudfoundry/#{ENV.fetch('STACK', 'cflinuxfs3')}"
     `docker run --name #{docker_container_name} -dit #{directory_mapping} -e CCACHE_DIR=/binary-builder/.ccache -w /binary-builder #{docker_image} sh -c 'env PATH=/usr/lib/ccache:$PATH bash'`
     `docker exec #{docker_container_name} apt-get -y install ccache`
     `docker exec #{docker_container_name} gem install bundler --no-ri --no-rdoc`

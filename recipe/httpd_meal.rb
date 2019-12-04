@@ -133,10 +133,8 @@ class HTTPdMeal
       fi
     eof
 
-    if ENV['STACK'] == 'cflinuxfs3'
-      run('apt-get install -y libjansson-dev libcjose-dev libhiredis-dev') or raise 'Failed to install additional dependencies'
-      mod_auth_openidc_recipe.cook
-    end
+    run('apt-get install -y libjansson-dev libcjose-dev libhiredis-dev') or raise 'Failed to install additional dependencies'
+    mod_auth_openidc_recipe.cook
   end
 
   def url
@@ -176,11 +174,8 @@ class HTTPdMeal
     hashes = httpd_recipe.send(:files_hashs) +
       apr_recipe.send(:files_hashs)       +
       apr_iconv_recipe.send(:files_hashs) +
-      apr_util_recipe.send(:files_hashs)
-
-    if ENV['STACK'] == 'cflinuxfs3'
-      hashes += mod_auth_openidc_recipe.send(:files_hashs)
-    end
+      apr_util_recipe.send(:files_hashs) +
+      mod_auth_openidc_recipe.send(:files_hashs)
 
     hashes
   end

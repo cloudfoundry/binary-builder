@@ -18,7 +18,7 @@ class Php7Recipe < BaseRecipe
       '--with-bz2=shared',
       '--with-curl=shared',
       '--enable-dba=shared',
-      "--with-password-argon2=#{ENV['STACK'] == 'cflinuxfs3' ? '/usr/lib/x86_64-linux-gnu' : '/usr/local'}",
+      "--with-password-argon2=/usr/lib/x86_64-linux-gnu",
       '--with-cdb',
       '--with-gdbm',
       '--with-mcrypt=shared',
@@ -40,7 +40,7 @@ class Php7Recipe < BaseRecipe
       '--with-ldap=shared',
       '--with-ldap-sasl',
       '--with-zlib=shared',
-      "#{ENV['STACK'] == 'cflinuxfs3' ? '--with-libzip=/usr/local/lib' : ''}",
+      '--with-libzip=/usr/local/lib',
       '--with-xsl=shared',
       '--with-snmp=shared',
       '--enable-mbstring=shared',
@@ -53,7 +53,7 @@ class Php7Recipe < BaseRecipe
       '--enable-sysvshm=shared',
       '--enable-sysvmsg=shared',
       '--enable-shmop=shared',
-      "#{ENV['STACK'] == 'cflinuxfs3' ? '--with-pdo_sqlsrv=shared' : ''}"
+      '--with-pdo_sqlsrv=shared',
     ]
   end
 
@@ -89,8 +89,8 @@ class Php7Recipe < BaseRecipe
   end
 
   def setup_tar
-    lib_dir   = "#{ENV['STACK'] == 'cflinuxfs3' ? '/usr/lib/x86_64-linux-gnu' : '/usr/lib'}"
-    argon_dir = "#{ENV['STACK'] == 'cflinuxfs3' ? '/usr/lib/x86_64-linux-gnu' : '/usr/lib'}"
+    lib_dir   = '/usr/lib/x86_64-linux-gnu'
+    argon_dir = '/usr/lib/x86_64-linux-gnu'
 
     system <<-eof
       cp -a /usr/local/lib/x86_64-linux-gnu/librabbitmq.so* #{path}/lib/
