@@ -11,11 +11,11 @@ class MavenRecipe < BaseRecipe
     extract
 
     #install maven 3.6.1 to $HOME/apache-maven-3.6.1
-    sha512 = 'fae9c12b570c3ba18116a4e26ea524b29f7279c17cbaadc3326ca72927368924d9131d11b9e851b8dc9162228b6fdea955446be41207a5cfc61283dd8a561d2f'
+    sha512 = '14eef64ad13c1f689f2ab0d2b2b66c9273bf336e557d81d5c22ddb001c47cf51f03bb1465d6059ce9fdc2e43180ceb0638ce914af1f53af9c2398f5d429f114c'
 
     Dir.chdir("#{ENV['HOME']}") do
-      maven_download = 'https://archive.apache.org/dist/maven/maven-3/3.6.0/binaries/apache-maven-3.6.0-bin.tar.gz'
-      maven_tar = "apache-maven-3.6.0-bin.tar.gz"
+      maven_download = 'https://archive.apache.org/dist/maven/maven-3/3.6.0/binaries/apache-maven-3.6.3-bin.tar.gz'
+      maven_tar = "apache-maven-3.6.3-bin.tar.gz"
       system("curl -L #{maven_download} -o #{maven_tar}")
 
       downloaded_sha = Digest::SHA512.file(maven_tar).hexdigest
@@ -28,11 +28,11 @@ class MavenRecipe < BaseRecipe
     end
 
     old_path = ENV['PATH']
-    ENV['PATH'] = "#{ENV['HOME']}/apache-maven-3.6.0/bin:#{old_path}"
+    ENV['PATH'] = "#{ENV['HOME']}/apache-maven-3.6.3/bin:#{old_path}"
 
     install
     ENV['PATH'] = old_path
-    FileUtils.rm_rf(File.join(ENV['HOME'], 'apache-maven-3.6.0'))
+    FileUtils.rm_rf(File.join(ENV['HOME'], 'apache-maven-3.6.3'))
   end
 
   def install
