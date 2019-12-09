@@ -41,10 +41,6 @@ extensions:
   version: 5.1.17
   md5: 8d60ffd6dcec221f8bce957a09511f87
   klass: PeclRecipe
-- name: cassandra
-  version: 1.3.2
-  md5: ebeeffa834e8428c9105a45fe89344aa
-  klass: PeclRecipe
 - name: geoip
   version: 1.1.1
   md5: 4f5f4b8a41a5802de6591c79b85cc838
@@ -78,8 +74,8 @@ extensions:
   md5: 8ed9843595c3b183ee79fd76b3039384
   klass: PeclRecipe
 - name: oauth
-  version: 2.0.3
-  md5: 0f0b4756d1a91a062817f22efc4bed62
+  version: 2.0.4
+  md5: ade75f04c172f06d24f99d0b30bccf2c
   klass: PeclRecipe
 - name: odbc
   version: nil
@@ -110,12 +106,8 @@ extensions:
   md5: 507c30184fde736e924cee20c56df061
   klass: PeclRecipe
 - name: xdebug
-  version: 2.7.2
-  md5: 5d1a8ca3101df93938d283933f256493
-  klass: PeclRecipe
-- name: yaf
-  version: 3.0.8
-  md5: 636b2284f0c89640e598f59956b4c0f8
+  version: 2.8.1
+  md5: 4170605efa503e1f116db0ab7b020848
   klass: PeclRecipe
 - name: yaml
   version: 2.0.4
@@ -125,19 +117,11 @@ extensions:
   version: 3.1.4
   md5: c50f416ff9fc66360b5bd7a5017dc829
   klass: MemcachedPeclRecipe
-- name: sodium
-  version: nil
-  md5: nil
-  klass: SodiumRecipe
 - name: tidy
   version: nil
   md5: nil
   klass: FakePeclRecipe
 - name: enchant
-  version: nil
-  md5: nil
-  klass: FakePeclRecipe
-- name: interbase
   version: nil
   md5: nil
   klass: FakePeclRecipe
@@ -149,22 +133,10 @@ extensions:
   version: nil
   md5: nil
   klass: FakePeclRecipe
-- name: wddx
-  version: nil
-  md5: nil
-  klass: FakePeclRecipe
 - name: xmlrpc
   version: nil
   md5: nil
   klass: FakePeclRecipe
-- name: recode
-  version: nil
-  md5: nil
-  klass: FakePeclRecipe
-- name: amqp
-  version: 1.9.4
-  md5: d45a7137edd361998494a8894fe50888
-  klass: AmqpPeclRecipe
 - name: ioncube
   version: 10.3.8
   md5: 5d65b82946f773b496716ebd988bf926
@@ -181,10 +153,6 @@ extensions:
   version: 1.3.2
   md5: 67a861965b30d045bf29a2126bcc05ed
   klass: LibMaxMindRecipe
-- name: phalcon
-  version: 3.4.4
-  md5: 6f8c8d5a752f953491bd0f4f5c63adbf
-  klass: PhalconRecipe
 - name: phpiredis
   version: 1.0.0
   md5: d84a6e7e3a54744269fd776d7be80be1
@@ -193,14 +161,14 @@ extensions:
   version: 0.12.4
   md5: 77a77a429af4a5ff97778ccafeffa43a
   klass: PHPProtobufPeclRecipe
-- name: tideways
-  version: 4.1.7
-  md5: 7ca0429d4465debb5dad4680825d22b8
-  klass: TidewaysXhprofRecipe
 - name: tideways_xhprof
-  version: 5.0.0
-  md5: 72a562882b6ea5e3bb25bd68c58707e3
+  version: 5.0.2
+  md5: 374cf4ff7ba03401a279777abe94815d
   klass: TidewaysXhprofRecipe
+- name: solr
+  version: 2.5.0
+  md5: 5034f5d274e2c80b8ac63f601d0beb01
+  klass: PeclRecipe
 - name: oci8
   version: 2.2.0
   md5: 678d2a647881cd8e5b458c669dcce215
