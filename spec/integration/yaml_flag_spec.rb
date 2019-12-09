@@ -45,17 +45,24 @@ describe 'building a binary', :integration do
       yaml_source = @output.match(/Source YAML:(.*)/m)[1]
       expect(YAML.load(yaml_source)).to match_array([
         {
-          "url"=>"https://archive.apache.org/dist/httpd/httpd-2.4.41.tar.bz2",
-          "sha256"=>"133d48298fe5315ae9366a0ec66282fa4040efa5d566174481077ade7d18ea40"
-        }, {
-          "url"=>"http://apache.mirrors.tds.net/apr/apr-1.7.0.tar.gz",
-          "sha256"=>"48e9dbf45ae3fdc7b491259ffb6ccf7d63049ffacbc1c0977cced095e4c2d5a2"
-        }, {
-          "url"=>"http://apache.mirrors.tds.net/apr/apr-iconv-1.2.2.tar.gz",
-          "sha256"=>"ce94c7722ede927ce1e5a368675ace17d96d60ff9b8918df216ee5c1298c6a5e"
-        }, {
-          "url"=>"http://apache.mirrors.tds.net/apr/apr-util-1.6.1.tar.gz",
-          "sha256"=>"b65e40713da57d004123b6319828be7f1273fbc6490e145874ee1177e112c459"
+          "sha256" => "133d48298fe5315ae9366a0ec66282fa4040efa5d566174481077ade7d18ea40",
+          "url" => "https://archive.apache.org/dist/httpd/httpd-2.4.41.tar.bz2"
+        },
+        {
+          "sha256" => "48e9dbf45ae3fdc7b491259ffb6ccf7d63049ffacbc1c0977cced095e4c2d5a2",
+          "url" => "http://apache.mirrors.tds.net/apr/apr-1.7.0.tar.gz"
+        },
+        {
+          "sha256" => "ce94c7722ede927ce1e5a368675ace17d96d60ff9b8918df216ee5c1298c6a5e",
+          "url" => "http://apache.mirrors.tds.net/apr/apr-iconv-1.2.2.tar.gz"
+        },
+        {
+          "sha256" => "b65e40713da57d004123b6319828be7f1273fbc6490e145874ee1177e112c459",
+          "url" => "http://apache.mirrors.tds.net/apr/apr-util-1.6.1.tar.gz"
+        },
+        {
+          "sha256" => "0f078444fed34085bc83e27eb3439556718f50dcea275307ffb66d498bdabb8f",
+          "url" => "https://github.com/zmartzone/mod_auth_openidc/releases/download/v2.3.8/mod_auth_openidc-2.3.8.tar.gz"
         }
       ])
     end
@@ -64,18 +71,24 @@ describe 'building a binary', :integration do
       yaml_source = `tar xzf httpd-2.4.41-linux-x64.tgz sources.yml -O`
       expect(YAML.load(yaml_source)).to match_array([
         {
-          "url"=>"https://archive.apache.org/dist/httpd/httpd-2.4.41.tar.bz2",
-          "sha256"=>"133d48298fe5315ae9366a0ec66282fa4040efa5d566174481077ade7d18ea40"
-        }, {
-          "url"=>"http://apache.mirrors.tds.net/apr/apr-1.7.0.tar.gz",
-          "sha256"=>"48e9dbf45ae3fdc7b491259ffb6ccf7d63049ffacbc1c0977cced095e4c2d5a2"
-        }, {
-          "url"=>"http://apache.mirrors.tds.net/apr/apr-iconv-1.2.2.tar.gz",
-          "sha256"=>"ce94c7722ede927ce1e5a368675ace17d96d60ff9b8918df216ee5c1298c6a5e"
+          "sha256" => "133d48298fe5315ae9366a0ec66282fa4040efa5d566174481077ade7d18ea40",
+          "url" => "https://archive.apache.org/dist/httpd/httpd-2.4.41.tar.bz2"
         },
         {
-          "url"=>"http://apache.mirrors.tds.net/apr/apr-util-1.6.1.tar.gz",
-          "sha256"=>"b65e40713da57d004123b6319828be7f1273fbc6490e145874ee1177e112c459"
+          "sha256" => "48e9dbf45ae3fdc7b491259ffb6ccf7d63049ffacbc1c0977cced095e4c2d5a2",
+          "url" => "http://apache.mirrors.tds.net/apr/apr-1.7.0.tar.gz"
+        },
+        {
+          "sha256" => "ce94c7722ede927ce1e5a368675ace17d96d60ff9b8918df216ee5c1298c6a5e",
+          "url" => "http://apache.mirrors.tds.net/apr/apr-iconv-1.2.2.tar.gz"
+        },
+        {
+          "sha256" => "b65e40713da57d004123b6319828be7f1273fbc6490e145874ee1177e112c459",
+          "url" => "http://apache.mirrors.tds.net/apr/apr-util-1.6.1.tar.gz"
+        },
+        {
+          "sha256" => "0f078444fed34085bc83e27eb3439556718f50dcea275307ffb66d498bdabb8f",
+          "url" => "https://github.com/zmartzone/mod_auth_openidc/releases/download/v2.3.8/mod_auth_openidc-2.3.8.tar.gz"
         }
       ])
     end
