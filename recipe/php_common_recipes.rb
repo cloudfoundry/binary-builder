@@ -251,6 +251,36 @@ class FakePeclRecipe < PeclRecipe
   end
 end
 
+
+class Gd72and73FakePeclRecipe < FakePeclRecipe
+  def configure_options
+    baseOpts = [
+      "--with-jpeg-dir",
+      "--with-png-dir",
+      "--with-xpm-dir",
+      "--with-freetype-dir",
+      "--with-webp-dir",
+      "--with-zlib-dir",
+    ]
+
+    if version.start_with?("7.2")
+      return baseOpts.push("--enable-gd-jis-conv")
+    else
+      return baseOpts.push("--with-gd-jis-conv")
+    end
+  end
+end
+
+class Gd74FakePeclRecipe < FakePeclRecipe
+  # how to build gd.so in PHP 7.4 changed dramatically
+  #  In 7.4+, you can just use libgd from Ubuntu
+  def configure_options
+    [
+      "--with-external-gd"
+    ]
+  end
+end
+
 class OdbcRecipe < FakePeclRecipe
   def configure_options
     [
