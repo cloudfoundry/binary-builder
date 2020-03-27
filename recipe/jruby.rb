@@ -25,10 +25,10 @@ class JRubyRecipe < BaseRecipe
   end
 
   def ruby_version
-    @ruby_version ||= version.match(/.*_ruby-(\d+\.\d+)/)[1]
+    @ruby_version ||= version.match(/.*-ruby-(\d+\.\d+)/)[1]
   end
 
   def jruby_version
-    @jruby_version ||= version.match(/(.*)_ruby-\d+\.\d+/)[1]
+    @jruby_version ||= version.match(/(.*)-ruby-\d+\.\d+/)[1]
   end
 end
