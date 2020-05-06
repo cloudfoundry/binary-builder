@@ -22,6 +22,7 @@ class BundlerRecipe < BaseRecipe
 
         in_gem_env(tmpdir) do
           system("unset RUBYOPT; gem install bundler --version #{version} --no-document --env-shebang")
+          replace_shebangs(tmpdir)
           system("rm -f bundler-#{version}.gem")
           system("rm -rf cache/bundler-#{version}.gem")
           system("tar czvf #{current_dir}/#{archive_filename} .")
@@ -46,5 +47,13 @@ class BundlerRecipe < BaseRecipe
 
     ENV['GEM_HOME'] = old_gem_home
     ENV['GEM_PATH'] = old_gem_path
+  end
+
+  def replace_shebangs(dir)
+    Dir.glob("#{dir}/bin/*").each do |bin_script|
+      original_contents = File.read(bin_script)
+      new_contents = original_contents.gsub(/^#!.*ruby.*/, '#!/usr/bin/env ruby')
+      File.open(bin_script, 'w') { |file| file.puts(new_contents) }
+    end
   end
 end
