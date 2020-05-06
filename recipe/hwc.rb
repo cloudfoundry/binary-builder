@@ -23,21 +23,21 @@ class HwcRecipe < BaseRecipe
     FileUtils.mv(Dir.glob("#{tmp_path}/hwc-*").first, "#{tmp_path}/hwc")
     Dir.chdir("#{tmp_path}/hwc") do
       system(
-        {"GOPATH" => "/tmp",
-         "PATH" => "#{ENV["PATH"]}:/usr/local/go/bin"},
+        {"PATH" => "#{ENV["PATH"]}:/usr/local/go/bin"},
       "./scripts/build.sh"
       ) or raise "Could not build hwc"
     end
 
     FileUtils.mv("#{tmp_path}/hwc/hwc-rel/hwc.exe", "/tmp/hwc.exe")
+    FileUtils.mv("#{tmp_path}/hwc/hwc-rel/hwc_x86.exe", "/tmp/hwc_x86.exe")
   end
 
   def archive_files
-    ['/tmp/hwc.exe']
+    ['/tmp/hwc.exe', '/tmp/hwc_x86.exe']
   end
 
   def url
-    "https://github.com/cloudfoundry-incubator/hwc/archive/#{version}.tar.gz"
+    "https://github.com/cloudfoundry/hwc/archive/#{version}.tar.gz"
   end
 
   def tmp_path
@@ -45,6 +45,6 @@ class HwcRecipe < BaseRecipe
   end
 
   def archive_filename
-    "#{name}-#{version}-windows-amd64.zip"
+    "#{name}-#{version}-windows-x86-64.zip"
   end
 end
