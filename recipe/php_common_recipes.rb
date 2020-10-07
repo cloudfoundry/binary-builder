@@ -3,7 +3,40 @@ require_relative 'base'
 require_relative '../lib/geoip_downloader'
 require 'uri'
 
-class PeclRecipe < BaseRecipe
+class BasePHPModuleRecipe < BaseRecipe
+  def initialize(name, version, options = {})
+    super name, version, options
+
+    @files = [{
+      url: url,
+      local_path: local_path,
+    }.merge(DetermineChecksum.new(options).to_h)]
+  end
+
+  def local_path
+    File.join(archives_path, File.basename(url))
+  end
+
+  # override this method to allow local_path to be specified
+  # this prevents recipes with the same versions downloading colliding files (such as `v1.0.0.tar.gz`)
+  def files_hashs
+    @files.map do |file|
+      hash = case file
+      when String
+        { :url => file }
+      when Hash
+        file.dup
+      else
+        raise ArgumentError, "files must be an Array of Stings or Hashs"
+      end
+
+      hash[:local_path] = local_path
+      hash
+    end
+  end
+end
+
+class PeclRecipe < BasePHPModuleRecipe
   def url
     "http://pecl.php.net/get/#{name}-#{version}.tgz"
   end
@@ -40,9 +73,13 @@ class LibMaxMindRecipe < BaseRecipe
   end
 end
 
-class MaxMindRecipe < BaseRecipe
+class MaxMindRecipe < BasePHPModuleRecipe
   def url
     "https://github.com/maxmind/MaxMind-DB-Reader-php/archive/v#{version}.tar.gz"
+  end
+
+  def local_path
+    "maxmind-#{version}.tar.gz"
   end
 
   def work_path
@@ -84,9 +121,13 @@ class GeoipRecipe < PeclRecipe
     end
 end
 
-class HiredisRecipe < BaseRecipe
+class HiredisRecipe < BasePHPModuleRecipe
   def url
     "https://github.com/redis/hiredis/archive/v#{version}.tar.gz"
+  end
+
+  def local_path
+    "hiredis-#{version}.tar.gz"
   end
 
   def configure
@@ -150,9 +191,13 @@ class UnixOdbcRecipe < BaseRecipe
   end
 end
 
-class LibRdKafkaRecipe < BaseRecipe
+class LibRdKafkaRecipe < BasePHPModuleRecipe
   def url
     "https://github.com/edenhill/librdkafka/archive/v#{version}.tar.gz"
+  end
+
+  def local_path
+    "librdkafka-#{version}.tar.gz"
   end
 
   def work_path
@@ -174,9 +219,13 @@ class LibRdKafkaRecipe < BaseRecipe
   end
 end
 
-class CassandraCppDriverRecipe < BaseRecipe
+class CassandraCppDriverRecipe < BasePHPModuleRecipe
   def url
     "https://github.com/datastax/cpp-driver/archive/#{version}.tar.gz"
+  end
+
+  def local_path
+    "cassandra-cpp-driver-#{version}.tar.gz"
   end
 
   def configure
@@ -388,6 +437,16 @@ class OraclePeclRecipe < PeclRecipe
   end
 end
 
+class PsrRecipe < PeclRecipe
+  def url
+    "https://github.com/jbboehr/php-psr/archive/v#{version}.tar.gz"
+  end
+
+  def local_path
+    "psr-#{version}.tar.gz"
+  end
+end
+
 class PhalconRecipe < PeclRecipe
   def configure_options
     [
@@ -402,6 +461,10 @@ class PhalconRecipe < PeclRecipe
 
   def url
     "https://github.com/phalcon/cphalcon/archive/v#{version}.tar.gz"
+  end
+
+  def local_path
+    "phalcon-#{version}.tar.gz"
   end
 
   def self.build_phalcon?(php_version)
@@ -421,6 +484,10 @@ class PHPIRedisRecipe < PeclRecipe
   def url
     "https://github.com/nrk/phpiredis/archive/v#{version}.tar.gz"
   end
+
+  def local_path
+    "phpiredis-#{version}.tar.gz"
+  end
 end
 
 class RedisPeclRecipe < PeclRecipe
@@ -438,17 +505,29 @@ class PHPProtobufPeclRecipe < PeclRecipe
   def url
     "https://github.com/allegro/php-protobuf/archive/v#{version}.tar.gz"
   end
+
+  def local_path
+    "php-protobuf-#{version}.tar.gz"
+  end
 end
 
 class TidewaysXhprofRecipe < PeclRecipe
   def url
     "https://github.com/tideways/php-xhprof-extension/archive/v#{version}.tar.gz"
   end
+
+  def local_path
+    "tideways-xhprof-#{version}.tar.gz"
+  end
 end
 
-class RabbitMQRecipe < BaseRecipe
+class RabbitMQRecipe < BasePHPModuleRecipe
   def url
     "https://github.com/alanxz/rabbitmq-c/archive/v#{version}.tar.gz"
+  end
+
+  def local_path
+    "rabbitmq-#{version}.tar.gz"
   end
 
   def work_path
