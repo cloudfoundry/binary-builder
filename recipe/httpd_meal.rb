@@ -3,7 +3,7 @@ require_relative 'base'
 
 class AprRecipe < BaseRecipe
   def url
-    "http://apache.mirrors.tds.net/apr/apr-#{version}.tar.gz"
+    "https://apache.osuosl.org/apr/apr-#{version}.tar.gz"
   end
 end
 
@@ -15,7 +15,7 @@ class AprIconvRecipe < BaseRecipe
   end
 
   def url
-    "http://apache.mirrors.tds.net/apr/apr-iconv-#{version}.tar.gz"
+    "https://apache.osuosl.org/apr/apr-iconv-#{version}.tar.gz"
   end
 end
 
@@ -34,7 +34,7 @@ class AprUtilRecipe < BaseRecipe
   end
 
   def url
-    "http://apache.mirrors.tds.net/apr/apr-util-#{version}.tar.gz"
+    "https://apache.osuosl.org/apr/apr-util-#{version}.tar.gz"
   end
 end
 

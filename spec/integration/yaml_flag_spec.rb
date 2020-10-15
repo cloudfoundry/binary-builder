@@ -50,15 +50,15 @@ describe 'building a binary', :integration do
         },
         {
           "sha256" => "48e9dbf45ae3fdc7b491259ffb6ccf7d63049ffacbc1c0977cced095e4c2d5a2",
-          "url" => "http://apache.mirrors.tds.net/apr/apr-1.7.0.tar.gz"
+          "url" => "https://apache.osuosl.org/apr/apr-1.7.0.tar.gz"
         },
         {
           "sha256" => "ce94c7722ede927ce1e5a368675ace17d96d60ff9b8918df216ee5c1298c6a5e",
-          "url" => "http://apache.mirrors.tds.net/apr/apr-iconv-1.2.2.tar.gz"
+          "url" => "https://apache.osuosl.org/apr/apr-iconv-1.2.2.tar.gz"
         },
         {
           "sha256" => "b65e40713da57d004123b6319828be7f1273fbc6490e145874ee1177e112c459",
-          "url" => "http://apache.mirrors.tds.net/apr/apr-util-1.6.1.tar.gz"
+          "url" => "https://apache.osuosl.org/apr/apr-util-1.6.1.tar.gz"
         },
         {
           "sha256" => "0f078444fed34085bc83e27eb3439556718f50dcea275307ffb66d498bdabb8f",
@@ -76,15 +76,15 @@ describe 'building a binary', :integration do
         },
         {
           "sha256" => "48e9dbf45ae3fdc7b491259ffb6ccf7d63049ffacbc1c0977cced095e4c2d5a2",
-          "url" => "http://apache.mirrors.tds.net/apr/apr-1.7.0.tar.gz"
+          "url" => "https://apache.osuosl.org/apr/apr-1.7.0.tar.gz"
         },
         {
           "sha256" => "ce94c7722ede927ce1e5a368675ace17d96d60ff9b8918df216ee5c1298c6a5e",
-          "url" => "http://apache.mirrors.tds.net/apr/apr-iconv-1.2.2.tar.gz"
+          "url" => "https://apache.osuosl.org/apr/apr-iconv-1.2.2.tar.gz"
         },
         {
           "sha256" => "b65e40713da57d004123b6319828be7f1273fbc6490e145874ee1177e112c459",
-          "url" => "http://apache.mirrors.tds.net/apr/apr-util-1.6.1.tar.gz"
+          "url" => "https://apache.osuosl.org/apr/apr-util-1.6.1.tar.gz"
         },
         {
           "sha256" => "0f078444fed34085bc83e27eb3439556718f50dcea275307ffb66d498bdabb8f",
