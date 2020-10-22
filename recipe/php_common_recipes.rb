@@ -358,9 +358,12 @@ end
 class SodiumRecipe < FakePeclRecipe
   def configure_options
     ENV['LDFLAGS'] = "-L#{@libsodium_path}/lib"
+    ENV['PKG_CONFIG_PATH'] = "#{@libsodium_path}/lib/pkgconfig" if version.start_with?('7.4')
+    sodium_flag = "--with-sodium"
+    sodium_flag += "=#{@libsodium_path}" unless version.start_with?('7.4')
     [
       "--with-php-config=#{@php_path}/bin/php-config",
-      "--with-sodium=#{@libsodium_path}"
+      sodium_flag
     ]
   end
 
