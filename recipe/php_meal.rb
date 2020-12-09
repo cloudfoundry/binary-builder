@@ -31,9 +31,13 @@ class PhpMeal
 
   def cook
     system <<-eof
-      apt-get update
-      apt-get -y upgrade
-      apt-get -y install #{apt_packages}
+      DIFF=$(expr $(date +'%s') - $(date -r /tmp/apt-last-updated +'%s'))
+      if [ -z $DIFF ] || [ $DIFF -gt 86400 ]; then
+        apt-get update
+        apt-get -y upgrade
+        apt-get -y install #{apt_packages}
+        touch /tmp/apt-last-updated
+      fi
       #{install_libuv}
       #{symlink_commands}
     eof
@@ -139,21 +143,6 @@ class PhpMeal
   end
 
   def apt_packages
-    packages = php_common_apt_packages
-    packages += php7_apt_packages
-    packages += php7_cflinuxfs3_apt_packages
-    return packages.join(" ")
-  end
-
-  def php7_apt_packages
-    %w(libedit-dev)
-  end
-
-  def php7_cflinuxfs3_apt_packages
-    %w(libkrb5-dev libssl-dev libcurl4-openssl-dev unixodbc-dev libmaxminddb-dev libonig-dev)
-  end
-
-  def php_common_apt_packages
     %w(libaspell-dev
       libc-client2007e-dev
       libexpat1-dev
@@ -180,7 +169,15 @@ class PhpMeal
       firebird-dev
       librecode-dev
       libwebp-dev
-      libssh2-1-dev)
+      libssh2-1-dev
+      libkrb5-dev
+      libssl-dev
+      libcurl4-openssl-dev
+      unixodbc-dev
+      libmaxminddb-dev
+      libonig-dev
+      libedit-dev
+      libmemcached-dev).join("\n")
   end
 
   def install_libuv
