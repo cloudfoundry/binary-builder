@@ -196,21 +196,10 @@ class PhpMeal
   end
 
   def symlink_commands
-    php7_symlinks.join("\n")
-  end
-
-  def php7_symlinks
-    php_common_symlinks +
-        ["sudo ln -s /usr/include/x86_64-linux-gnu/curl /usr/local/include/curl"] # This is required for php 7.1.x on cflinuxfs3
-  end
-
-  def php_common_symlinks
-    ["sudo ln -s /usr/include/x86_64-linux-gnu/curl /usr/local/include/curl", # This is required for php 7.1.x on cflinuxfs3
-      "sudo ln -fs /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h",
+    [ "sudo ln -fs /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h",
       "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap.so /usr/lib/libldap.so",
-      "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap_r.so /usr/lib/libldap_r.so"]
+      "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap_r.so /usr/lib/libldap_r.so"].join("\n")
   end
-
 
   def should_cook?(recipe)
     case recipe.name
