@@ -182,13 +182,15 @@ class PhpMeal
 
   def install_libuv
     %q((
-       cd /tmp
-       wget http://dist.libuv.org/dist/v1.12.0/libuv-v1.12.0.tar.gz
-       tar zxf libuv-v1.12.0.tar.gz
-       cd libuv-v1.12.0
-       sh autogen.sh
-       ./configure
-       make install
+       if [ "$(pkg-config libuv --print-provides | awk '{print $3}')" != "1.12.0" ]; then
+          cd /tmp
+          wget http://dist.libuv.org/dist/v1.12.0/libuv-v1.12.0.tar.gz
+          tar zxf libuv-v1.12.0.tar.gz
+          cd libuv-v1.12.0
+          sh autogen.sh
+          ./configure
+          make install
+       fi
        )
     )
   end
