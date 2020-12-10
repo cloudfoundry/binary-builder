@@ -1,6 +1,6 @@
 # encoding: utf-8
 require_relative 'php_common_recipes'
-require_relative 'php7_recipe'
+require_relative 'php_recipe'
 
 class PhpMeal
   attr_reader :name, :version
@@ -124,18 +124,10 @@ class PhpMeal
       case recipe.name
       when 'amqp'
         recipe.instance_variable_set('@rabbitmq_path', @native_modules.detect{|r| r.name=='rabbitmq'}.work_path)
-      when 'memcached'
-        recipe.instance_variable_set('@libmemcached_path', @native_modules.detect{|r| r.name=='libmemcached'}.path)
       when 'lua'
         recipe.instance_variable_set('@lua_path', @native_modules.detect{|r| r.name=='lua'}.path)
-      when 'phalcon'
-        recipe.instance_variable_set('@php_version', "php#{@major_version}")
       when 'phpiredis'
         recipe.instance_variable_set('@hiredis_path', @native_modules.detect{|r| r.name=='hiredis'}.path)
-      when 'odbc'
-        recipe.instance_variable_set('@unixodbc_path', @native_modules.detect{|r| r.name=='unixodbc'}.path)
-      when 'pdo_odbc'
-        recipe.instance_variable_set('@unixodbc_path', @native_modules.detect{|r| r.name=='unixodbc'}.path)
       when 'sodium'
         recipe.instance_variable_set('@libsodium_path', @native_modules.detect{|r| r.name=='libsodium'}.path)
       end
@@ -143,41 +135,41 @@ class PhpMeal
   end
 
   def apt_packages
-    %w(libaspell-dev
+    %w(automake
+      firebird-dev
+      libaspell-dev
       libc-client2007e-dev
+      libcurl4-openssl-dev
+      libedit-dev
+      libenchant-dev
       libexpat1-dev
       libgdbm-dev
+      libgeoip-dev
       libgmp-dev
       libgpgme11-dev
       libjpeg-dev
+      libkrb5-dev
       libldap2-dev
+      libmaxminddb-dev
       libmcrypt-dev
+      libmemcached-dev
+      libonig-dev
       libpng-dev
       libpspell-dev
+      librecode-dev
       libsasl2-dev
       libsnmp-dev
       libsqlite3-dev
+      libssh2-1-dev
+      libssl-dev
+      libtidy-dev
       libtool
+      libwebp-dev
       libxml2-dev
       libzip-dev
       libzookeeper-mt-dev
       snmp-mibs-downloader
-      automake
-      libgeoip-dev
-      libtidy-dev
-      libenchant-dev
-      firebird-dev
-      librecode-dev
-      libwebp-dev
-      libssh2-1-dev
-      libkrb5-dev
-      libssl-dev
-      libcurl4-openssl-dev
-      unixodbc-dev
-      libmaxminddb-dev
-      libonig-dev
-      libedit-dev
-      libmemcached-dev).join("\n")
+      unixodbc-dev).join(" ")
   end
 
   def install_libuv
@@ -196,15 +188,14 @@ class PhpMeal
   end
 
   def symlink_commands
-    [ "sudo ln -fs /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h",
+    [ "sudo ln -s /usr/include/x86_64-linux-gnu/curl /usr/local/include/curl",
+      "sudo ln -fs /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h",
       "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap.so /usr/lib/libldap.so",
       "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap_r.so /usr/lib/libldap_r.so"].join("\n")
   end
 
   def should_cook?(recipe)
     case recipe.name
-    when 'phalcon'
-       PhalconRecipe.build_phalcon?(version)
     when 'ioncube'
        IonCubeRecipe.build_ioncube?(version)
     when 'oci8', 'pdo_oci'
@@ -239,6 +230,6 @@ class PhpMeal
 
     php_recipe_options.merge(DetermineChecksum.new(@options).to_h)
 
-    @php_recipe ||= Php7Recipe.new(@name, @version, php_recipe_options)
+    @php_recipe ||= PhpRecipe.new(@name, @version, php_recipe_options)
   end
 end

@@ -15,7 +15,6 @@ recipes = {
      'httpd' => HTTPdMeal,
      'python' => PythonRecipe,
      'php' => PhpMeal,
-     'php7' => PhpMeal,
      'nginx-static' => NginxRecipe,
      'godep' => GodepMeal,
      'glide' => GlideRecipe,
