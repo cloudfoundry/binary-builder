@@ -54,7 +54,7 @@ class PeclRecipe < BasePHPModuleRecipe
     digest   = Digest::MD5.hexdigest(computed_options.to_s)
     File.open(md5_file, 'w') { |f| f.write digest }
 
-    execute('configure', 'phpize')
+    execute('phpize', 'phpize')
     execute('configure', %w(sh configure) + computed_options)
   end
 end
@@ -67,61 +67,26 @@ class AmqpPeclRecipe < PeclRecipe
   end
 end
 
-class LibMaxMindRecipe < BaseRecipe
-  def url
-    "https://github.com/maxmind/libmaxminddb/releases/download/#{version}/libmaxminddb-#{version}.tar.gz"
-  end
-end
-
-class MaxMindRecipe < BasePHPModuleRecipe
-  def url
-    "https://github.com/maxmind/MaxMind-DB-Reader-php/archive/v#{version}.tar.gz"
-  end
-
-  def local_path
-    "maxmind-#{version}.tar.gz"
-  end
-
-  def work_path
-    File.join(tmp_path, "MaxMind-DB-Reader-php-#{version}", 'ext')
-  end
-
-  def configure_options
-    [
-      "--with-php-config=#{@php_path}/bin/php-config"
-    ]
-  end
-
-  def configure
-    return if configured?
-
-    execute('configure', %w(bash -c phpize))
-    execute('configure', %w(sh configure) + computed_options)
-  end
-end
-
-class GeoipRecipe < PeclRecipe
-    def cook
-        super
-        system <<-eof
-          cd #{@php_path}
-          mkdir -p geoipdb/bin
-          mkdir -p geoipdb/lib
-          mkdir -p geoipdb/dbs
-          cp #{File.expand_path(File.join(File.dirname(__FILE__), '..'))}/bin/download_geoip_db.rb ./geoipdb/bin/
-          cp #{File.expand_path(File.join(File.dirname(__FILE__), '..'))}/lib/geoip_downloader.rb ./geoipdb/lib/
-        eof
-        if File.exist? "BUNDLE_GEOIP_LITE" then
-            products = "GeoLite-Legacy-IPv6-City GeoLite-Legacy-IPv6-Country 506 517 533"
-            updater = MaxMindGeoIpUpdater.new(MaxMindGeoIpUpdater.FREE_USER, MaxMindGeoIpUpdater.FREE_LICENSE, File.join(@php_path, 'geoipdb', 'dbs'))
-            products.split(" ").each do |product|
-                updater.download_product(product)
-            end
-        end
+class PkgConfigLibRecipe < BasePHPModuleRecipe
+  def cook
+    exists = system("PKG_CONFIG_PATH=$PKG_CONFIG_PATH:#{pkg_path} pkg-config #{pkgcfg_name} --exists")
+    if ! exists
+      super()
     end
+  end
+
+  def pkg_path
+    "#{File.expand_path(port_path)}/lib/pkgconfig/"
+  end
 end
 
-class HiredisRecipe < BasePHPModuleRecipe
+class MaxMindRecipe < PeclRecipe
+  def work_path
+    File.join(tmp_path, "maxminddb-#{version}", 'ext')
+  end
+end
+
+class HiredisRecipe < PkgConfigLibRecipe
   def url
     "https://github.com/redis/hiredis/archive/v#{version}.tar.gz"
   end
@@ -138,11 +103,19 @@ class HiredisRecipe < BasePHPModuleRecipe
 
     execute('install', ['bash', '-c', "LIBRARY_PATH=lib PREFIX='#{path}' #{make_cmd} install"])
   end
+
+  def pkgcfg_name
+    "hiredis"
+  end
 end
 
-class LibSodiumRecipe < BaseRecipe
+class LibSodiumRecipe < PkgConfigLibRecipe
   def url
     "https://download.libsodium.org/libsodium/releases/libsodium-#{version}.tar.gz"
+  end
+
+  def pkgcfg_name
+    "libsodium"
   end
 end
 
@@ -166,34 +139,13 @@ class IonCubeRecipe < BaseRecipe
   end
 end
 
-class LibmemcachedRecipe < BaseRecipe
-  def url
-    "https://launchpad.net/libmemcached/1.0/#{version}/+download/libmemcached-#{version}.tar.gz"
-  end
-
-  def configure
-    return if configured?
-
-    cache_file = File.join(tmp_path, 'configure.options_cache')
-    File.open(cache_file, "w") { |f| f.write computed_options.to_s }
-
-    ENV['CXXFLAGS'] = '-fpermissive'
-    execute('configure', %w(./configure) + computed_options)
-  end
-end
-
-# We need to compile from source until Ubuntu packages version 2.3.0+
-#  The unixODBC library version changed from 1 to 2 at this point, so
-#  newer ODBC drivers won't work with the older library.
-class UnixOdbcRecipe < BaseRecipe
-  def url
-    "http://www.unixodbc.org/unixODBC-#{version}.tar.gz"
-  end
-end
-
-class LibRdKafkaRecipe < BasePHPModuleRecipe
+class LibRdKafkaRecipe < PkgConfigLibRecipe
   def url
     "https://github.com/edenhill/librdkafka/archive/v#{version}.tar.gz"
+  end
+
+  def pkgcfg_name
+    "rdkafka"
   end
 
   def local_path
@@ -219,9 +171,13 @@ class LibRdKafkaRecipe < BasePHPModuleRecipe
   end
 end
 
-class CassandraCppDriverRecipe < BasePHPModuleRecipe
+class CassandraCppDriverRecipe < PkgConfigLibRecipe
   def url
     "https://github.com/datastax/cpp-driver/archive/#{version}.tar.gz"
+  end
+
+  def pkgcfg_name
+    "cassandra"
   end
 
   def local_path
@@ -272,7 +228,7 @@ class MemcachedPeclRecipe < PeclRecipe
   def configure_options
     [
       "--with-php-config=#{@php_path}/bin/php-config",
-      "--with-libmemcached-dir=#{@libmemcached_path}",
+      "--with-libmemcached-dir",
       '--enable-memcached-sasl',
       '--enable-memcached-msgpack',
       '--enable-memcached-igbinary',
@@ -293,7 +249,6 @@ class FakePeclRecipe < PeclRecipe
     files_hashs.each do |file|
       path = URI(file[:url]).path.rpartition('-')[0] # only need path before the `-`, see url above
       system <<-eof
-        echo 'tar czf "#{file[:local_path]}" -C "#{File.dirname(path)}" "#{File.basename(path)}"'
         tar czf "#{file[:local_path]}" -C "#{File.dirname(path)}" "#{File.basename(path)}"
       eof
     end
@@ -333,7 +288,7 @@ end
 class OdbcRecipe < FakePeclRecipe
   def configure_options
     [
-      "--with-unixODBC=shared,#{@unixodbc_path}"
+      "--with-unixODBC=shared,/usr"
     ]
   end
 
@@ -349,8 +304,8 @@ class OdbcRecipe < FakePeclRecipe
 
   def setup_tar
     system <<-eof
-      cp -a #{@unixodbc_path}/lib/libodbc.so* #{@php_path}/lib/
-      cp -a #{@unixodbc_path}/lib/libodbcinst.so* #{@php_path}/lib/
+      cp -a /usr/lib/x86_64-linux-gnu/libodbc.so* #{@php_path}/lib/
+      cp -a /usr/lib/x86_64-linux-gnu/libodbcinst.so* #{@php_path}/lib/
     eof
   end
 end
@@ -358,9 +313,8 @@ end
 class SodiumRecipe < FakePeclRecipe
   def configure_options
     ENV['LDFLAGS'] = "-L#{@libsodium_path}/lib"
-    ENV['PKG_CONFIG_PATH'] = "#{@libsodium_path}/lib/pkgconfig" if version.start_with?('7.4')
-    sodium_flag = "--with-sodium"
-    sodium_flag += "=#{@libsodium_path}" unless version.start_with?('7.4')
+    ENV['PKG_CONFIG_PATH'] = "#{@libsodium_path}/lib/pkgconfig"
+    sodium_flag = "--with-sodium=#{@libsodium_path}"
     [
       "--with-php-config=#{@php_path}/bin/php-config",
       sodium_flag
@@ -377,14 +331,14 @@ end
 class PdoOdbcRecipe < FakePeclRecipe
   def configure_options
     [
-      "--with-pdo-odbc=unixODBC,#{@unixodbc_path}"
+      "--with-pdo-odbc=unixODBC,/usr"
     ]
   end
 
   def setup_tar
     system <<-eof
-      cp -a #{@unixodbc_path}/lib/libodbc.so* #{@php_path}/lib/
-      cp -a #{@unixodbc_path}/lib/libodbcinst.so* #{@php_path}/lib/
+      cp -a /usr/lib/x86_64-linux-gnu/libodbc.so* #{@php_path}/lib/
+      cp -a /usr/lib/x86_64-linux-gnu/libodbcinst.so* #{@php_path}/lib/
     eof
   end
 
@@ -440,41 +394,6 @@ class OraclePeclRecipe < PeclRecipe
   end
 end
 
-class PsrRecipe < PeclRecipe
-  def url
-    "https://github.com/jbboehr/php-psr/archive/v#{version}.tar.gz"
-  end
-
-  def local_path
-    "psr-#{version}.tar.gz"
-  end
-end
-
-class PhalconRecipe < PeclRecipe
-  def configure_options
-    [
-      "--with-php-config=#{@php_path}/bin/php-config",
-      '--enable-phalcon'
-    ]
-  end
-
-  def work_path
-    "#{super}/build/#{@php_version}/64bits"
-  end
-
-  def url
-    "https://github.com/phalcon/cphalcon/archive/v#{version}.tar.gz"
-  end
-
-  def local_path
-    "phalcon-#{version}.tar.gz"
-  end
-
-  def self.build_phalcon?(php_version)
-    true
-  end
-end
-
 class PHPIRedisRecipe < PeclRecipe
   def configure_options
     [
@@ -504,6 +423,7 @@ class RedisPeclRecipe < PeclRecipe
   end
 end
 
+# TODO: Remove after PHP 7 is out of support
 class PHPProtobufPeclRecipe < PeclRecipe
   def url
     "https://github.com/allegro/php-protobuf/archive/v#{version}.tar.gz"
@@ -524,9 +444,23 @@ class TidewaysXhprofRecipe < PeclRecipe
   end
 end
 
-class RabbitMQRecipe < BasePHPModuleRecipe
+class EnchantFakePeclRecipe < FakePeclRecipe
+  def patch
+    super
+    system <<-eof
+      cd #{work_path}
+      sed -i 's|#include "../spl/spl_exceptions.h"|#include <spl/spl_exceptions.h>|' enchant.c
+    eof
+  end
+end
+
+class RabbitMQRecipe < PkgConfigLibRecipe
   def url
     "https://github.com/alanxz/rabbitmq-c/archive/v#{version}.tar.gz"
+  end
+
+  def pkgcfg_name
+    "librabbitmq"
   end
 
   def local_path
@@ -583,9 +517,10 @@ class SnmpRecipe
       sed -i "s|^DEST=ietf|DEST=|" mibs/conf/rfc.conf
       sed -i "s|^BASEDIR=/var/lib/mibs|BASEDIR=\$HOME/php/mibs|" mibs/conf/snmp-mibs-downloader.conf
       # copy data files
-      mkdir mibs/originals
-      cp -R /usr/share/doc/mibiana mibs/originals
-      cp -R /usr/share/doc/mibrfcs mibs/originals
+      # TODO: these are gone or have moved, commenting out for now
+      # mkdir mibs/originals
+      # cp -R /usr/share/doc/mibiana mibs/originals
+      # cp -R /usr/share/doc/mibrfcs mibs/originals
     eof
   end
 end

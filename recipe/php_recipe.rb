@@ -1,7 +1,7 @@
 # encoding: utf-8
 require_relative 'php_common_recipes'
 
-class Php7Recipe < BaseRecipe
+class PhpRecipe < BaseRecipe
   def configure_options
     [
       '--disable-static',
@@ -92,7 +92,7 @@ class Php7Recipe < BaseRecipe
       cp -a /usr/lib/libmcrypt.so* #{path}/lib
       cp -a #{lib_dir}/libaspell.so* #{path}/lib
       cp -a #{lib_dir}/libpspell.so* #{path}/lib
-      cp -a #{@libmemcached_path}/lib/libmemcached.so* #{path}/lib/
+      cp -a /usr/lib/x86_64-linux-gnu/libmemcached.so* #{path}/lib/
       cp -a /usr/local/lib/x86_64-linux-gnu/libcassandra.so* #{path}/lib
       cp -a /usr/local/lib/libuv.so* #{path}/lib
       cp -a #{argon_dir}/libargon2.so* #{path}/lib
@@ -118,9 +118,6 @@ class Php7Recipe < BaseRecipe
     system <<-eof
       # Remove unused files
       rm "#{path}/etc/php-fpm.conf.default"
-      rm -rf "#{path}/include"
-      rm -rf "#{path}/php"
-      rm -rf "#{path}/lib/php/build"
       rm "#{path}/bin/php-cgi"
       find "#{path}/lib/php/extensions" -name "*.a" -type f -delete
     eof
