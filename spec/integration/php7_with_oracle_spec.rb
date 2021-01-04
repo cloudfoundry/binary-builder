@@ -8,8 +8,8 @@ describe 'building a binary', :run_oracle_php_tests do
     before(:all) do
       extensions_file = File.join('spec', 'assets', 'php-extensions.yml')
 
-      run_binary_builder('php7', '7.4.0', "--sha256=004a1a8176176ee1b5c112e73d705977507803f425f9e48cb4a84f42b22abf22 --php-extensions-file=#{extensions_file}")
-      @binary_tarball_location = Dir.glob(File.join(Dir.pwd, 'php7-7.4.0-linux-x64.tgz')).first
+      run_binary_builder('php', '7.4.0', "--sha256=004a1a8176176ee1b5c112e73d705977507803f425f9e48cb4a84f42b22abf22 --php-extensions-file=#{extensions_file}")
+      @binary_tarball_location = Dir.glob(File.join(Dir.pwd, 'php-7.4.0-linux-x64.tgz')).first
     end
 
     after(:all) do
