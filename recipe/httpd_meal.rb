@@ -116,6 +116,7 @@ class HTTPdMeal
   end
 
   def cook
+    run('mkdir /app')
     run('apt update') or raise 'Failed to apt update'
     run('apt-get install -y libldap2-dev') or raise 'Failed to install libldap2-dev'
 
