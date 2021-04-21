@@ -39,6 +39,10 @@ class NodeRecipe < BaseRecipe
   end
 
   def configure
-    execute('configure', %w(python configure) + computed_options)
+    if Gem::Version.new(version) >= Gem::Version.new('16.0.0')
+      execute('configure', %w(python3 configure) + computed_options)
+    else
+      execute('configure', %w(python configure) + computed_options)
+    end
   end
 end
