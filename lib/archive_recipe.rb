@@ -30,7 +30,7 @@ class ArchiveRecipe
           `zip #{File.join(output_dir, @recipe.archive_filename)} -r .`
         end
       else
-        `ls -A #{dir} | xargs tar czf #{@recipe.archive_filename} -C #{dir}`
+        `ls -A #{dir} | xargs tar --dereference -czf #{@recipe.archive_filename} -C #{dir}`
       end
       puts 'OK'
     end
