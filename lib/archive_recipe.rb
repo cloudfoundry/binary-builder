@@ -30,7 +30,11 @@ class ArchiveRecipe
           `zip #{File.join(output_dir, @recipe.archive_filename)} -r .`
         end
       else
-        `ls -A #{dir} | xargs tar --dereference -czf #{@recipe.archive_filename} -C #{dir}`
+        if @recipe.name == 'php'
+          `ls -A #{dir} | xargs tar --dereference -czf #{@recipe.archive_filename} -C #{dir}`
+        else
+          `ls -A #{dir} | xargs tar czf #{@recipe.archive_filename} -C #{dir}`
+        end
       end
       puts 'OK'
     end
