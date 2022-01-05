@@ -3,7 +3,7 @@ source 'https://rubygems.org'
 
 ruby '~> 2.3'
 
-gem 'mini_portile', git: 'https://github.com/cf-buildpacks-eng/mini_portile'
+gem 'mini_portile', git: 'https://github.com/cf-buildpacks-eng/mini_portile', branch: 'debug-php-error'
 
 group :test do
   gem 'rspec'
