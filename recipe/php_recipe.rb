@@ -51,7 +51,7 @@ class PhpRecipe < BaseRecipe
   end
 
   def url
-    "https://www.php.net/distributions/php-#{version}.tar.gz"
+    "https://github.com/php/web-php-distributions/raw/master/php-#{version}.tar.gz"
   end
 
   def archive_files
