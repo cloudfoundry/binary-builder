@@ -1,0 +1,22 @@
+# frozen_string_literal: true
+
+source 'https://rubygems.org'
+
+ruby '~> 3.0.2'
+
+gem 'mini_portile2'
+
+group :test do
+  gem 'pry'
+  gem 'rspec'
+  gem 'rspec-instafail'
+end
+
+group :local do
+  gem 'rubocop'
+  gem 'rubocop-rspec'
+end
+
+group :development do
+  gem 'rainbow'
+end

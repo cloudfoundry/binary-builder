@@ -1,0 +1,15 @@
+# This is the configuration used to check the rubocop source code.
+
+Style/Encoding:
+  Enabled: true
+
+Metrics/LineLength:
+  Enabled: false
+
+require: rubocop-rspec
+
+RSpec/FilePath:
+  Enabled: false
+
+AllCops:
+  TargetRubyVersion: 3.0.2

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# workaround to prevent tons of deprecation warnings from spamming the screen
+#  the deprecations are a result of Debian/Ubuntu packaging issues we cannot control
+export DEBIAN_DISABLE_RUBYGEMS_INTEGRATION=foo
+
+gem update --system --no-document -q --silent > /dev/null
+gem install bundler --no-document -f -q --silent > /dev/null
+bundle config mirror.https://rubygems.org ${RUBYGEM_MIRROR}
+bundle config set --local without 'local'
+bundle install
+bundle exec ./bin/binary-builder.rb "$@"
