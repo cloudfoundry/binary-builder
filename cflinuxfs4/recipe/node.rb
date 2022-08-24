@@ -6,11 +6,7 @@ require_relative 'base'
 
 class NodeRecipe < BaseRecipe
   def computed_options
-    if Gem::Version.new(version) >= Gem::Version.new('6.0.0')
-      %w[--prefix=/ --openssl-use-def-ca-store]
-    else
-      ['--prefix=/']
-    end
+    %w[--prefix=/ --openssl-use-def-ca-store]
   end
 
   def install
