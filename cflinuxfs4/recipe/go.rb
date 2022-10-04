@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'base'
+require_relative '../lib/utils'
 
 class GoRecipe < BaseRecipe
   attr_reader :name, :version
@@ -13,13 +14,9 @@ class GoRecipe < BaseRecipe
     go143_sha256 = 'ce3140662f45356eb78bc16a88fc7cfb29fb00e18d7c632608245b789b2086d2'
 
     Dir.chdir((ENV['HOME']).to_s) do
-      go_download = 'https://storage.googleapis.com/golang/go1.4.3.linux-amd64.tar.gz'
+      go_download_uri = 'https://dl.google.com/go/go1.4.3.linux-amd64.tar.gz'
       go_tar = 'go.tar.gz'
-      system("curl -L #{go_download} -o #{go_tar}")
-
-      downloaded_sha = Digest::SHA256.file(go_tar).hexdigest
-
-      raise "sha256 verification failed: expected #{go_sha256}, got #{downloaded_sha}" if go143_sha256 != downloaded_sha
+      HTTPHelper.download(go_download_uri, go_tar, "sha256", go143_sha256)
 
       system("tar xf #{go_tar}")
       system('mv ./go ./go1.4')
@@ -45,6 +42,6 @@ class GoRecipe < BaseRecipe
   end
 
   def url
-    "https://storage.googleapis.com/golang/go#{version}.src.tar.gz"
+    "https://dl.google.com/go/go#{version}.src.tar.gz"
   end
 end
