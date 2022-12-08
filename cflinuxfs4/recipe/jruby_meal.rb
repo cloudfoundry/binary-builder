@@ -17,13 +17,12 @@ class JRubyMeal
   def cook
     # We compile against the OpenJDK8 that the java buildpack team builds
     # This is the openjdk-jdk that contains the openjdk-jre used in the ruby buildpack
-    # Ubuntu Trusty itself does not provide openjdk 8
 
     java_jdk_dir = '/opt/java'
     java_jdk_tar_file = File.join(java_jdk_dir, 'openjdk-8-jdk.tar.gz')
     java_jdk_bin_dir = File.join(java_jdk_dir, 'bin')
-    java_jdk_sha256 = '1210b14353f9a911aad84182e36be229a30991c5ca6b8b1a932aad426e106276'
-    java_buildpack_java_sdk = 'https://java-buildpack.cloudfoundry.org/openjdk-jdk/trusty/x86_64/openjdk-jdk-1.8.0_222-trusty.tar.gz'
+    java_jdk_sha256 = 'dcb9fea2fc3a9b003031874ed17aa5d5a7ebbe397b276ecc8c814633003928fe'
+    java_buildpack_java_sdk = 'https://java-buildpack.cloudfoundry.org/openjdk-jdk/bionic/x86_64/openjdk-jdk-1.8.0_242-bionic.tar.gz'
 
     FileUtils.mkdir_p(java_jdk_dir)
     raise 'Downloading openjdk-8-jdk failed.' unless system("wget #{java_buildpack_java_sdk} -O #{java_jdk_tar_file}")
