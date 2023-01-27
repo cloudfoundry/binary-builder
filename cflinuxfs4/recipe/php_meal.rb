@@ -170,6 +170,7 @@ class PhpMeal
        libzip-dev
        libzookeeper-mt-dev
        snmp-mibs-downloader
+       sqlite3
        unixodbc-dev].join(' ')
   end
 
