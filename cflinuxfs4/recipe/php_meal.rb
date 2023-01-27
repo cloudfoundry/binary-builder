@@ -34,6 +34,8 @@ class PhpMeal
     system <<-EOF
       DIFF=$(expr $(date +'%s') - $(date -r /tmp/apt-last-updated +'%s'))
       if [ -z $DIFF ] || [ $DIFF -gt 86400 ]; then
+        echo "HERE!"
+        echo "-----------------------------------------------------------"
         apt-get update
         apt-get -y upgrade
         apt-get -y install #{apt_packages}
