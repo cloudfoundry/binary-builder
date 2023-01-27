@@ -141,6 +141,7 @@ class PhpMeal
        libaspell-dev
        libc-client2007e-dev
        libcurl4-openssl-dev
+       libdb-dev
        libedit-dev
        libenchant-dev
        libexpat1-dev
