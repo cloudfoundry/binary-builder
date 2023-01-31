@@ -146,6 +146,7 @@ class PhpMeal
        libcurl4-openssl-dev
        libdb-dev
        libedit-dev
+       libenchant-2-dev
        libexpat1-dev
        libgdbm-dev
        libgeoip-dev
