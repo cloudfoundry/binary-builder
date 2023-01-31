@@ -4,7 +4,48 @@ require_relative 'php_common_recipes'
 
 class PhpRecipe < BaseRecipe
   def configure_options
-    %w[--disable-static --enable-shared --enable-ftp=shared --enable-sockets=shared --enable-soap=shared --enable-fileinfo=shared --enable-bcmath --enable-calendar --enable-intl --with-kerberos --with-bz2=shared --with-curl=shared --enable-dba=shared --with-password-argon2=/usr/lib/x86_64-linux-gnu --with-cdb --with-gdbm --with-mysqli=shared --enable-pdo=shared --with-pdo-sqlite=shared,/usr --with-pdo-mysql=shared,mysqlnd --with-pdo-pgsql=shared --with-pgsql=shared --with-pspell=shared --with-gettext=shared --with-gmp=shared --with-imap=shared --with-imap-ssl=shared --with-ldap=shared --with-ldap-sasl --with-zlib=shared --with-xsl=shared --with-snmp=shared --enable-mbstring=shared --enable-mbregex --enable-exif=shared --with-openssl=shared --enable-fpm --enable-pcntl=shared --enable-sysvsem=shared --enable-sysvshm=shared --enable-sysvmsg=shared --enable-shmop=shared]
+    %w[--disable-static
+        --enable-shared
+        --enable-ftp=shared
+        --enable-sockets=shared
+        --enable-soap=shared
+        --enable-fileinfo=shared
+        --enable-bcmath
+        --enable-calendar
+        --enable-intl
+        --with-kerberos
+        --with-bz2=shared
+        --with-curl=shared
+        --enable-dba=shared
+        --with-password-argon2=/usr/lib/x86_64-linux-gnu
+        --with-cdb
+        --with-gdbm
+        --with-mysqli=shared
+        --enable-pdo=shared
+        --with-pdo-sqlite=shared,/usr
+        --with-pdo-mysql=shared,mysqlnd
+        --with-pdo-pgsql=shared
+        --with-pgsql=shared
+        --with-pspell=shared
+        --with-gettext=shared
+        --with-gmp=shared
+        --with-imap=shared
+        --with-imap-ssl=shared
+        --with-ldap=shared
+        --with-ldap-sasl
+        --with-zlib=shared
+        --with-xsl=shared
+        --with-snmp=shared
+        --enable-mbstring=shared
+        --enable-mbregex
+        --enable-exif=shared
+        --with-openssl=shared
+        --enable-fpm
+        --enable-pcntl=shared
+        --enable-sysvsem=shared
+        --enable-sysvshm=shared
+        --enable-sysvmsg=shared
+        --enable-shmop=shared].join(' ')
   end
 
   def url
