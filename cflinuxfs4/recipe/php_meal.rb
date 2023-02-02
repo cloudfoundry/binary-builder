@@ -31,16 +31,6 @@ class PhpMeal
   end
 
   def cook
-    # system <<-EOF
-    #   DIFF=$(expr $(date +'%s') - $(date -r /tmp/apt-last-updated +'%s'))
-    #   if [ -z $DIFF ] || [ $DIFF -gt 86400 ]; then
-    #     apt-get update
-    #     apt-get -y upgrade
-    #     apt-get -y install #{apt_packages}
-    #   #{install_libuv}
-    #   #{symlink_commands}
-    # EOF
-
     run('apt-get -y update') or raise 'Failed to apt-get update'
     run('apt-get -y upgrade') or raise 'Failed to apt-get upgrade'
     run("apt-get -y install #{apt_packages}") or raise 'Failed to apt-get install packages'
@@ -178,6 +168,7 @@ class PhpMeal
        unixodbc-dev].join(' ')
   end
 
+  # @todo: remove this method when all the tests run for cflinuxfs4 without errors
   def install_libuv
     %q((
        if [ "$(pkg-config libuv --print-provides | awk '{print $3}')" != "1.12.0" ]; then
