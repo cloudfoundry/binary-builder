@@ -31,17 +31,10 @@ class PhpMeal
   end
 
   def cook
-    system <<-EOF
-      DIFF=$(expr $(date +'%s') - $(date -r /tmp/apt-last-updated +'%s'))
-      if [ -z $DIFF ] || [ $DIFF -gt 86400 ]; then
-        apt-get update
-        apt-get -y upgrade
-        apt-get -y install #{apt_packages}
-        touch /tmp/apt-last-updated
-      fi
-      #{install_libuv}
-      #{symlink_commands}
-    EOF
+    run('apt-get -y update') or raise 'Failed to apt-get update'
+    run('apt-get -y upgrade') or raise 'Failed to apt-get upgrade'
+    run("apt-get -y install #{apt_packages}") or raise 'Failed to apt-get install packages'
+    symlink_commands
 
     if OraclePeclRecipe.oracle_sdk?
       Dir.chdir('/oracle') do
@@ -141,8 +134,9 @@ class PhpMeal
        libaspell-dev
        libc-client2007e-dev
        libcurl4-openssl-dev
+       libdb-dev
        libedit-dev
-       libenchant-dev
+       libenchant-2-dev
        libexpat1-dev
        libgdbm-dev
        libgeoip-dev
@@ -170,9 +164,11 @@ class PhpMeal
        libzip-dev
        libzookeeper-mt-dev
        snmp-mibs-downloader
+       sqlite3
        unixodbc-dev].join(' ')
   end
 
+  # @todo: remove this method when all the tests run for cflinuxfs4 without errors
   def install_libuv
     %q((
        if [ "$(pkg-config libuv --print-provides | awk '{print $3}')" != "1.12.0" ]; then
@@ -189,10 +185,10 @@ class PhpMeal
   end
 
   def symlink_commands
-    ['sudo ln -s /usr/include/x86_64-linux-gnu/curl /usr/local/include/curl',
-     'sudo ln -fs /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h',
-     'sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap.so /usr/lib/libldap.so',
-     'sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap_r.so /usr/lib/libldap_r.so'].join("\n")
+    run('sudo ln -s /usr/include/x86_64-linux-gnu/curl /usr/local/include/curl')
+    run('sudo ln -fs /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h')
+    run('sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap.so /usr/lib/libldap.so')
+    run('sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap_r.so /usr/lib/libldap_r.so')
   end
 
   def should_cook?(recipe)
@@ -232,5 +228,16 @@ class PhpMeal
     php_recipe_options.merge(DetermineChecksum.new(@options).to_h)
 
     @php_recipe ||= PhpRecipe.new(@name, @version, php_recipe_options)
+  end
+
+  def run(command)
+    output = `#{command}`
+    if $CHILD_STATUS.success?
+      true
+    else
+      $stdout.puts 'ERROR, output was:'
+      $stdout.puts output
+      false
+    end
   end
 end
