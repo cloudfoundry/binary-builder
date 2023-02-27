@@ -10,22 +10,23 @@ class GoRecipe < BaseRecipe
     download unless downloaded?
     extract
 
-    # Installs go1.4.3 to $HOME/go1.4
-    go143_sha256 = 'ce3140662f45356eb78bc16a88fc7cfb29fb00e18d7c632608245b789b2086d2'
+    # Installs go1.20.1 to $HOME/go1.20
+    go1201_sha256 = '000a5b1fca4f75895f78befeb2eecf10bfff3c428597f3f1e69133b63b911b02'
 
-    Dir.chdir((ENV['HOME']).to_s) do
-      go_download_uri = 'https://dl.google.com/go/go1.4.3.linux-amd64.tar.gz'
-      go_tar = 'go.tar.gz'
-      HTTPHelper.download(go_download_uri, go_tar, "sha256", go143_sha256)
+    Dir.chdir("#{ENV['HOME']}") do
+      go_download_uri = "https://go.dev/dl/go1.20.1.linux-amd64.tar.gz"
+      go_tar = "go.tar.gz"
+      HTTPHelper.download(go_download_uri, go_tar, "sha256", go1201_sha256)
 
       system("tar xf #{go_tar}")
-      system('mv ./go ./go1.4')
+      system("mv ./go ./go1.20")
     end
 
+    # The GOROOT_BOOTSTRAP defaults to $HOME/go1.4 so we need to update it for this command
     Dir.chdir("#{tmp_path}/go/src") do
       system(
-        './make.bash'
-      ) or raise 'Could not install go'
+        'GOROOT_BOOTSTRAP=$HOME/go1.20 ./make.bash'
+      ) or raise "Could not install go"
     end
   end
 
@@ -42,6 +43,7 @@ class GoRecipe < BaseRecipe
   end
 
   def url
-    "https://dl.google.com/go/go#{version}.src.tar.gz"
+    "https://go.dev/dl/go#{version}.src.tar.gz"
   end
+
 end
