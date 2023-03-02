@@ -87,12 +87,11 @@ class PhpRecipe < BaseRecipe
       cp -a /usr/local/lib/x86_64-linux-gnu/librabbitmq.so* #{path}/lib/
       cp -a #{@hiredis_path}/lib/libhiredis.so* #{path}/lib/
       cp -a /usr/lib/libc-client.so* #{path}/lib/
-      cp -a /usr/lib/libmcrypt.so* #{path}/lib
+      cp -a /usr/lib/x86_64-linux-gnu/libmcrypt.so* #{path}/lib
       cp -a #{lib_dir}/libaspell.so* #{path}/lib
       cp -a #{lib_dir}/libpspell.so* #{path}/lib
       cp -a /usr/lib/x86_64-linux-gnu/libmemcached.so* #{path}/lib/
-      cp -a /usr/local/lib/x86_64-linux-gnu/libcassandra.so* #{path}/lib
-      cp -a /usr/local/lib/libuv.so* #{path}/lib
+      cp -a /usr/lib/x86_64-linux-gnu/libuv.so* #{path}/lib
       cp -a #{argon_dir}/libargon2.so* #{path}/lib
       cp -a /usr/lib/librdkafka.so* #{path}/lib
       cp -a /usr/lib/x86_64-linux-gnu/libzip.so* #{path}/lib/
@@ -100,8 +99,8 @@ class PhpRecipe < BaseRecipe
       cp -a /usr/lib/x86_64-linux-gnu/libgpgme.so* #{path}/lib/
       cp -a /usr/lib/x86_64-linux-gnu/libassuan.so* #{path}/lib/
       cp -a /usr/lib/x86_64-linux-gnu/libgpg-error.so* #{path}/lib/
-      cp -a /usr/lib/libtidy*.so* #{path}/lib/
-      cp -a /usr/lib/x86_64-linux-gnu/libenchant.so* #{path}/lib/
+      cp -a /usr/lib/x86_64-linux-gnu/libtidy*.so* #{path}/lib/
+      cp -a /usr/lib/x86_64-linux-gnu/libenchant*.so* #{path}/lib/
       cp -a /usr/lib/x86_64-linux-gnu/libfbclient.so* #{path}/lib/
       cp -a /usr/lib/x86_64-linux-gnu/librecode.so* #{path}/lib/
       cp -a /usr/lib/x86_64-linux-gnu/libtommath.so* #{path}/lib/
