@@ -482,7 +482,7 @@ class SnmpRecipe
     system <<-EOF
       cd #{@php_path}
       mkdir -p mibs
-      cp "/usr/lib/x86_64-linux-gnu/libnetsnmp.so.30" lib/
+      cp -a /usr/lib/x86_64-linux-gnu/libnetsnmp.so* lib/
       # copy mibs that are packaged freely
       cp -r /usr/share/snmp/mibs/* mibs
       # copy mibs downloader & smistrip, will download un-free mibs
