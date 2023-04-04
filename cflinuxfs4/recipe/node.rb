@@ -33,6 +33,15 @@ class NodeRecipe < BaseRecipe
   end
 
   def configure
+    # Node building requires python https://github.com/nodejs/node/blob/main/BUILDING.md#unix-and-macos
+    # But cflinuxfs4 image does not come with python
+    system <<-EOF
+      #!/bin/sh
+      if [ -z $(command -v python3) ]; then
+        apt update
+        apt install -y python3 python3-pip
+      fi
+    EOF
     execute('configure', %w(./configure) + computed_options)
   end
 end
