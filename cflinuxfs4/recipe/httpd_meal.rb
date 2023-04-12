@@ -174,6 +174,12 @@ class HTTPdMeal
     end
   end
 
+  def latest_github_version(repo)
+    puts "Getting latest tag from #{repo}..."
+    repo = "https://github.com/#{repo}"
+    return `git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags #{repo} '*.*.*' | tail -1 | cut -d/ --fields=3`.strip
+  end
+
   def files_hashs
     httpd_recipe.send(:files_hashs) +
       apr_recipe.send(:files_hashs)       +
@@ -198,17 +204,18 @@ class HTTPdMeal
   end
 
   def apr_util_recipe
-    @apr_util_recipe ||= AprUtilRecipe.new('apr-util', '1.6.3', apr_path: apr_recipe.path,
-                                                                apr_iconv_path: apr_iconv_recipe.path,
-                                                                md5: 'b2b6fb440548869dc228535e339f619b')
+    apr_util_version = latest_github_version("apache/apr-util")
+    @apr_util_recipe ||= AprUtilRecipe.new('apr-util', apr_util_version, apr_path: apr_recipe.path,
+                                                                apr_iconv_path: apr_iconv_recipe.path)
   end
 
   def apr_iconv_recipe
-    @apr_iconv_recipe ||= AprIconvRecipe.new('apr-iconv', '1.2.2', apr_path: apr_recipe.path,
-                                                                   md5: '60ae6f95ee4fdd413cf7472fd9c776e3')
+    apr_iconv_version = latest_github_version("apache/apr-iconv")
+    @apr_iconv_recipe ||= AprIconvRecipe.new('apr-iconv', apr_iconv_version, apr_path: apr_recipe.path)
   end
 
   def apr_recipe
-    @apr_recipe ||= AprRecipe.new('apr', '1.7.2', md5: '0af3415d905e8780e37540b3ab76c541')
+    apr_version = latest_github_version("apache/apr")
+    @apr_recipe ||= AprRecipe.new('apr', apr_version)
   end
 end
