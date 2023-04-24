@@ -9,9 +9,9 @@ class BasePHPModuleRecipe < BaseRecipe
     super name, version, options
 
     @files = [{
-      url: url,
-      local_path: local_path
-    }.merge(DetermineChecksum.new(options).to_h)]
+                url: url,
+                local_path: local_path
+              }.merge(DetermineChecksum.new(options).to_h)]
   end
 
   def local_path
@@ -52,7 +52,7 @@ class PeclRecipe < BasePHPModuleRecipe
     return if configured?
 
     md5_file = File.join(tmp_path, 'configure.md5')
-    digest   = Digest::MD5.hexdigest(computed_options.to_s)
+    digest = Digest::MD5.hexdigest(computed_options.to_s)
     File.open(md5_file, 'w') { |f| f.write digest }
 
     execute('phpize', 'phpize')
@@ -104,6 +104,34 @@ class HiredisRecipe < PkgConfigLibRecipe
 
   def pkgcfg_name
     'hiredis'
+  end
+end
+
+class ImagickRecipe < BasePHPModuleRecipe
+  def url
+    "http://pecl.php.net/get/#{name}-#{version}.tgz"
+  end
+
+  def configure_options
+    [
+      "--with-php-config=#{@php_path}/bin/php-config"
+    ]
+  end
+
+  def configure
+    return if configured?
+
+    md5_file = File.join(tmp_path, 'configure.md5')
+    digest = Digest::MD5.hexdigest(computed_options.to_s)
+    File.open(md5_file, 'w') { |f| f.write digest }
+
+    # Setup libmagickwand-dev libmagickcore-dev
+    execute('install', %w[apt-get update])
+    execute('install', %w[apt-get install -y libmagickwand-dev])
+
+    # Configure
+    execute('phpize', 'phpize')
+    execute('configure', %w[sh configure] + computed_options)
   end
 end
 
@@ -162,7 +190,7 @@ class LibRdKafkaRecipe < PkgConfigLibRecipe
     return if configured?
 
     md5_file = File.join(tmp_path, 'configure.md5')
-    digest   = Digest::MD5.hexdigest(computed_options.to_s)
+    digest = Digest::MD5.hexdigest(computed_options.to_s)
     File.open(md5_file, 'w') { |f| f.write digest }
 
     execute('configure', %w[bash ./configure] + computed_options)
