@@ -6,10 +6,8 @@ require_relative 'base'
 class NodeRecipe < BaseRecipe
 
   def computed_options
-    puts '----- computed_options ---------'
-    puts [ Gem::Version.new(version), '>=', Gem::Version.new('6.0.0') ]
     if Gem::Version.new(version) >= Gem::Version.new('6.0.0')
-      ['--prefix=/', '--openssl-use-def-ca-store']
+      %w[--prefix=/ --openssl-use-def-ca-store]
     else
       ['--prefix=/']
     end
