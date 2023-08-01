@@ -145,6 +145,8 @@ class PhpMeal
        libjpeg-dev
        libkrb5-dev
        libldap2-dev
+       libmagickwand-dev
+       libmagickcore-dev
        libmaxminddb-dev
        libmcrypt-dev
        libmemcached-dev
