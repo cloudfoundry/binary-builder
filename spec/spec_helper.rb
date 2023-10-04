@@ -81,7 +81,19 @@ RSpec.configure do |config|
       s3_bucket = ENV['ORACLE_LIBS_AWS_BUCKET']
       libs_filename = ENV['ORACLE_LIBS_FILENAME']
 
-      system "aws s3 cp s3://#{s3_bucket}/#{libs_filename} ."
+      ## If AWS_ASSUME_ROLE_ARN is provides, switch to aws assume-role mode
+      if ENV['AWS_ASSUME_ROLE_ARN'] && !ENV['AWS_ASSUME_ROLE_ARN'].empty?
+        system <<-eof
+          uuid=$(cat /proc/sys/kernel/random/uuid)
+          RESULT="$(aws sts assume-role --role-arn "${AWS_ASSUME_ROLE_ARN}" --role-session-name "binary-builder-spec-${uuid}")"
+          export AWS_ACCESS_KEY_ID="$(echo "${RESULT}" |jq -r .Credentials.AccessKeyId)"
+          export AWS_SECRET_ACCESS_KEY="$(echo "${RESULT}" |jq -r .Credentials.SecretAccessKey)"
+          export AWS_SESSION_TOKEN="$(echo "${RESULT}" |jq -r .Credentials.SessionToken)"
+          aws s3 cp s3://#{s3_bucket}/#{libs_filename} .
+        eof
+      else
+        system "aws s3 cp s3://#{s3_bucket}/#{libs_filename} ."
+      end
       system "tar -xvf #{libs_filename}"
     end
   end

@@ -85,4 +85,6 @@ The project backlog is on [Pivotal Tracker](https://www.pivotaltracker.com/proje
 
 The integration test suite includes specs that test the functionality for building [PHP with Oracle client libraries](./PHP-Oracle.md). These tests are tagged `:run_oracle_php_tests` and require access to an S3 bucket containing the Oracle client libraries. This is configured using the environment variables `AWS_ACCESS_KEY` and `AWS_SECRET_ACCESS_KEY`
 
+Optionally provide `AWS_ASSUME_ROLE_ARN` to assume a role.
+
 If you do not need to test this functionality, exclude the tag `:run_oracle_php_tests` when you run `rspec`.
