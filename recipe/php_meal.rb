@@ -143,6 +143,7 @@ class PhpMeal
       libedit-dev
       libenchant-dev
       libexpat1-dev
+      libgd-dev
       libgdbm-dev
       libgeoip-dev
       libgmp-dev
