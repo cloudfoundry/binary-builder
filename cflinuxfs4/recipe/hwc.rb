@@ -25,12 +25,16 @@ class HwcRecipe < BaseRecipe
     Dir.chdir("#{tmp_path}/hwc") do
       system(
         { 'PATH' => "#{ENV['PATH']}:/usr/local/go/bin" },
-        './scripts/build.sh'
-      ) or raise 'Could not build hwc'
+        "./bin/release-binaries.bash amd64 windows #{version} #{tmp_path}/hwc"
+      ) or raise 'Could not build hwc amd64'
+      system(
+        { 'PATH' => "#{ENV['PATH']}:/usr/local/go/bin" },
+        "./bin/release-binaries.bash 386 windows #{version} #{tmp_path}/hwc"
+      ) or raise 'Could not build hwc 386'
     end
 
-    FileUtils.mv("#{tmp_path}/hwc/hwc-rel/hwc.exe", '/tmp/hwc.exe')
-    FileUtils.mv("#{tmp_path}/hwc/hwc-rel/hwc_x86.exe", '/tmp/hwc_x86.exe')
+    FileUtils.mv("#{tmp_path}/hwc/hwc-windows-386", '/tmp/hwc.exe')
+    FileUtils.mv("#{tmp_path}/hwc/hwc-windows-amd64", '/tmp/hwc_x86.exe')
   end
 
   def archive_files
