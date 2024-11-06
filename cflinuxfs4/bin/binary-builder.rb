@@ -19,8 +19,7 @@ recipes = {
   'godep' => GoDepMeal,
   'glide' => GlideRecipe,
   'go' => GoRecipe,
-  'dep' => DepRecipe,
-  'hwc' => HwcRecipe
+  'dep' => DepRecipe
 }
 
 options = {}
