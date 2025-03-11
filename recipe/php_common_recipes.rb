@@ -111,7 +111,7 @@ end
 
 class LibSodiumRecipe < PkgConfigLibRecipe
   def url
-    "https://download.libsodium.org/libsodium/releases/libsodium-#{version}.tar.gz"
+    "https://github.com/jedisct1/libsodium/archive/#{version}-RELEASE.tar.gz"
   end
 
   def pkgcfg_name
