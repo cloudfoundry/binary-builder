@@ -9,22 +9,22 @@ class GoRecipe < BaseRecipe
     download unless downloaded?
     extract
 
-    # Installs go1.20.1 to $HOME/go1.20
-    go1201_sha256 = '000a5b1fca4f75895f78befeb2eecf10bfff3c428597f3f1e69133b63b911b02'
+    # Installs go1.24.2 to $HOME/go1.24
+    go124_sha256 = '68097bd680839cbc9d464a0edce4f7c333975e27a90246890e9f1078c7e702ad'
 
     Dir.chdir("#{ENV['HOME']}") do
-      go_download_uri = "https://go.dev/dl/go1.20.1.linux-amd64.tar.gz"
+      go_download_uri = "https://go.dev/dl/go1.24.2.linux-amd64.tar.gz"
       go_tar = "go.tar.gz"
-      HTTPHelper.download(go_download_uri, go_tar, "sha256", go1201_sha256)
+      HTTPHelper.download(go_download_uri, go_tar, "sha256", go124_sha256)
 
       system("tar xf #{go_tar}")
-      system("mv ./go ./go1.20")
+      system("mv ./go ./go1.24")
     end
 
     # The GOROOT_BOOTSTRAP defaults to $HOME/go1.4 so we need to update it for this command
     Dir.chdir("#{tmp_path}/go/src") do
       system(
-        'GOROOT_BOOTSTRAP=$HOME/go1.20 ./make.bash'
+        'GOROOT_BOOTSTRAP=$HOME/go1.24 ./make.bash'
       ) or raise "Could not install go"
     end
   end
