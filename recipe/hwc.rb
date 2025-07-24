@@ -32,8 +32,8 @@ class HwcRecipe < BaseRecipe
       ) or raise 'Could not build hwc 386'
     end
 
-    FileUtils.mv("#{tmp_path}/hwc/hwc-windows-386", '/tmp/hwc.exe')
-    FileUtils.mv("#{tmp_path}/hwc/hwc-windows-amd64", '/tmp/hwc_x86.exe')
+    FileUtils.mv("#{tmp_path}/hwc/hwc-windows-amd64", '/tmp/hwc.exe')
+    FileUtils.mv("#{tmp_path}/hwc/hwc-windows-386", '/tmp/hwc_x86.exe')
   end
 
   def archive_files
