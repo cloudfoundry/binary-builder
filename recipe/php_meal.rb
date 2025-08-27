@@ -36,6 +36,13 @@ class PhpMeal
         apt-get update
         apt-get -y upgrade
         apt-get -y install #{apt_packages}
+
+        # because default bionic gives us an old uncompatible libtidy
+        apt-get -y install software-properties-common
+        add-apt-repository -y ppa:savoury1/backports
+        apt-get update
+        apt-get install -y libtidy-dev
+        
         touch /tmp/apt-last-updated
       fi
       #{install_libuv}
@@ -163,7 +170,6 @@ class PhpMeal
       libsqlite3-dev
       libssh2-1-dev
       libssl-dev
-      libtidy-dev
       libtool
       libwebp-dev
       libxml2-dev
