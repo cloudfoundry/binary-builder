@@ -103,7 +103,7 @@ class PhpRecipe < BaseRecipe
       cp -a /usr/lib/x86_64-linux-gnu/libassuan.so* #{path}/lib/
       cp -a /usr/lib/x86_64-linux-gnu/libgpg-error.so* #{path}/lib/
       cp -a /usr/lib/libtidy*.so* #{path}/lib/
-      cp -a -v /usr/lib/x86_64-linux-gnu/libtidy*.so* #{path}/lib/
+      cp -a /usr/lib/x86_64-linux-gnu/libtidy*.so* #{path}/lib/
       cp -a /usr/lib/x86_64-linux-gnu/libenchant.so* #{path}/lib/
       cp -a /usr/lib/x86_64-linux-gnu/libfbclient.so* #{path}/lib/
       cp -a /usr/lib/x86_64-linux-gnu/librecode.so* #{path}/lib/
