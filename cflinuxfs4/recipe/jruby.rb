@@ -9,7 +9,7 @@ class JRubyRecipe < BaseRecipe
   end
 
   def url
-    "https://s3.amazonaws.com/jruby.org/downloads/#{jruby_version}/jruby-src-#{jruby_version}.tar.gz"
+    "https://repo1.maven.org/maven2/org/jruby/jruby-dist/#{jruby_version}/jruby-dist-#{jruby_version}-src.zip"
   end
 
   def cook
