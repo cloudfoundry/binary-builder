@@ -14,12 +14,23 @@ class JRubyRecipe < BaseRecipe
 
   def cook
     download unless downloaded?
-    extract
+    extract_zip
     compile
   end
 
   def compile
     execute('compile', ['mvn', '-P', '!truffle', "-Djruby.default.ruby.version=#{ruby_version}"])
+  end
+
+  def extract_zip
+    files_hashs.each do |file|
+      verify_file(file)
+
+      filename = File.basename(file[:local_path])
+      message "Unzipping #{filename} into #{tmp_path}... "
+      FileUtils.mkdir_p tmp_path
+      execute('unzip', ["unzip", "-o", file[:local_path], "-d", tmp_path], {:cd => Dir.pwd, :initial_message => false})
+    end
   end
 
   def ruby_version
