@@ -11,17 +11,28 @@ class JRubyRecipe < BaseRecipe
   end
 
   def url
-    "https://s3.amazonaws.com/jruby.org/downloads/#{jruby_version}/jruby-src-#{jruby_version}.tar.gz"
+    "https://repo1.maven.org/maven2/org/jruby/jruby-dist/#{jruby_version}/jruby-dist-#{jruby_version}-src.zip"
   end
 
   def cook
     download unless downloaded?
-    extract
+    extract_zip
     compile
   end
 
   def compile
     execute('compile', ['mvn', '-P', '!truffle', "-Djruby.default.ruby.version=#{ruby_version}"])
+  end
+
+  def extract_zip
+    files_hashs.each do |file|
+      verify_file(file)
+
+      filename = File.basename(file[:local_path])
+      message "Unzipping #{filename} into #{tmp_path}... "
+      FileUtils.mkdir_p tmp_path
+      execute('unzip', ["unzip", "-o", file[:local_path], "-d", tmp_path], {:cd => Dir.pwd, :initial_message => false})
+    end
   end
 
   def ruby_version
