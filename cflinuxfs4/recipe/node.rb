@@ -25,7 +25,7 @@ class NodeRecipe < BaseRecipe
   end
 
   def url
-    "https://nodejs.org/dist/v#{version}/node-v#{version}.tar.gz"
+    "https://github.com/nodejs/node/archive/refs/tags/v#{version}.tar.gz"
   end
 
   def dest_dir
