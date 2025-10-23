@@ -16,7 +16,7 @@ describe 'building a binary', :integration do
 
     it 'prints a yaml representation of the source used to build the binary to stdout' do
       yaml_source = @output.match(/Source YAML:(.*)/m)[1]
-      expect(YAML.load(yaml_source)).to eq([
+      expect(YAML.safe_load(yaml_source)).to eq([
                                             {
                                               "sha256"=>"6326aeed5f86cf18f16d6dc831405614f855e2d416a91fd3fdc334f772345b00",
                                               "url"=>"https://storage.googleapis.com/golang/go1.6.3.src.tar.gz"
@@ -26,7 +26,7 @@ describe 'building a binary', :integration do
 
     it 'includes the yaml representation of the source inside the resulting tarball' do
       yaml_source = `tar xzf #{@tarball_name} -O sources.yml`
-      expect(YAML.load(yaml_source)).to eq([
+      expect(YAML.safe_load(yaml_source)).to eq([
                                               {
                                                 "sha256"=>"6326aeed5f86cf18f16d6dc831405614f855e2d416a91fd3fdc334f772345b00",
                                                 "url"=>"https://storage.googleapis.com/golang/go1.6.3.src.tar.gz"
@@ -43,7 +43,7 @@ describe 'building a binary', :integration do
 
     it 'prints a yaml representation of the source used to build the binary to stdout' do
       yaml_source = @output.match(/Source YAML:(.*)/m)[1]
-      expect(YAML.load(yaml_source)).to match_array([
+      expect(YAML.safe_load(yaml_source)).to match_array([
         {
           "sha256" => "133d48298fe5315ae9366a0ec66282fa4040efa5d566174481077ade7d18ea40",
           "url" => "https://archive.apache.org/dist/httpd/httpd-2.4.41.tar.bz2"
@@ -69,7 +69,7 @@ describe 'building a binary', :integration do
 
     it 'includes the yaml representation of the source inside the resulting tarball' do
       yaml_source = `tar xzf httpd-2.4.41-linux-x64.tgz sources.yml -O`
-      expect(YAML.load(yaml_source)).to match_array([
+      expect(YAML.safe_load(yaml_source)).to match_array([
         {
           "sha256" => "133d48298fe5315ae9366a0ec66282fa4040efa5d566174481077ade7d18ea40",
           "url" => "https://archive.apache.org/dist/httpd/httpd-2.4.41.tar.bz2"
