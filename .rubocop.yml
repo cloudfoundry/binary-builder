@@ -15,4 +15,4 @@ Performance/RedundantMatch:
   Enabled: false
 
 AllCops:
-  TargetRubyVersion: 1.9
+  TargetRubyVersion: 3.4

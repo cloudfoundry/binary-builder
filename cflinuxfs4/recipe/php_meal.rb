@@ -86,7 +86,7 @@ class PhpMeal
   def create_native_module_recipes
     return unless @options[:php_extensions_file]
 
-    php_extensions_hash = YAML.load_file(@options[:php_extensions_file])
+    php_extensions_hash = YAML.safe_load_file(@options[:php_extensions_file])
 
     php_extensions_hash['native_modules'].each do |hash|
       klass = Kernel.const_get(hash['klass'])
@@ -102,7 +102,7 @@ class PhpMeal
   def create_extension_recipes
     return unless @options[:php_extensions_file]
 
-    php_extensions_hash = YAML.load_file(@options[:php_extensions_file])
+    php_extensions_hash = YAML.safe_load_file(@options[:php_extensions_file])
 
     php_extensions_hash['extensions'].each do |hash|
       klass = Kernel.const_get(hash['klass'])
