@@ -1,0 +1,120 @@
+name: cflinuxfs4
+ubuntu_version: "22.04"
+ubuntu_codename: jammy
+docker_image: cloudfoundry/cflinuxfs4
+
+ruby_bootstrap:
+  url: https://buildpacks.cloudfoundry.org/dependencies/ruby/ruby_3.3.6_linux_x64_cflinuxfs4_e4311262.tgz
+  sha256: e4311262
+  install_dir: /opt/ruby
+
+compilers:
+  gfortran:
+    version: 11
+    bin: /usr/bin/x86_64-linux-gnu-gfortran-11
+    lib_path: /usr/lib/gcc/x86_64-linux-gnu/11
+    packages:
+      - gfortran
+      - libgfortran-12-dev
+  gcc:
+    version: 12
+    packages:
+      - gcc-12
+      - g++-12
+    ppa: "ppa:ubuntu-toolchain-r/test"
+
+apt_packages:
+  php_build:
+    - automake
+    - firebird-dev
+    - libaspell-dev
+    - libc-client2007e-dev
+    - libcurl4-openssl-dev
+    - libdb-dev
+    - libedit-dev
+    - libenchant-2-dev
+    - libexpat1-dev
+    - libgdbm-dev
+    - libgeoip-dev
+    - libgmp-dev
+    - libgpgme11-dev
+    - libjpeg-dev
+    - libkrb5-dev
+    - libldap2-dev
+    - libmagickwand-dev
+    - libmagickcore-dev
+    - libmaxminddb-dev
+    - libmcrypt-dev
+    - libmemcached-dev
+    - libonig-dev
+    - libpng-dev
+    - libpspell-dev
+    - librecode-dev
+    - libsasl2-dev
+    - libsnmp-dev
+    - libsqlite3-dev
+    - libssh2-1-dev
+    - libssl-dev
+    - libtidy-dev
+    - libtool
+    - libwebp-dev
+    - libxml2-dev
+    - libzip-dev
+    - libzookeeper-mt-dev
+    - snmp-mibs-downloader
+    - sqlite3
+    - unixodbc-dev
+  r_build:
+    - gfortran
+    - libbz2-dev
+    - liblzma-dev
+    - libpcre++-dev
+    - libpcre2-dev
+    - libcurl4-openssl-dev
+    - libsodium-dev
+    - libharfbuzz-dev
+    - libfribidi-dev
+    - default-jre
+    - libgfortran-12-dev
+    - libfreetype6-dev
+    - libpng-dev
+    - libtiff5-dev
+    - libjpeg-dev
+    - libwebp-dev
+  ruby_build:
+    - libffi-dev
+  python_build:
+    - libdb-dev
+    - libgdbm-dev
+    - tk8.6-dev
+  node_build: []
+  httpd_build:
+    - libldap2-dev
+  httpd_mod_auth_build:
+    - libjansson-dev
+    - libcjose-dev
+    - libhiredis-dev
+  libgdiplus_build:
+    - automake
+    - libtool
+    - libglib2.0-dev
+    - libcairo2-dev
+
+php_symlinks:
+  - src: /usr/include/x86_64-linux-gnu/curl
+    dst: /usr/local/include/curl
+  - src: /usr/include/x86_64-linux-gnu/gmp.h
+    dst: /usr/include/gmp.h
+  - src: /usr/lib/x86_64-linux-gnu/libldap.so
+    dst: /usr/lib/libldap.so
+  - src: /usr/lib/x86_64-linux-gnu/libldap_r.so
+    dst: /usr/lib/libldap_r.so
+
+jruby:
+  jdk_url: https://java-buildpack.cloudfoundry.org/openjdk-jdk/bionic/x86_64/openjdk-jdk-1.8.0_242-bionic.tar.gz
+  jdk_sha256: dcb9fea2fc3a9b003031874ed17aa5d5a7ebbe397b276ecc8c814633003928fe
+  jdk_install_dir: /opt/java
+
+python:
+  tcl_version: "8.6"
+  use_force_yes: true
