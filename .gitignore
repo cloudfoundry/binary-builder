@@ -1,13 +1,14 @@
 /*.tgz
 /*.tar.gz
-.rspec
 .bundle
 .ccache
 /logs
 ports/
+cflinuxfs4/
 tmp/
 mini_portile/
 .idea/
 oracle_client_libs
 *deb*
 **/.idea
+/binary-builder
