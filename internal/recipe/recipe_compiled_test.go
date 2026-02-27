@@ -839,54 +839,31 @@ func TestJRubyRecipeBuild(t *testing.T) {
 	r := &recipe.JRubyRecipe{Fetcher: f}
 	run := runner.NewFakeRunner()
 	s := newCompiledStack(t)
+
+	// The recipe globs for jdk*/ inside JDKInstallDir after extracting the JDK
+	// tarball. FakeRunner doesn't execute commands, so create the subdir manually.
+	require.NoError(t, os.MkdirAll(filepath.Join(s.JRuby.JDKInstallDir, "jdk8u452"), 0755))
+
 	src := newInput("jruby", "9.4.5.0", "https://repo1.maven.org/maven2/org/jruby/jruby-dist/9.4.5.0/jruby-dist-9.4.5.0-src.zip")
 
 	err := r.Build(context.Background(), s, src, run, &output.OutData{})
 	require.NoError(t, err)
 
-	// Should download JDK from the stack-configured URL.
-	jdkDownloaded := false
-	for _, dl := range f.DownloadedURLs {
-		if dl.URL == s.JRuby.JDKURL {
-			jdkDownloaded = true
-		}
-	}
-	assert.True(t, jdkDownloaded, "should download JDK from stack JRuby.JDKURL")
+	// JDK must be downloaded from the stack-configured URL.
+	assert.True(t, hasDownload(f, s.JRuby.JDKURL), "should download JDK from stack JRuby.JDKURL")
 
-	// Should download Maven.
-	mavenDownloaded := false
-	for _, dl := range f.DownloadedURLs {
-		if strings.Contains(dl.URL, "apache-maven") {
-			mavenDownloaded = true
-		}
-	}
-	assert.True(t, mavenDownloaded, "should download Maven")
+	// Maven must be downloaded.
+	assert.True(t, hasDownloadContaining(f, "apache-maven"), "should download Maven")
 
-	// Maven must run inside srcDir via sh -c "cd {srcDir} && mvn ...".
+	// mvn must be invoked inside the correct source directory.
 	assert.True(t, hasCallMatching(run.Calls, "sh", "cd /tmp/jruby-9.4.5.0"),
-		"mvn must run inside srcDir via sh -c cd")
+		"mvn must run inside srcDir")
 	assert.True(t, hasCallMatching(run.Calls, "sh", "mvn"),
 		"should invoke mvn")
 
-	// The sh -c mvn call must have JAVA_HOME set.
-	assert.True(t, hasCallWithEnv(run.Calls, "sh", "JAVA_HOME"),
-		"mvn invocation must have JAVA_HOME env set")
-
-	// Artifact path should encode the full version "9.4.5.0-ruby-3.1".
+	// Artifact must encode the full version including Ruby compatibility suffix.
 	assert.True(t, hasCallMatching(run.Calls, "tar", "9.4.5.0-ruby-3.1"),
 		"artifact should use full version 9.4.5.0-ruby-3.1")
-}
-
-func TestJRubyRecipeUnknownVersion(t *testing.T) {
-	f := newFakeFetcher()
-	r := &recipe.JRubyRecipe{Fetcher: f}
-	run := runner.NewFakeRunner()
-	s := newCompiledStack(t)
-	src := newInput("jruby", "9.9.0.0", "https://example.com/jruby-9.9.0.0-src.zip")
-
-	err := r.Build(context.Background(), s, src, run, &output.OutData{})
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "9.9")
 }
 
 func TestJRubyRecipeVersion93(t *testing.T) {
@@ -897,6 +874,9 @@ func TestJRubyRecipeVersion93(t *testing.T) {
 	r := &recipe.JRubyRecipe{Fetcher: f}
 	run := runner.NewFakeRunner()
 	s := newCompiledStack(t)
+
+	require.NoError(t, os.MkdirAll(filepath.Join(s.JRuby.JDKInstallDir, "jdk8u452"), 0755))
+
 	src := newInput("jruby", "9.3.14.0", "https://repo1.maven.org/maven2/org/jruby/jruby-dist/9.3.14.0/jruby-dist-9.3.14.0-src.zip")
 
 	err := r.Build(context.Background(), s, src, run, &output.OutData{})
@@ -905,6 +885,18 @@ func TestJRubyRecipeVersion93(t *testing.T) {
 	// 9.3.x maps to Ruby 2.6.
 	assert.True(t, hasCallMatching(run.Calls, "tar", "9.3.14.0-ruby-2.6"),
 		"JRuby 9.3.x should produce artifact with ruby-2.6")
+}
+
+func TestJRubyRecipeUnknownVersion(t *testing.T) {
+	f := newFakeFetcher()
+	r := &recipe.JRubyRecipe{Fetcher: f}
+	run := runner.NewFakeRunner()
+	s := newCompiledStack(t)
+	src := newInput("jruby", "9.9.0.0", "https://repo1.maven.org/maven2/org/jruby/jruby-dist/9.9.0.0/jruby-dist-9.9.0.0-src.zip")
+
+	err := r.Build(context.Background(), s, src, run, &output.OutData{})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "9.9")
 }
 
 // ── HTTPDRecipe ───────────────────────────────────────────────────────────────

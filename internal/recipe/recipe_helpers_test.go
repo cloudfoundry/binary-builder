@@ -55,6 +55,26 @@ func hasCallMatching(calls []runner.Call, name string, argSubstr string) bool {
 	return false
 }
 
+// hasDownload returns true if the fetcher recorded a download with the exact URL.
+func hasDownload(f *FakeFetcher, url string) bool {
+	for _, dl := range f.DownloadedURLs {
+		if dl.URL == url {
+			return true
+		}
+	}
+	return false
+}
+
+// hasDownloadContaining returns true if any downloaded URL contains substr.
+func hasDownloadContaining(f *FakeFetcher, substr string) bool {
+	for _, dl := range f.DownloadedURLs {
+		if strings.Contains(dl.URL, substr) {
+			return true
+		}
+	}
+	return false
+}
+
 // hasCallWithEnv returns true if any call matches name and has envKey in its Env map.
 func hasCallWithEnv(calls []runner.Call, name string, envKey string) bool {
 	for _, c := range calls {
