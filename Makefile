@@ -9,13 +9,12 @@ unit-test-race:
 	go test -race ./...
 
 # Tier 2: parity test for a single dep (requires Docker + network)
-# Usage: make parity-test DEP=ruby VERSION=3.3.6 SHA256=abc123 STACK=cflinuxfs4
+# Uses the same data.json values as parity-test-all (defined in run-all.sh).
+# Usage: make parity-test DEP=httpd [STACK=cflinuxfs4]
 STACK ?= cflinuxfs4
 parity-test:
-	@test -n "$(DEP)"     || (echo "DEP is required"; exit 1)
-	@test -n "$(VERSION)" || (echo "VERSION is required"; exit 1)
-	@test -n "$(SHA256)"  || (echo "SHA256 is required"; exit 1)
-	./test/parity/compare-builds.sh "$(DEP)" "$(VERSION)" "$(SHA256)" "$(STACK)"
+	@test -n "$(DEP)" || (echo "DEP is required. Usage: make parity-test DEP=<name> [STACK=<stack>]"; exit 1)
+	DEP=$(DEP) ./test/parity/run-all.sh "$(STACK)"
 
 # Tier 2: parity test for all deps in the matrix (requires Docker + network)
 parity-test-all:

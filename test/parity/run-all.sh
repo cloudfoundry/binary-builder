@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 # binary-builder/test/parity/run-all.sh
-# Usage: run-all.sh [<stack>]
+# Usage: run-all.sh [<stack>] [DEP=<name>]
 #
 # Runs compare-builds.sh for every dep in the parity test matrix.
 # For each dep we generate a real depwatcher-format data.json on-the-fly,
 # then call compare-builds.sh --dep <name> --data-json <path> [--stack <stack>].
+#
+# To run a single dep only, set the DEP env var:
+#   DEP=httpd ./test/parity/run-all.sh
+#   DEP=httpd make parity-test
 #
 # Deps that require vendor credentials (appdynamics, appdynamics-java) are
 # skipped with a SKIP notice; they can be tested manually when credentials
@@ -22,6 +26,8 @@
 set -euo pipefail
 
 STACK="${1:-cflinuxfs4}"
+# Optional: filter to a single dep (set via env, e.g. DEP=httpd make parity-test)
+FILTER_DEP="${DEP:-}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TMPDIR="$(mktemp -d)"
 
@@ -66,6 +72,9 @@ run_dep() {
   local dep="$1"
   local data_json="$2"
 
+  # Skip if a DEP filter is set and this dep doesn't match.
+  if [[ -n "${FILTER_DEP}" && "${dep}" != "${FILTER_DEP}" ]]; then return 0; fi
+
   echo ""
   echo "════════════════════════════════════════════════════════════════"
   echo " ${dep} on ${STACK}"
@@ -84,9 +93,96 @@ run_dep() {
   fi
 }
 
+# run_dep_r <data_json>
+# Wraps run_dep for `r`, creating the 4 sub-dep data.json files that the
+# Go recipe reads from source-*-latest/ directories inside the container.
+run_dep_r() {
+  local data_json="$1"
+  local sub_deps_dir="${TMPDIR}/r-sub-deps"
+
+  # forecast 8.24.0
+  mkdir -p "${sub_deps_dir}/source-forecast-latest"
+  jq -n \
+    --arg name    "forecast" \
+    --arg stype   "github_releases" \
+    --arg repo    "robjhyndman/forecast" \
+    --arg url     "https://cran.r-project.org/src/contrib/forecast_8.24.0.tar.gz" \
+    --arg ref     "8.24.0" \
+    --arg sha256  "" \
+    --arg sha512  "" \
+    '{"source":{"name":$name,"type":$stype,"repo":$repo},"version":{"url":$url,"ref":$ref,"sha256":$sha256,"sha512":$sha512}}' \
+    > "${sub_deps_dir}/source-forecast-latest/data.json"
+
+  # plumber 1.3.0
+  mkdir -p "${sub_deps_dir}/source-plumber-latest"
+  jq -n \
+    --arg name    "plumber" \
+    --arg stype   "github_releases" \
+    --arg repo    "rstudio/plumber" \
+    --arg url     "https://cran.r-project.org/src/contrib/plumber_1.3.0.tar.gz" \
+    --arg ref     "1.3.0" \
+    --arg sha256  "" \
+    --arg sha512  "" \
+    '{"source":{"name":$name,"type":$stype,"repo":$repo},"version":{"url":$url,"ref":$ref,"sha256":$sha256,"sha512":$sha512}}' \
+    > "${sub_deps_dir}/source-plumber-latest/data.json"
+
+  # rserve 1.8.15
+  mkdir -p "${sub_deps_dir}/source-rserve-latest"
+  jq -n \
+    --arg name    "Rserve" \
+    --arg stype   "github_releases" \
+    --arg repo    "s-u/Rserve" \
+    --arg url     "https://cran.r-project.org/src/contrib/Rserve_1.8-15.tar.gz" \
+    --arg ref     "1.8.15" \
+    --arg sha256  "" \
+    --arg sha512  "" \
+    '{"source":{"name":$name,"type":$stype,"repo":$repo},"version":{"url":$url,"ref":$ref,"sha256":$sha256,"sha512":$sha512}}' \
+    > "${sub_deps_dir}/source-rserve-latest/data.json"
+
+  # shiny 1.10.0
+  mkdir -p "${sub_deps_dir}/source-shiny-latest"
+  jq -n \
+    --arg name    "shiny" \
+    --arg stype   "github_releases" \
+    --arg repo    "rstudio/shiny" \
+    --arg url     "https://cran.r-project.org/src/contrib/shiny_1.10.0.tar.gz" \
+    --arg ref     "1.10.0" \
+    --arg sha256  "" \
+    --arg sha512  "" \
+    '{"source":{"name":$name,"type":$stype,"repo":$repo},"version":{"url":$url,"ref":$ref,"sha256":$sha256,"sha512":$sha512}}' \
+    > "${sub_deps_dir}/source-shiny-latest/data.json"
+
+  local dep="r"
+
+  # Skip if a DEP filter is set and this dep doesn't match.
+  if [[ -n "${FILTER_DEP}" && "${dep}" != "${FILTER_DEP}" ]]; then return 0; fi
+
+  local version
+  version=$(jq -r '.version.ref // "unknown"' "${data_json}")
+  local log_file="/tmp/parity-logs/${dep}-${version}-${STACK}.log"
+
+  echo ""
+  echo "════════════════════════════════════════════════════════════════"
+  echo " ${dep} on ${STACK}"
+  echo "════════════════════════════════════════════════════════════════"
+
+  if "${SCRIPT_DIR}/compare-builds.sh" --dep "${dep}" --data-json "${data_json}" \
+       --stack "${STACK}" --sub-deps-dir "${sub_deps_dir}"; then
+    PASSED+=("${dep} ${version}")
+  else
+    FAILED+=("${dep} ${version}")
+    FAILED_LOGS+=("${log_file}")
+    echo "FAILED: ${dep} ${version} — log: ${log_file}"
+  fi
+}
+
 skip_dep() {
   local dep="$1"
   local reason="$2"
+
+  # Skip silently if a DEP filter is set and this dep doesn't match.
+  if [[ -n "${FILTER_DEP}" && "${dep}" != "${FILTER_DEP}" ]]; then return 0; fi
+
   echo ""
   echo "════════════════════════════════════════════════════════════════"
   echo " ${dep} — SKIPPED: ${reason}"
@@ -103,10 +199,11 @@ run_dep ruby "$(write_data_json ruby 3.3.6 \
   "8dc48fffaf270f86f1019053f28e51e4da4cce32a36760a0603a9aee67d7fd8d" \
   "" github_releases "ruby/ruby")"
 
-# jruby 9.4.5.0 — https://repo1.maven.org/maven2/org/jruby/jruby-dist/9.4.5.0/
-run_dep jruby "$(write_data_json jruby 9.4.5.0 \
-  "https://repo1.maven.org/maven2/org/jruby/jruby-dist/9.4.5.0/jruby-dist-9.4.5.0-src.tar.gz" \
-  "e791ccfcfee9c0d299d07474d9bfcbfcbebf1181323be601220c8a823062ab99" \
+# jruby 9.4.14.0 — https://repo1.maven.org/maven2/org/jruby/jruby-dist/9.4.14.0/
+# NOTE: Maven only publishes a .zip (no .tar.gz); the Go builder downloads .zip.
+run_dep jruby "$(write_data_json jruby 9.4.14.0 \
+  "https://repo1.maven.org/maven2/org/jruby/jruby-dist/9.4.14.0/jruby-dist-9.4.14.0-src.zip" \
+  "400086b33f701a47dc28c5965d5a408bc2740301a5fb3b545e37abaa002ccdf8" \
   "" maven "")"
 
 # python 3.12.0 — https://www.python.org/ftp/python/3.12.0/Python-3.12.0.tgz
@@ -124,7 +221,7 @@ run_dep node "$(write_data_json node 20.11.0 \
 # go 1.22.0 — https://go.dev/dl/go1.22.0.src.tar.gz
 run_dep go "$(write_data_json go 1.22.0 \
   "https://go.dev/dl/go1.22.0.src.tar.gz" \
-  "180a0c1f964153114d70b640472ce4514cb4246e76f66e19459596141832ba24" \
+  "4d196c3d41a0d6c1dfc64d04e3cc1f608b0c436bd87b7060ce3e23234e1f4d5c" \
   "" url "")"
 
 # nginx 1.25.3 — https://nginx.org/download/nginx-1.25.3.tar.gz
@@ -145,10 +242,10 @@ run_dep openresty "$(write_data_json openresty 1.25.3.1 \
   "32ec1a253a5a13250355a075fe65b7d63ec45c560bbe213350f0992a57cd79df" \
   "" url "")"
 
-# httpd 2.4.58 — https://archive.apache.org/dist/httpd/httpd-2.4.58.tar.gz
+# httpd 2.4.58 — Go recipe downloads .tar.bz2 (not .tar.gz); sha256 is for .tar.bz2
 run_dep httpd "$(write_data_json httpd 2.4.58 \
   "https://archive.apache.org/dist/httpd/httpd-2.4.58.tar.gz" \
-  "503a7da4a4a27fd496037998b17078dc9fe004db32c657c96cce8356b8aa2eb6" \
+  "fa16d72a078210a54c47dd5bef2f8b9b8a01d94909a51453956b3ec6442ea4c5" \
   "" url "")"
 
 # bundler 2.5.6 — https://rubygems.org/gems/bundler-2.5.6.gem
@@ -163,10 +260,11 @@ run_dep rubygems "$(write_data_json rubygems 3.5.6 \
   "f3fcc0327cee0b7ebbee2ef014a42ba05b4032d7e1834dbcd3165dde700c99c2" \
   "" url "")"
 
-# r 4.3.2 — https://cran.r-project.org/src/base/R-4.3.2.tar.gz
-run_dep r "$(write_data_json r 4.3.2 \
-  "https://cran.r-project.org/src/base/R-4.3.2.tar.gz" \
-  "6b008b843616a692e0e3906902fe414ebce338a54b6dad5cd863a5bd2cd03cb2" \
+# r 4.4.2 — https://cran.r-project.org/src/base/R-4/R-4.4.2.tar.gz
+# Uses run_dep_r to supply the 4 sub-dep data.json files required by the Go recipe.
+run_dep_r "$(write_data_json r 4.4.2 \
+  "https://cran.r-project.org/src/base/R-4/R-4.4.2.tar.gz" \
+  "1578cd603e8d866b58743e49d8bf99c569e81079b6a60cf33cdf7bdffeb817ec" \
   "" url "")"
 
 # libunwind 1.6.2 — https://github.com/libunwind/libunwind/archive/refs/tags/v1.6.2.tar.gz
@@ -181,10 +279,10 @@ run_dep libgdiplus "$(write_data_json libgdiplus 6.1 \
   "6ba47acef48ffa2a75d71f8958e0de7f8f52ea066ed97409b33e7a32f31835fd" \
   "" github_releases "mono/libgdiplus")"
 
-# hwc 2.0.0 — https://github.com/cloudfoundry/hwc/archive/refs/tags/2.0.0.tar.gz
-run_dep hwc "$(write_data_json hwc 2.0.0 \
-  "https://github.com/cloudfoundry/hwc/archive/refs/tags/2.0.0.tar.gz" \
-  "7de05bf5baed5518b4880a982f7da60a8951c4a5950677d907aec8496a0cd952" \
+# hwc 106.0.0 — https://github.com/cloudfoundry/hwc/archive/refs/tags/106.0.0.tar.gz
+run_dep hwc "$(write_data_json hwc 106.0.0 \
+  "https://github.com/cloudfoundry/hwc/archive/refs/tags/106.0.0.tar.gz" \
+  "87fe14594a5d51f43680a84a669ff1ae7b1ec64630608726beeca172ab0d4163" \
   "" github_releases "cloudfoundry/hwc")"
 
 # pip 24.0 — https://files.pythonhosted.org/...
@@ -254,11 +352,11 @@ run_dep skywalking-agent "$(write_data_json skywalking-agent 9.5.0 \
   "deb782b41e6cde1e4eae94f806bb73bccb0f6bd0362c6b9f90e387a6d84bad672c34b70ca204f9e5f74899726542c76c36b2e2af05ecbcab8fff73a661a3de21" \
   "url" "")"
 
-# jprofiler-profiler 13.0.14 — ej-technologies JProfiler
-# URL: https://download-gcdn.ej-technologies.com/jprofiler/jprofiler_linux_13_0_14.tar.gz
-run_dep jprofiler-profiler "$(write_data_json jprofiler-profiler 13.0.14 \
-  "https://download-gcdn.ej-technologies.com/jprofiler/jprofiler_linux_13_0_14.tar.gz" \
-  "4b78c6afde22fb6c3a957230b9b32d573e187fdccf40608b8f658cd76c8eb42c" \
+# jprofiler-profiler 15.0.4 — ej-technologies JProfiler
+# URL: https://download.ej-technologies.com/jprofiler/jprofiler_linux_15_0_4.tar.gz
+run_dep jprofiler-profiler "$(write_data_json jprofiler-profiler 15.0.4 \
+  "https://download.ej-technologies.com/jprofiler/jprofiler_linux_15_0_4.tar.gz" \
+  "fec741718854a11b2383bb278ca7103984e0ae659268ed53ea5a8b32077b86c9" \
   "" jprofiler "")"
 
 # your-kit-profiler 2025.9.185 — YourKit Java Profiler (latest publicly available)
