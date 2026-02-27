@@ -1,11 +1,12 @@
 package recipe
 
 import (
-	"path/filepath"
 	"context"
 	"fmt"
+	"path/filepath"
 	"strings"
 
+	"github.com/cloudfoundry/binary-builder/internal/apt"
 	"github.com/cloudfoundry/binary-builder/internal/output"
 	"github.com/cloudfoundry/binary-builder/internal/runner"
 	"github.com/cloudfoundry/binary-builder/internal/source"
@@ -22,13 +23,22 @@ func (l *LibunwindRecipe) Artifact() ArtifactMeta {
 	return ArtifactMeta{OS: "linux", Arch: "noarch", Stack: ""}
 }
 
-func (l *LibunwindRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, run runner.Runner, _ *output.OutData) error {
+func (l *LibunwindRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, run runner.Runner, _ *output.OutData) error {
+	// Install autotools needed to regenerate ./configure from configure.ac.
+	// GitHub source archives only contain autotools sources, not the generated script.
+	a := apt.New(run)
+	if err := a.Install(ctx, s.AptPackages["libunwind_build"]...); err != nil {
+		return fmt.Errorf("libunwind: apt install libunwind_build: %w", err)
+	}
+
 	version := src.Version
 
 	// Derive the directory name from the URL filename by stripping .tar.gz.
 	parts := strings.Split(src.URL, "/")
 	filename := parts[len(parts)-1]
-	dirName := strings.TrimSuffix(strings.TrimSuffix(filename, ".tar.gz"), ".tgz")
+	tag := strings.TrimSuffix(strings.TrimSuffix(filename, ".tar.gz"), ".tgz")
+	// GitHub archives for tag vX.Y.Z extract to libunwind-X.Y.Z (repo name + version, no "v").
+	dirName := "libunwind-" + strings.TrimPrefix(tag, "v")
 
 	srcTarball := fmt.Sprintf("source/%s", filename)
 	srcDir := fmt.Sprintf("/tmp/%s", dirName)
@@ -42,6 +52,11 @@ func (l *LibunwindRecipe) Build(ctx context.Context, _ *stack.Stack, src *source
 
 	if err := run.Run("mkdir", "-p", builtPath); err != nil {
 		return err
+	}
+
+	// Regenerate ./configure from configure.ac (GitHub archives ship only autotools sources).
+	if err := run.RunInDir(srcDir, "autoreconf", "-i"); err != nil {
+		return fmt.Errorf("libunwind: autoreconf: %w", err)
 	}
 
 	// Configure, make, install.
