@@ -48,45 +48,6 @@ pointing to the original installer URL. `compare-builds.sh` handles this via
 - The Go builder is compiled **inside the container at runtime** (`go build ./cmd/binary-builder`),
   so source changes are always picked up on re-run.
 
-## Parity Results
-
-| Dep | Status | Notes |
-|-----|--------|-------|
-| composer | ✅ PASS | |
-| tomcat | ✅ PASS | |
-| bundler | ✅ PASS | |
-| rubygems | ✅ PASS | |
-| yarn | ✅ PASS | |
-| bower | ✅ PASS | |
-| pip | ✅ PASS | |
-| pipenv | ✅ PASS | |
-| setuptools | ✅ PASS | |
-| openjdk | ✅ PASS | |
-| zulu | ✅ PASS | |
-| sapmachine | ✅ PASS | |
-| nginx | ✅ PASS | |
-| nginx-static | ✅ PASS | |
-| openresty | ✅ PASS | |
-| ruby | ✅ PASS | |
-| python | ✅ PASS | |
-| libunwind | ✅ PASS | |
-| miniconda3-py39 | ✅ PASS | URL-passthrough |
-| libgdiplus | ✅ PASS | Fixed: RunInDirWithEnv for make/make install |
-| dotnet-aspnetcore | ✅ PASS | Fixed: artifact path + RuntimeVersion.txt |
-| dotnet-runtime | ✅ PASS | Fixed: artifact path + RuntimeVersion.txt |
-| httpd | ✅ PASS | Fixed: split httpd_build/httpd_mod_auth_build in yaml |
-| dotnet-sdk | ✅ PASS | Fixed: artifact path |
-| node | ✅ PASS | |
-| hwc | ✅ PASS | Fixed: RunInDirWithEnv from srcDir + CGO_ENABLED=1 + GO_EXTLINK_ENABLED=1 + -ldflags + sources.yml in zip |
-| go | ✅ PASS | Fixed: artifact filename `go-%s` (dash) so findIntermediateArtifact finds it |
-| r | ✅ PASS | Fixed: (1) dependencies=TRUE+type='source'; (2) install order; (3) git_commit_sha; (4) rBinDir="/usr/local/lib/R/bin"; (5) compare-builds.sh excludes sub-dep source sha256 (Ruby bug) |
-| jruby | ✅ PASS | Fixed: (1) ArtifactVersion field for filename (dep-metadata keeps raw "9.4.14.0"); (2) tar czf … -C packDir . for ./‑prefixed entry list matching Ruby's strip_incorrect_words re-archive |
-| jprofiler-profiler | ✅ PASS | |
-| your-kit-profiler | ⚠️ RUBY BROKEN | Ruby dispatch bug: `name.sub('-','_')` only replaces first hyphen → dispatches to `build_your_kit-profiler` (not `build_your_kit_profiler`) → NoMethodError. Go builder works fine. |
-| appdynamics | ✅ PASS | |
-| skywalking-agent | ✅ PASS | |
-| php | ✅ PASS | run11 PASSED. Fixed: (1) mkdir ext-build; (2) PHP bin PATH; (3) ec.RabbitMQPath="/usr/local"; (4) TidewaysXhprofRecipe subdir "php-xhprof-extension-{ver}"; (5) OraclePeclRecipe --with-php-config; (6) skip oci8/pdo_oci when /oracle absent; (7) ioncube IonCubePath in extensions loop; (8) StripTopLevelDir; (9) SnmpRecipe mibs copy; (10) ioncube loader major.minor (8.1) |
-
 ## Relevant Go Files
 
 ### Recipes

@@ -84,7 +84,136 @@ make parity-test-all
 - `internal/runner/` — subprocess execution helpers
 - `stacks/` — per-stack YAML configuration (versions, URLs, paths)
 - `php_extensions/` — PHP extension lists per PHP minor version
-- `test/parity/` — Tier 2 parity test scripts (compare Ruby vs Go builder outputs)
+- `test/parity/` — Parity test scripts (compare Ruby vs Go builder outputs)
+
+## Parity Tests
+
+The parity tests verify that the Go builder produces identical output to the
+original Ruby builder for every supported dependency. This is the primary
+confidence check that the Go rewrite is correct.
+
+### Scripts
+
+| Script | Purpose |
+|---|---|
+| `test/parity/run-all.sh` | Runs every dep in the test matrix sequentially; prints a pass/fail summary and tails failure logs |
+| `test/parity/compare-builds.sh` | Runs both builders for a single dep and diffs their output |
+
+### How it works
+
+For each dependency, `compare-builds.sh` does the following:
+
+**1. Source pre-download**
+
+Some deps (`libunwind`, `dotnet-*`, `jprofiler-profiler`, `your-kit-profiler`)
+are built from a source tarball that must already be present in a `source/`
+directory at build time — neither builder downloads them inline. The script
+downloads the tarball on the host first, then mounts it into both containers
+as a read-only volume at `/tmp/host-source/`.
+
+All other deps download their own source inside the container during the build.
+
+**2. Run the Ruby builder**
+
+Runs `buildpacks-ci/tasks/build-binary-new-cflinuxfs4/build.rb` inside a
+`cloudfoundry/<stack>` Docker container with this layout:
+
+```
+/task/
+  source/data.json          ← the depwatcher input
+  source/<tarball>          ← pre-downloaded source (if applicable)
+  source-*-latest/          ← R sub-dep data.json dirs (r dep only)
+  binary-builder/           ← symlink to this repo
+  buildpacks-ci/            ← symlink to ../buildpacks-ci
+  artifacts/                ← artifact output (*.tgz / *.zip)
+  dep-metadata/             ← dep-metadata JSON output
+  builds-artifacts/
+    binary-builds-new/<dep>/  ← builds JSON output
+```
+
+`SKIP_COMMIT=true` prevents git commits. Ruby 3.3.6 is compiled from source
+inside the container if not already present.
+
+**3. Run the Go builder**
+
+Compiles `binary-builder` from source inside the same `cloudfoundry/<stack>`
+container (using `mise` to install the required Go version), then runs:
+
+```
+binary-builder build \
+  --stack <stack> \
+  --source-file /tmp/data.json \
+  --stacks-dir /binary-builder/stacks \
+  --php-extensions-dir /binary-builder/php_extensions \
+  --artifacts-dir /out/artifact \
+  --builds-dir /out/builds \
+  --dep-metadata-dir /out/dep-metadata \
+  --skip-commit
+```
+
+The source tarball (if any) and R sub-dep dirs are copied into the working
+directory before the build runs.
+
+**4. Compare outputs**
+
+If the Ruby builder failed, the comparison is skipped entirely — the test exits
+0 with `RUBY BROKEN`. Otherwise all three output types are compared:
+
+| Output | How it is compared | Hard failure? |
+|---|---|---|
+| **Artifact filename** | Both filenames are normalised by replacing the 8-char content SHA (`_<sha8>.`) with `_.` then compared | Yes |
+| **Artifact contents** | Files inside the `.tgz` or `.zip` are listed and sorted, then diffed | Yes |
+| **Builds JSON** | Fields `version`, `source.url`, `source.sha256`, `source.sha512`, `source.md5`, `url`, `sha256`, and `sub_dependencies[*].version` are compared individually | Yes |
+| **Dep-metadata JSON structural fields** | All fields except `sha256` and `url` (the artifact hash) and `sub_dependencies[*].source.sha256` are compared with `jq -S` (sorted keys) | Yes |
+| **Dep-metadata JSON artifact hash** | Top-level `sha256` and `url` fields are diffed | Warn only — non-reproducible builds (e.g. `bundler`) legitimately differ |
+| **Sub-dep source sha256** | `sub_dependencies[*].source.sha256` | Warn only — Ruby builder has a known bug where it records the sha256 of an HTTP redirect response body rather than the actual tarball |
+
+### Exit outcomes
+
+| Result | Meaning |
+|---|---|
+| `PASS` | Both builders produced identical output on all hard-failure checks |
+| `RUBY BROKEN` | Ruby builder failed; Go builder output not compared; exits 0 |
+| `FAIL` | One or more hard-failure mismatches; exits 1 |
+
+### Input format
+
+Both builders receive the same depwatcher `data.json`:
+
+```json
+{
+  "source": { "name": "ruby", "type": "github_releases", "repo": "ruby/ruby" },
+  "version": { "url": "https://...", "ref": "3.3.6", "sha256": "...", "sha512": "" }
+}
+```
+
+For SHA512-only deps (e.g. `dotnet-*`, `skywalking-agent`), `sha256` is `""`
+and `sha512` carries the real checksum. Both fields are always present in the
+builder output — the `sha256` field is never omitted even when empty.
+
+### Running
+
+```bash
+# All deps (requires Docker + network)
+test/parity/run-all.sh [<stack>]
+
+# Single dep
+test/parity/compare-builds.sh --dep ruby --data-json /tmp/ruby-data.json --stack cflinuxfs4
+
+# R dep (needs sub-dep data.json dirs)
+test/parity/compare-builds.sh --dep r --data-json /tmp/r-data.json \
+  --sub-deps-dir /tmp/r-sub-deps
+```
+
+All output is written to both the terminal and
+`/tmp/parity-logs/<dep>-<version>-<stack>.log`. To watch a running build:
+
+```bash
+tail -f /tmp/parity-logs/ruby-3.3.6-cflinuxfs4.log
+```
+
+`run-all.sh` prints a summary at the end and tails the last 20 lines of each
+failure log automatically.
 
 ## Contributing
 
