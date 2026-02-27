@@ -76,10 +76,8 @@ run_dep() {
   local log_file="/tmp/parity-logs/${dep}-${version}-${STACK}.log"
 
   if "${SCRIPT_DIR}/compare-builds.sh" --dep "${dep}" --data-json "${data_json}" --stack "${STACK}"; then
-    version=$(jq -r '.version.ref // "unknown"' "${data_json}")
     PASSED+=("${dep} ${version}")
   else
-    version=$(jq -r '.version.ref // "unknown"' "${data_json}")
     FAILED+=("${dep} ${version}")
     FAILED_LOGS+=("${log_file}")
     echo "FAILED: ${dep} ${version} — log: ${log_file}"
@@ -183,24 +181,6 @@ run_dep libgdiplus "$(write_data_json libgdiplus 6.1 \
   "6ba47acef48ffa2a75d71f8958e0de7f8f52ea066ed97409b33e7a32f31835fd" \
   "" github_releases "mono/libgdiplus")"
 
-# dep 0.5.4 — https://github.com/golang/dep/archive/refs/tags/v0.5.4.tar.gz
-run_dep dep "$(write_data_json dep 0.5.4 \
-  "https://github.com/golang/dep/archive/refs/tags/v0.5.4.tar.gz" \
-  "929c8f759838f98323211ba408a831ea80d93b75beda8584b6d950f393a3298a" \
-  "" github_releases "golang/dep")"
-
-# glide 0.13.3 — https://github.com/Masterminds/glide/archive/refs/tags/v0.13.3.tar.gz
-run_dep glide "$(write_data_json glide 0.13.3 \
-  "https://github.com/Masterminds/glide/archive/refs/tags/v0.13.3.tar.gz" \
-  "817dad2f25303d835789c889bf2fac5e141ad2442b9f75da7b164650f0de3fee" \
-  "" github_releases "Masterminds/glide")"
-
-# godep 80 — https://github.com/tools/godep/archive/refs/tags/v80.tar.gz
-run_dep godep "$(write_data_json godep 80 \
-  "https://github.com/tools/godep/archive/refs/tags/v80.tar.gz" \
-  "029adc1a0ce5c63cd40b56660664e73456648e5c031ba6c214ba1e1e9fc86cf6" \
-  "" github_releases "tools/godep")"
-
 # hwc 2.0.0 — https://github.com/cloudfoundry/hwc/archive/refs/tags/2.0.0.tar.gz
 run_dep hwc "$(write_data_json hwc 2.0.0 \
   "https://github.com/cloudfoundry/hwc/archive/refs/tags/2.0.0.tar.gz" \
@@ -267,6 +247,13 @@ run_dep sapmachine "$(write_data_json sapmachine 21.0.2 \
   "3123189ec5b99eed78de0328e2fd49d7c13cc7d4524c341f1fe8fbd5165be31f" \
   "" github_releases "SAP/SapMachine")"
 
+# skywalking-agent 9.5.0 — Apache SkyWalking Java Agent (SHA512 checksum)
+run_dep skywalking-agent "$(write_data_json skywalking-agent 9.5.0 \
+  "https://archive.apache.org/dist/skywalking/java-agent/9.5.0/apache-skywalking-java-agent-9.5.0.tgz" \
+  "" \
+  "deb782b41e6cde1e4eae94f806bb73bccb0f6bd0362c6b9f90e387a6d84bad672c34b70ca204f9e5f74899726542c76c36b2e2af05ecbcab8fff73a661a3de21" \
+  "url" "")"
+
 # jprofiler-profiler 13.0.14 — ej-technologies JProfiler
 # URL: https://download-gcdn.ej-technologies.com/jprofiler/jprofiler_linux_13_0_14.tar.gz
 run_dep jprofiler-profiler "$(write_data_json jprofiler-profiler 13.0.14 \
@@ -280,6 +267,12 @@ run_dep your-kit-profiler "$(write_data_json your-kit-profiler 2025.9.185 \
   "https://download.yourkit.com/yjp/2025.9/YourKit-JavaProfiler-2025.9-b185-x64.zip" \
   "1818a6f74ef231e53876c66ba9e7e4f0952f57cb1af40c2d410e21a6da8c33b7" \
   "" yourkit "")"
+
+# php 8.1.32 — https://www.php.net/distributions/php-8.1.32.tar.gz
+run_dep php "$(write_data_json php 8.1.32 \
+  "https://www.php.net/distributions/php-8.1.32.tar.gz" \
+  "4846836d1de27dbd28e89180f073531087029a77e98e8e019b7b2eddbdb1baff" \
+  "" url "")"
 
 # dotnet-sdk 8.0.101 — Microsoft .NET SDK (SHA512 checksum, not SHA256)
 run_dep dotnet-sdk "$(write_data_json dotnet-sdk 8.0.101 \
@@ -299,12 +292,6 @@ run_dep dotnet-runtime "$(write_data_json dotnet-runtime 8.0.1 \
 run_dep dotnet-aspnetcore "$(write_data_json dotnet-aspnetcore 8.0.1 \
   "https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/8.0.1/aspnetcore-runtime-8.0.1-linux-x64.tar.gz" \
   "cd825a5bd7b40e5706840d7b22650b787f71db5e2e496c80e16571bf5003f8fe" \
-  "" url "")"
-
-# miniconda3-py39 23.11.0 — Anaconda Miniconda3
-run_dep miniconda3-py39 "$(write_data_json miniconda3-py39 23.11.0 \
-  "https://repo.anaconda.com/miniconda/Miniconda3-py39_23.11.0-1-Linux-x86_64.sh" \
-  "d36c0f778b6b164223a174acafbe8556b841b67e53cb84b3eb24f1956b62121a" \
   "" url "")"
 
 # appdynamics — requires vendor credentials; skip

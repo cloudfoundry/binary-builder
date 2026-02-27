@@ -248,10 +248,10 @@ compare_outputs() {
   ruby_artifact=$(ls "${RUBY_OUT}/artifact/" 2>/dev/null | head -1)
   go_artifact=$(ls "${GO_OUT}/artifact/"   2>/dev/null | head -1)
 
-  # URL-passthrough deps (e.g. miniconda3-py39) produce no artifact file —
+  # URL-passthrough deps produce no artifact file —
   # both builders set outData.URL directly pointing to the original download.
   # For these deps, no artifact is expected; just compare builds JSON.
-  URL_PASSTHROUGH_DEPS=(miniconda3-py39)
+  URL_PASSTHROUGH_DEPS=()
   is_url_passthrough=false
   for pt_dep in "${URL_PASSTHROUGH_DEPS[@]}"; do
     if [[ "${DEP}" == "${pt_dep}" ]]; then
