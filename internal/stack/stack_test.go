@@ -193,7 +193,7 @@ func TestJRubyConfigCflinuxfs4(t *testing.T) {
 	s, err := stack.Load(stacksDir(t), "cflinuxfs4")
 	require.NoError(t, err)
 
-	assert.Contains(t, s.JRuby.JDKURL, "bionic")
+	assert.Contains(t, s.JRuby.JDKURL, "jammy")
 	assert.Equal(t, "/opt/java", s.JRuby.JDKInstallDir)
 }
 
@@ -201,7 +201,9 @@ func TestJRubyConfigCflinuxfs5(t *testing.T) {
 	s, err := stack.Load(stacksDir(t), "cflinuxfs5")
 	require.NoError(t, err)
 
-	assert.Contains(t, s.JRuby.JDKURL, "noble")
+	// No noble JDK bucket exists yet; cflinuxfs5 intentionally uses the jammy
+	// Bellsoft JDK 8 build which is binary-compatible with Ubuntu 24.04.
+	assert.Contains(t, s.JRuby.JDKURL, "jammy")
 	assert.Equal(t, "/opt/java", s.JRuby.JDKInstallDir)
 }
 

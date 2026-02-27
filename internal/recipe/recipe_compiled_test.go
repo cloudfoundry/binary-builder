@@ -54,7 +54,7 @@ func newCompiledStack(t *testing.T) *stack.Stack {
 		JRuby: stack.JRubyConfig{
 			JDKURL:        "https://example.com/openjdk.tar.gz",
 			JDKSHA256:     "cafebabe",
-			JDKInstallDir: "/opt/java",
+			JDKInstallDir: t.TempDir() + "/java",
 		},
 	}
 }
