@@ -15,6 +15,20 @@ import (
 	"github.com/cloudfoundry/binary-builder/internal/stack"
 )
 
+// jdkSubdir returns the actual JDK directory that the tarball extracted into.
+// The bellsoft/openjdk tarballs extract to a subdirectory like "jdk8u452/"
+// inside the install dir, not directly into the install dir itself.
+func jdkSubdir(jdkInstallDir string) (string, error) {
+	matches, err := filepath.Glob(filepath.Join(jdkInstallDir, "jdk*"))
+	if err != nil {
+		return "", fmt.Errorf("globbing JDK subdir: %w", err)
+	}
+	if len(matches) == 0 {
+		return "", fmt.Errorf("no jdk* subdirectory found in %s", jdkInstallDir)
+	}
+	return matches[0], nil
+}
+
 // JRubyRecipe builds JRuby by:
 //  1. Downloading the JDK from the stack-specific URL.
 //  2. Building Maven from source (pinned version).
@@ -84,6 +98,13 @@ func (j *JRubyRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Inp
 		return fmt.Errorf("jruby: extracting JDK: %w", err)
 	}
 
+	// The JDK tarball extracts into a subdir like "jdk8u452/" inside jdkDir.
+	// JAVA_HOME must point to that subdir, not to jdkDir itself.
+	javaHome, err := jdkSubdir(jdkDir)
+	if err != nil {
+		return fmt.Errorf("jruby: locating JDK subdir: %w", err)
+	}
+
 	// Step 3: Download and set up Maven.
 	mavenURL := fmt.Sprintf("https://archive.apache.org/dist/maven/maven-3/%s/binaries/apache-maven-%s-bin.tar.gz", mavenVersion, mavenVersion)
 	mavenTar := fmt.Sprintf("/tmp/apache-maven-%s-bin.tar.gz", mavenVersion)
@@ -124,18 +145,18 @@ func (j *JRubyRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Inp
 	srcDir := fmt.Sprintf("/tmp/jruby-%s", jrubyVersion)
 
 	// Step 5: Compile JRuby via Maven inside srcDir.
-	// JAVA_HOME and PATH are set so Maven and the JDK are on the PATH.
-	// We use sh -c "cd {srcDir} && mvn ..." because RunWithEnv does not
-	// accept a working directory argument.
+	// We embed export statements directly in the shell command so that all
+	// child processes (including Maven's polyglot plugin which invokes bin/jruby
+	// as a subprocess) inherit JAVA_HOME, JAVACMD, and PATH.
+	// JAVACMD is set explicitly so bin/jruby does not need to discover java via
+	// PATH lookup — without it the subprocess fails with "Permission denied"
+	// (exit 126) because JAVACMD is empty and `exec ""` fails.
+	javacmd := fmt.Sprintf("%s/bin/java", javaHome)
 	mvnCmd := fmt.Sprintf(
-		"cd %s && mvn clean package -P '!truffle' -Djruby.default.ruby.version=%s",
-		srcDir, rubyVersion,
+		"export JAVA_HOME=%s && export JAVACMD=%s && export PATH=%s/bin:%s/bin:/usr/bin:/bin && cd %s && mvn clean package -P '!truffle' -Djruby.default.ruby.version=%s",
+		javaHome, javacmd, javaHome, mavenInstallDir, srcDir, rubyVersion,
 	)
-	buildEnv := map[string]string{
-		"JAVA_HOME": jdkDir,
-		"PATH":      fmt.Sprintf("%s/bin:%s/bin:/usr/bin:/bin", jdkDir, mavenInstallDir),
-	}
-	if err := run.RunWithEnv(buildEnv, "sh", "-c", mvnCmd); err != nil {
+	if err := run.Run("sh", "-c", mvnCmd); err != nil {
 		return fmt.Errorf("jruby: mvn build: %w", err)
 	}
 
