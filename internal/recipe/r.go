@@ -127,7 +127,7 @@ func (r *RRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, 
 			return fmt.Errorf("r: installing R package %s: %w", pkg.name, err)
 		}
 
-		subDeps[strings.ToLower(pkg.name)] = output.SubDependency{
+		subDeps[pkg.name] = output.SubDependency{
 			Source: &output.SubDepSource{
 				URL:    subInput.URL,
 				SHA256: subInput.SHA256,
