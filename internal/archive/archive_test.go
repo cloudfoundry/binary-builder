@@ -222,7 +222,7 @@ func TestStripTopLevelDirFromZip(t *testing.T) {
 func TestPackUsesRunner(t *testing.T) {
 	f := runner.NewFakeRunner()
 
-	err := archive.Pack(f, "/tmp/out.tgz", "/tmp/src", "mydir", nil)
+	err := archive.Pack(f, "/tmp/out.tgz", "/tmp/src", "mydir")
 	require.NoError(t, err)
 
 	require.Len(t, f.Calls, 1)
@@ -235,7 +235,7 @@ func TestPackUsesRunner(t *testing.T) {
 func TestPackFlatUsesRunner(t *testing.T) {
 	f := runner.NewFakeRunner()
 
-	err := archive.Pack(f, "/tmp/out.tgz", "/tmp/src", "", nil)
+	err := archive.Pack(f, "/tmp/out.tgz", "/tmp/src", "")
 	require.NoError(t, err)
 
 	require.Len(t, f.Calls, 1)

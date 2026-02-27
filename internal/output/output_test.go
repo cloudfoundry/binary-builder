@@ -2,6 +2,7 @@ package output_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -209,4 +210,42 @@ func TestOutDataOmitsEmptyFields(t *testing.T) {
 	assert.NotContains(t, string(jsonData), "git_commit_sha")
 	assert.NotContains(t, string(jsonData), "sub_dependencies")
 	assert.NotContains(t, string(jsonData), `"sha256":""`)
+}
+
+func TestBuildOutputCommitWithStagedChanges(t *testing.T) {
+	tmpDir := t.TempDir()
+	f := runner.NewFakeRunner()
+	// Simulate staged changes: git diff --cached --quiet exits non-zero.
+	f.ErrorMap["git diff --cached --quiet"] = fmt.Errorf("exit status 1")
+
+	bo, err := output.NewBuildOutput("ruby", f, tmpDir)
+	require.NoError(t, err)
+
+	require.NoError(t, bo.Commit("Build ruby 3.3.6 [cflinuxfs4]"))
+
+	// Expect: git add, git config x2, git diff --cached --quiet, git commit.
+	require.Len(t, f.Calls, 5)
+	assert.Equal(t, "git add .", f.Calls[0].String())
+	assert.Equal(t, "git config user.email cf-buildpacks-eng@pivotal.io", f.Calls[1].String())
+	assert.Equal(t, "git config user.name CF Buildpacks Team CI Server", f.Calls[2].String())
+	assert.Equal(t, "git diff --cached --quiet", f.Calls[3].String())
+	assert.Equal(t, "git commit -m Build ruby 3.3.6 [cflinuxfs4]", f.Calls[4].String())
+}
+
+func TestBuildOutputCommitSkipsWhenNothingStaged(t *testing.T) {
+	tmpDir := t.TempDir()
+	f := runner.NewFakeRunner()
+	// git diff --cached --quiet returns exit 0 (no staged changes) — no error configured.
+
+	bo, err := output.NewBuildOutput("ruby", f, tmpDir)
+	require.NoError(t, err)
+
+	require.NoError(t, bo.Commit("Build ruby 3.3.6 [cflinuxfs4]"))
+
+	// Expect: git add, git config x2, git diff --cached --quiet — but NO git commit.
+	require.Len(t, f.Calls, 4)
+	assert.Equal(t, "git diff --cached --quiet", f.Calls[3].String())
+	for _, call := range f.Calls {
+		assert.NotEqual(t, "commit", call.Name, "git commit should not be run when nothing is staged")
+	}
 }

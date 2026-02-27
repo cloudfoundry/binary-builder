@@ -12,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/cloudfoundry/binary-builder/internal/source"
 )
@@ -31,9 +32,10 @@ type HTTPFetcher struct {
 	Client *http.Client
 }
 
-// NewHTTPFetcher creates a Fetcher with a default HTTP client.
+// NewHTTPFetcher creates a Fetcher with a 10-minute HTTP client timeout.
+// A timeout prevents builds hanging indefinitely on stalled downloads.
 func NewHTTPFetcher() *HTTPFetcher {
-	return &HTTPFetcher{Client: http.DefaultClient}
+	return &HTTPFetcher{Client: &http.Client{Timeout: 10 * time.Minute}}
 }
 
 // Download fetches a URL to dest, following redirects, and verifies the checksum.

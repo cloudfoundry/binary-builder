@@ -112,6 +112,7 @@ func (b *BuildOutput) AddOutput(filename string, data *OutData) error {
 }
 
 // Commit stages and commits the output file with the given message.
+// It skips the commit if there are no staged changes (safe-commit behaviour).
 func (b *BuildOutput) Commit(msg string) error {
 	if err := b.Runner.RunInDir(b.BaseDir, "git", "add", "."); err != nil {
 		return fmt.Errorf("running git add: %w", err)
@@ -124,8 +125,15 @@ func (b *BuildOutput) Commit(msg string) error {
 		return fmt.Errorf("setting git name: %w", err)
 	}
 
-	// safe_commit: only commit if there are staged changes.
-	return b.Runner.RunInDir(b.BaseDir, "git", "diff", "--cached", "--quiet", "||", "git", "commit", "-m", msg)
+	// safe_commit: only commit when there are staged changes.
+	// git diff --cached --quiet exits 0 when nothing is staged, 1 when changes exist.
+	// RunInDir returns an error on non-zero exit, so a nil error means nothing to commit.
+	if err := b.Runner.RunInDir(b.BaseDir, "git", "diff", "--cached", "--quiet"); err == nil {
+		// Exit 0: no staged changes — nothing to commit.
+		return nil
+	}
+
+	return b.Runner.RunInDir(b.BaseDir, "git", "commit", "-m", msg)
 }
 
 // DepMetadataOutput writes dep-metadata JSON files.

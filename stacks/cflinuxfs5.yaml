@@ -112,6 +112,9 @@ jruby:
   jdk_sha256: 41e0e474ad6f44226e9b52af81eaddcb8d300fa29606cffbc4b8a9e9846a3db3
   jdk_install_dir: /opt/java
 
+go:
+  bootstrap_url: https://go.dev/dl/go1.24.2.linux-amd64.tar.gz
+
 python:
   tcl_version: "8.6"
   use_force_yes: false

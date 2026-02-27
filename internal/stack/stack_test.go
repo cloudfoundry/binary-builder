@@ -213,6 +213,22 @@ func TestRubyBootstrapCflinuxfs4(t *testing.T) {
 	assert.Equal(t, "/opt/ruby", s.RubyBootstrap.InstallDir)
 }
 
+func TestGoBootstrapCflinuxfs4(t *testing.T) {
+	s, err := stack.Load(stacksDir(t), "cflinuxfs4")
+	require.NoError(t, err)
+
+	assert.Contains(t, s.Go.BootstrapURL, "go.dev/dl/")
+	assert.Contains(t, s.Go.BootstrapURL, "linux-amd64.tar.gz")
+}
+
+func TestGoBootstrapCflinuxfs5(t *testing.T) {
+	s, err := stack.Load(stacksDir(t), "cflinuxfs5")
+	require.NoError(t, err)
+
+	assert.Contains(t, s.Go.BootstrapURL, "go.dev/dl/")
+	assert.Contains(t, s.Go.BootstrapURL, "linux-amd64.tar.gz")
+}
+
 func TestPythonTCLVersion(t *testing.T) {
 	s, err := stack.Load(stacksDir(t), "cflinuxfs4")
 	require.NoError(t, err)

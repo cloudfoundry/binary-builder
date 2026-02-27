@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"slices"
 
 	"github.com/cloudfoundry/binary-builder/internal/archive"
 	"github.com/cloudfoundry/binary-builder/internal/fetch"
@@ -98,7 +99,7 @@ func buildNginxVariant(ctx context.Context, src *source.Input, run runner.Runner
 	}
 
 	// Build configure args. Base args include --prefix=/ (Ruby parity).
-	// Custom args are prepended before the base args (matching Ruby's options order).
+	// Custom args are appended after the base args (nginx configure flags are order-independent).
 	var customArgs []string
 	if isStatic {
 		// nginx-static: PIE flags, minimal modules (no dynamic modules).
@@ -118,7 +119,8 @@ func buildNginxVariant(ctx context.Context, src *source.Input, run runner.Runner
 			"--with-http_sub_module",
 		}
 	}
-	configureArgs := append(nginxBaseConfigureArgs, customArgs...)
+	// Use slices.Concat to avoid appending to the package-level slice's backing array.
+	configureArgs := slices.Concat(nginxBaseConfigureArgs, customArgs)
 
 	if err := run.RunInDir(srcDir, "./configure", configureArgs...); err != nil {
 		return fmt.Errorf("nginx: configure: %w", err)

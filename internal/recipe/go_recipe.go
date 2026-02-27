@@ -27,7 +27,7 @@ func (g *GoRecipe) Artifact() ArtifactMeta {
 	return ArtifactMeta{OS: "linux", Arch: "x64", Stack: ""}
 }
 
-func (g *GoRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, run runner.Runner, _ *output.OutData) error {
+func (g *GoRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, run runner.Runner, _ *output.OutData) error {
 	// Strip the `go` prefix from version (e.g. "go1.24.2" → "1.24.2").
 	version := strings.TrimPrefix(src.Version, "go")
 
@@ -54,13 +54,12 @@ func (g *GoRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input,
 
 	// Download and extract the bootstrap Go binary.
 	// Match the Ruby go.rb recipe which uses go1.24.2 as bootstrap.
-	bootstrapURL := "https://go.dev/dl/go1.24.2.linux-amd64.tar.gz"
 	bootstrapTarball := "/tmp/go-bootstrap.tar.gz"
 
 	if err := run.Run("mkdir", "-p", bootstrapDir); err != nil {
 		return err
 	}
-	if err := run.Run("wget", "-q", "-O", bootstrapTarball, bootstrapURL); err != nil {
+	if err := run.Run("wget", "-q", "-O", bootstrapTarball, s.Go.BootstrapURL); err != nil {
 		return fmt.Errorf("go: downloading bootstrap: %w", err)
 	}
 	if err := run.Run("tar", "xzf", bootstrapTarball, "-C", bootstrapDir, "--strip-components=1"); err != nil {

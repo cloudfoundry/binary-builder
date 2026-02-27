@@ -40,10 +40,17 @@ func (y *YarnRecipe) Artifact() ArtifactMeta {
 	return ArtifactMeta{OS: "linux", Arch: "noarch", Stack: ""}
 }
 
-func (y *YarnRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, r runner.Runner, _ *output.OutData) error {
-	src.Version = strings.TrimPrefix(src.Version, "v")
+func (y *YarnRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, r runner.Runner, outData *output.OutData) error {
+	// Yarn versions may carry a "v" prefix (e.g. "v1.22.19"). Strip it so the
+	// artifact filename and outData.Version are consistent without the prefix.
+	// Do NOT mutate src.Version directly — it was already copied into outData
+	// before Build was called, so mutating src would leave outData.Version with
+	// the prefix while the file on disk would not, causing findIntermediateArtifact
+	// to fail to match the glob.
+	version := strings.TrimPrefix(src.Version, "v")
+	outData.Version = version
 
-	dest := filepath.Join(os.TempDir(), fmt.Sprintf("yarn-%s.tgz", src.Version))
+	dest := filepath.Join(os.TempDir(), fmt.Sprintf("yarn-%s.tgz", version))
 	if err := y.Fetcher.Download(ctx, src.URL, dest, src.PrimaryChecksum()); err != nil {
 		return fmt.Errorf("downloading yarn: %w", err)
 	}

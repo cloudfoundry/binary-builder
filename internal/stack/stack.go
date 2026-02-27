@@ -46,6 +46,13 @@ type JRubyConfig struct {
 	JDKInstallDir string `yaml:"jdk_install_dir"`
 }
 
+// GoConfig holds Go-specific build settings.
+type GoConfig struct {
+	// BootstrapURL is the URL of the pre-built Go binary used to bootstrap
+	// compilation from source. Update when Go raises its minimum bootstrap version.
+	BootstrapURL string `yaml:"bootstrap_url"`
+}
+
 // PythonConfig holds Python-specific build settings.
 type PythonConfig struct {
 	TCLVersion  string `yaml:"tcl_version"`
@@ -71,6 +78,7 @@ type Stack struct {
 	AptPackages    map[string][]string `yaml:"apt_packages"`
 	PHPSymlinks    []Symlink           `yaml:"php_symlinks"`
 	JRuby          JRubyConfig         `yaml:"jruby"`
+	Go             GoConfig            `yaml:"go"`
 	Python         PythonConfig        `yaml:"python"`
 }
 

@@ -17,9 +17,8 @@ import (
 )
 
 // Pack creates a gzipped tarball at outputPath from the given directory.
-// pathName is the top-level directory name inside the tarball ("" for flat).
-// globs are file patterns relative to sourceDir to include.
-func Pack(r runner.Runner, outputPath, sourceDir, pathName string, globs []string) error {
+// pathName is the top-level directory name inside the tarball ("" for flat pack of dir contents).
+func Pack(r runner.Runner, outputPath, sourceDir, pathName string) error {
 	args := []string{"czf", outputPath}
 	if pathName != "" {
 		args = append(args, "-C", sourceDir, pathName)

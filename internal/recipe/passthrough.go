@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/cloudfoundry/binary-builder/internal/fetch"
+	"github.com/cloudfoundry/binary-builder/internal/fileutil"
 	"github.com/cloudfoundry/binary-builder/internal/output"
 	"github.com/cloudfoundry/binary-builder/internal/runner"
 	"github.com/cloudfoundry/binary-builder/internal/source"
@@ -50,7 +51,7 @@ func (p *PassthroughRecipe) Build(ctx context.Context, _ *stack.Stack, src *sour
 	// patterns like "tomcat-9.0.85*.tar.gz".
 	ext := archiveExt(filename)
 	intermediateName := fmt.Sprintf("%s-%s%s", p.DepName, src.Version, ext)
-	if err := os.Rename(localPath, intermediateName); err != nil {
+	if err := fileutil.MoveFile(localPath, intermediateName); err != nil {
 		return fmt.Errorf("staging artifact %s: %w", p.DepName, err)
 	}
 

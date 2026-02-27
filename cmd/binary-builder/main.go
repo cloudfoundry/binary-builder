@@ -17,16 +17,14 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
-	"syscall"
 
 	"github.com/cloudfoundry/binary-builder/internal/artifact"
 	"github.com/cloudfoundry/binary-builder/internal/fetch"
+	"github.com/cloudfoundry/binary-builder/internal/fileutil"
 	"github.com/cloudfoundry/binary-builder/internal/output"
 	"github.com/cloudfoundry/binary-builder/internal/recipe"
 	"github.com/cloudfoundry/binary-builder/internal/runner"
@@ -194,7 +192,7 @@ func handleArtifact(src *source.Input, rec recipe.Recipe, s *stack.Stack, artifa
 
 	// Move artifact into artifacts dir. Use cross-device-safe move (copy+delete)
 	// because the workdir and artifactsDir may be on different filesystems.
-	if err := moveFile(intermediatePath, finalPath); err != nil {
+	if err := fileutil.MoveFile(intermediatePath, finalPath); err != nil {
 		return fmt.Errorf("moving artifact to %s: %w", finalPath, err)
 	}
 
@@ -291,35 +289,4 @@ func findIntermediateArtifact(name, version string) (string, error) {
 	}
 
 	return "", fmt.Errorf("no intermediate artifact file found for %s %s", name, version)
-}
-
-// moveFile moves src to dst. It tries os.Rename first; if that fails with
-// a cross-device link error (EXDEV) it falls back to copy-then-delete.
-func moveFile(src, dst string) error {
-	if err := os.Rename(src, dst); err == nil {
-		return nil
-	} else if !errors.Is(err, syscall.EXDEV) {
-		return err
-	}
-
-	// Cross-device: copy then delete.
-	in, err := os.Open(src)
-	if err != nil {
-		return fmt.Errorf("opening source: %w", err)
-	}
-	defer in.Close()
-
-	out, err := os.Create(dst)
-	if err != nil {
-		return fmt.Errorf("creating destination: %w", err)
-	}
-	defer out.Close()
-
-	if _, err := io.Copy(out, in); err != nil {
-		return fmt.Errorf("copying: %w", err)
-	}
-	if err := out.Close(); err != nil {
-		return fmt.Errorf("closing destination: %w", err)
-	}
-	return os.Remove(src)
 }

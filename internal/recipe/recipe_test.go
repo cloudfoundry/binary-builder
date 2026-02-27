@@ -338,21 +338,18 @@ func TestYarnRecipeStripsVPrefix(t *testing.T) {
 	f := newFakeFetcher()
 	fakeRunner := runner.NewFakeRunner()
 
-	// YarnRecipe calls archive.StripTopLevelDir which tries to read the actual file.
-	// We only want to verify the version stripping and download call, so we
-	// intercept at the fetch level and accept that StripTopLevelDir will fail
-	// (since no real file exists). FakeFetcher.Download creates the file at dest.
-
 	src := newInput("yarn", "v1.22.22", "https://example.com/yarn.tgz")
 	r := &recipe.YarnRecipe{Fetcher: f}
-	// Build will fail at StripTopLevelDir (fake archive), but we can check the
-	// download call happened with the stripped version in src.
-	_ = r.Build(context.Background(), newStack(t), src, fakeRunner, &output.OutData{})
+	outData := &output.OutData{}
+	_ = r.Build(context.Background(), newStack(t), src, fakeRunner, outData)
 
 	require.Len(t, f.DownloadedURLs, 1)
+	// File on disk uses the stripped version.
 	assert.Equal(t, filepath.Join(os.TempDir(), "yarn-1.22.22.tgz"), f.DownloadedURLs[0].Dest)
-	// Version should have been stripped to "1.22.22".
-	assert.Equal(t, "1.22.22", src.Version)
+	// outData.Version must be the stripped version so findIntermediateArtifact matches.
+	assert.Equal(t, "1.22.22", outData.Version)
+	// src.Version must NOT be mutated — callers after Build rely on the original value.
+	assert.Equal(t, "v1.22.22", src.Version)
 }
 
 func TestYarnRecipeNameAndArtifact(t *testing.T) {
