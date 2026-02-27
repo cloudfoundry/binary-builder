@@ -48,9 +48,9 @@ type OutData struct {
 // SHA512 uses a plain string so an empty value is preserved as "" (Ruby outputs
 // the raw depwatcher value which may be an empty string for non-applicable fields).
 type OutDataSource struct {
-	URL    string  `json:"url,omitempty"`
+	URL    string  `json:"url"`
 	MD5    *string `json:"md5"`
-	SHA256 string  `json:"sha256,omitempty"`
+	SHA256 string  `json:"sha256"`
 	SHA512 string  `json:"sha512"`
 	SHA1   *string `json:"sha1"`
 }

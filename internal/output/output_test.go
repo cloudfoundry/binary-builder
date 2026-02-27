@@ -206,10 +206,11 @@ func TestOutDataOmitsEmptyFields(t *testing.T) {
 	jsonData, err := json.Marshal(data)
 	require.NoError(t, err)
 
-	// Empty fields should be omitted.
+	// Optional top-level fields should be omitted when empty.
 	assert.NotContains(t, string(jsonData), "git_commit_sha")
 	assert.NotContains(t, string(jsonData), "sub_dependencies")
-	assert.NotContains(t, string(jsonData), `"sha256":""`)
+	// sha256 is always serialized (even as "") to match Ruby builder output.
+	assert.Contains(t, string(jsonData), `"sha256":""`)
 }
 
 func TestBuildOutputCommitWithStagedChanges(t *testing.T) {
