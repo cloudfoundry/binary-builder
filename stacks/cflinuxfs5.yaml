@@ -97,6 +97,10 @@ apt_packages:
     - libtool
     - libglib2.0-dev
     - libcairo2-dev
+  libunwind_build:
+    - autoconf
+    - automake
+    - libtool
 
 php_symlinks:
   - src: /usr/include/x86_64-linux-gnu/curl
@@ -108,8 +112,8 @@ php_symlinks:
   # libldap_r removed — dropped in OpenLDAP 2.6 (Ubuntu 24.04)
 
 jruby:
-  jdk_url: https://java-buildpack.cloudfoundry.org/openjdk-jdk/jammy/x86_64/bellsoft-jdk8u442+7-linux-amd64.tar.gz
-  jdk_sha256: 41e0e474ad6f44226e9b52af81eaddcb8d300fa29606cffbc4b8a9e9846a3db3
+  jdk_url: https://java-buildpack.cloudfoundry.org/openjdk-jdk/jammy/x86_64/bellsoft-jdk8u452%2B11-linux-amd64.tar.gz
+  jdk_sha256: d87d70d286150e662f12650ed22d91f1663c267b27ab3b0775eed1416ef3bd12
   jdk_install_dir: /opt/java
 
 go:
