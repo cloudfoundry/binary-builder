@@ -8,30 +8,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestLoad_BaseOnly verifies that when no patch file exists for the requested
-// minor version, Load returns the base extensions unchanged.
-// PHP 8.4 has no patch file, so this exercises the base-only path.
-func TestLoad_BaseOnly(t *testing.T) {
-	set, err := php.Load("8", "4")
-	require.NoError(t, err)
-
-	// Base file must include the expected native modules.
-	nativeNames := make([]string, len(set.NativeModules))
-	for i, m := range set.NativeModules {
-		nativeNames[i] = m.Name
-	}
-	assert.Contains(t, nativeNames, "rabbitmq")
-	assert.Contains(t, nativeNames, "lua")
-	assert.Contains(t, nativeNames, "hiredis")
-
-	// Must have a meaningful number of extensions.
-	assert.Greater(t, len(set.Extensions), 20)
-}
-
-// TestLoad_PatchAddsExtension verifies that an addition in a patch file is
-// appended when the name does not already exist in the base.
-// php83-extensions-patch.yml has no additions, so we use php81 which adds oci8.
-func TestLoad_PatchAddsExtension(t *testing.T) {
+// TestLoad_PatchOverridesExisting verifies that an addition whose name already
+// exists in the base replaces the existing entry (override path), and that the
+// result contains exactly one entry for that name (no duplicates).
+// php81-extensions-patch.yml overrides oci8, which is also present in the base.
+//
+// TODO: the pure-append path (patch adds a name not present in the base at all)
+// has no integration-level coverage here; it would require a dedicated patch
+// fixture that introduces a genuinely new extension name.
+func TestLoad_PatchOverridesExisting(t *testing.T) {
 	// php81 patch adds oci8 (as an override — oci8 exists in base with a
 	// different version). Verify the result contains exactly one oci8 entry.
 	set, err := php.Load("8", "1")

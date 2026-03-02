@@ -30,6 +30,9 @@
 //
 //   - Base files:  php{major}-base-extensions.yml   (e.g. php8-base-extensions.yml)
 //   - Patch files: php{major}{minor}-extensions-patch.yml (e.g. php84-extensions-patch.yml)
+//
+// Important: only .yml files are embedded (the glob is assets/*.yml). A file with a
+// .yaml extension would be silently ignored.
 package php
 
 import (
@@ -48,6 +51,11 @@ var (
 	// baseFileRE matches e.g. "assets/php8-base-extensions.yml" and captures the major version ("8").
 	baseFileRE = regexp.MustCompile(`^assets/php(\d+)-base-extensions\.yml$`)
 	// patchFileRE matches e.g. "assets/php83-extensions-patch.yml" and captures major+minor ("83").
+	// The \d{2,} quantifier is intentional: patch filenames must encode both the major AND minor
+	// digit together (e.g. "php81", "php90"), never a bare major digit. This prevents a file named
+	// "php8-extensions-patch.yml" from matching (that would be a base file), and ensures a future
+	// PHP 9 patch is named "php90-extensions-patch.yml", not "php9-extensions-patch.yml" (which
+	// would be silently ignored).
 	patchFileRE = regexp.MustCompile(`^assets/php(\d{2,})-extensions-patch\.yml$`)
 )
 
