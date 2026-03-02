@@ -1,13 +1,90 @@
 // Package php provides extension loading and recipe implementations for PHP builds.
+//
+// # Extension data files
+//
+// The YAML files that define which PHP extensions and native modules are built
+// live in assets/ alongside the Go source:
+//
+//	internal/php/assets/
+//	  php8-base-extensions.yml      — full list for all PHP 8.x (native modules + PECL extensions)
+//	  php81-extensions-patch.yml    — overrides/exclusions specific to PHP 8.1.x
+//	  php82-extensions-patch.yml    — overrides/exclusions specific to PHP 8.2.x
+//	  php83-extensions-patch.yml    — overrides/exclusions specific to PHP 8.3.x
+//
+// # Adding a new PHP minor version (e.g. 8.4)
+//
+//  1. Create assets/php84-extensions-patch.yml with any additions or exclusions
+//     relative to the PHP 8 base (an empty patch is valid: "---\nextensions:\n").
+//
+// No code changes are required — the file is discovered automatically via the
+// embedded FS glob.
+//
+// # Adding a new PHP major version (e.g. 9)
+//
+//  1. Create assets/php9-base-extensions.yml with the full extension list for PHP 9.x.
+//  2. Create a patch file for each shipped minor version (e.g. assets/php90-extensions-patch.yml).
+//
+// Again, no code changes are required.
+//
+// # File naming convention (drives auto-discovery)
+//
+//   - Base files:  php{major}-base-extensions.yml   (e.g. php8-base-extensions.yml)
+//   - Patch files: php{major}{minor}-extensions-patch.yml (e.g. php84-extensions-patch.yml)
 package php
 
 import (
+	"embed"
 	"fmt"
-	"os"
-	"path/filepath"
+	"regexp"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
+
+//go:embed assets/*.yml
+var assetsFS embed.FS
+
+var (
+	// baseFileRE matches e.g. "assets/php8-base-extensions.yml" and captures the major version ("8").
+	baseFileRE = regexp.MustCompile(`^assets/php(\d+)-base-extensions\.yml$`)
+	// patchFileRE matches e.g. "assets/php83-extensions-patch.yml" and captures major+minor ("83").
+	patchFileRE = regexp.MustCompile(`^assets/php(\d{2,})-extensions-patch\.yml$`)
+)
+
+// embeddedBases maps PHP major version (e.g. "8") → base YAML bytes.
+// embeddedPatches maps PHP major+minor (e.g. "83") → patch YAML bytes.
+// Both are populated once at init() from the embedded FS.
+var (
+	embeddedBases   map[string][]byte
+	embeddedPatches map[string][]byte
+)
+
+func init() {
+	embeddedBases = make(map[string][]byte)
+	embeddedPatches = make(map[string][]byte)
+
+	entries, err := assetsFS.ReadDir("assets")
+	if err != nil {
+		panic("php/extensions: cannot read embedded assets: " + err.Error())
+	}
+
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".yml") {
+			continue
+		}
+		path := "assets/" + e.Name()
+		data, err := assetsFS.ReadFile(path)
+		if err != nil {
+			panic("php/extensions: cannot read embedded file " + path + ": " + err.Error())
+		}
+
+		if m := baseFileRE.FindStringSubmatch(path); m != nil {
+			embeddedBases[m[1]] = data
+		} else if m := patchFileRE.FindStringSubmatch(path); m != nil {
+			embeddedPatches[m[1]] = data
+		}
+	}
+}
 
 // Extension represents a single PHP extension or native module.
 type Extension struct {
@@ -34,43 +111,36 @@ type patchCategory struct {
 	Exclusions []Extension `yaml:"exclusions"`
 }
 
-// Load reads the base YAML for the given PHP major version (e.g. "8"), applies
-// the patch YAML for the given major+minor (e.g. "8"+"3"), and returns the
-// merged ExtensionSet.
+// Load returns the ExtensionSet for the given PHP major+minor version by reading
+// the embedded YAML data compiled into this package.
 //
-// Base file:  {extensionsDir}/php{major}-base-extensions.yml
-// Patch file: {extensionsDir}/php{major}{minor}-extensions-patch.yml
+// It loads the base file for the major version (e.g. "8" → php8-base-extensions.yml),
+// then applies the patch file for the specific minor version if one exists
+// (e.g. "8"+"2" → php82-extensions-patch.yml).
 //
 // Merge rules:
 //   - For each addition: if name already exists → replace; otherwise → append.
 //   - For each exclusion: remove by name.
-func Load(extensionsDir, phpMajor, phpMinor string) (*ExtensionSet, error) {
-	basePath := filepath.Join(extensionsDir, fmt.Sprintf("php%s-base-extensions.yml", phpMajor))
-
-	data, err := os.ReadFile(basePath)
-	if err != nil {
-		return nil, fmt.Errorf("php/extensions: reading base file %s: %w", basePath, err)
+func Load(phpMajor, phpMinor string) (*ExtensionSet, error) {
+	baseData, ok := embeddedBases[phpMajor]
+	if !ok {
+		return nil, fmt.Errorf("php/extensions: no base extensions file for PHP major version %q", phpMajor)
 	}
 
 	var set ExtensionSet
-	if err := yaml.Unmarshal(data, &set); err != nil {
-		return nil, fmt.Errorf("php/extensions: parsing base file %s: %w", basePath, err)
+	if err := yaml.Unmarshal(baseData, &set); err != nil {
+		return nil, fmt.Errorf("php/extensions: parsing base file for PHP %s: %w", phpMajor, err)
 	}
 
-	patchPath := filepath.Join(extensionsDir, fmt.Sprintf("php%s%s-extensions-patch.yml", phpMajor, phpMinor))
-
-	patchData, err := os.ReadFile(patchPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			// No patch file — return base as-is.
-			return &set, nil
-		}
-		return nil, fmt.Errorf("php/extensions: reading patch file %s: %w", patchPath, err)
+	patchData, ok := embeddedPatches[phpMajor+phpMinor]
+	if !ok {
+		// No patch for this minor version — return base as-is.
+		return &set, nil
 	}
 
 	var patch patchYAML
 	if err := yaml.Unmarshal(patchData, &patch); err != nil {
-		return nil, fmt.Errorf("php/extensions: parsing patch file %s: %w", patchPath, err)
+		return nil, fmt.Errorf("php/extensions: parsing patch file for PHP %s.%s: %w", phpMajor, phpMinor, err)
 	}
 
 	applyPatch(&set.NativeModules, patch.NativeModules)

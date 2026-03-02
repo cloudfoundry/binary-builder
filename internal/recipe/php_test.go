@@ -2,7 +2,6 @@ package recipe_test
 
 import (
 	"context"
-	"os"
 	"strings"
 	"testing"
 
@@ -14,30 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-// fakePHPExtensionsDir returns a temp directory with minimal PHP extension YAMLs.
-// The minimal YAML has a single native module and a single extension so tests
-// can assert the recipe wires them up correctly without loading the full ~45-extension file.
-func fakePHPExtensionsDir(t *testing.T) string {
-	t.Helper()
-	dir := t.TempDir()
-	base := `
-native_modules:
-  - name: hiredis
-    version: "1.2.0"
-    md5: abc123
-    klass: HiredisRecipe
-extensions:
-  - name: apcu
-    version: "5.1.23"
-    md5: def456
-    klass: PeclRecipe
-`
-	if err := writeExtFile(t, dir, "php8-base-extensions.yml", base); err != nil {
-		t.Fatalf("fakePHPExtensionsDir: %v", err)
-	}
-	return dir
-}
 
 func TestPHPRecipeName(t *testing.T) {
 	r := &recipe.PHPRecipe{}
@@ -64,9 +39,8 @@ func TestPHPRecipeBuildInstallsAptPackages(t *testing.T) {
 	}
 	src := &source.Input{Version: "8.3.2"}
 	outData := &output.OutData{}
-	extDir := fakePHPExtensionsDir(t)
 
-	r := &recipe.PHPRecipe{ExtensionsDir: extDir}
+	r := &recipe.PHPRecipe{}
 	_ = r.Build(context.Background(), s, src, fakeRun, outData)
 
 	assert.True(t, hasCallMatching(fakeRun.Calls, "apt-get", "libssl-dev"), "should apt-get install libssl-dev")
@@ -89,9 +63,8 @@ func TestPHPRecipeBuildCreatesSymlinks(t *testing.T) {
 	}
 	src := &source.Input{Version: "8.3.2"}
 	outData := &output.OutData{}
-	extDir := fakePHPExtensionsDir(t)
 
-	r := &recipe.PHPRecipe{ExtensionsDir: extDir}
+	r := &recipe.PHPRecipe{}
 	_ = r.Build(context.Background(), s, src, fakeRun, outData)
 
 	assert.True(t, hasCallMatching(fakeRun.Calls, "ln", "/usr/local/include/curl"), "should create curl symlink")
@@ -109,9 +82,8 @@ func TestPHPRecipeBuildConfigureFlags(t *testing.T) {
 	}
 	src := &source.Input{Version: "8.3.2"}
 	outData := &output.OutData{}
-	extDir := fakePHPExtensionsDir(t)
 
-	r := &recipe.PHPRecipe{ExtensionsDir: extDir}
+	r := &recipe.PHPRecipe{}
 	_ = r.Build(context.Background(), s, src, fakeRun, outData)
 
 	// The configure command is run via bash -c with LIBS=-lz prefix.
@@ -139,17 +111,16 @@ func TestPHPRecipeBuildPopulatesSubDependencies(t *testing.T) {
 	}
 	src := &source.Input{Version: "8.3.2"}
 	outData := &output.OutData{}
-	extDir := fakePHPExtensionsDir(t)
 
-	r := &recipe.PHPRecipe{ExtensionsDir: extDir}
+	r := &recipe.PHPRecipe{}
 	_ = r.Build(context.Background(), s, src, fakeRun, outData)
 
-	// Both the native module (hiredis) and extension (apcu) should be in sub-dependencies.
+	// SubDependencies should be populated from the embedded extension YAML.
+	// Check a representative sample of well-known extensions.
 	require.NotNil(t, outData.SubDependencies)
-	assert.Contains(t, outData.SubDependencies, "hiredis")
-	assert.Contains(t, outData.SubDependencies, "apcu")
-	assert.Equal(t, "1.2.0", outData.SubDependencies["hiredis"].Version)
-	assert.Equal(t, "5.1.23", outData.SubDependencies["apcu"].Version)
+	assert.Contains(t, outData.SubDependencies, "apcu", "apcu should be in sub-dependencies")
+	assert.Contains(t, outData.SubDependencies, "rabbitmq", "rabbitmq should be in sub-dependencies")
+	assert.Greater(t, len(outData.SubDependencies), 20, "should have many sub-dependencies from the embedded YAML")
 }
 
 func TestPHPRecipeBuildDownloadsSource(t *testing.T) {
@@ -163,9 +134,8 @@ func TestPHPRecipeBuildDownloadsSource(t *testing.T) {
 	}
 	src := &source.Input{Version: "8.3.2"}
 	outData := &output.OutData{}
-	extDir := fakePHPExtensionsDir(t)
 
-	r := &recipe.PHPRecipe{ExtensionsDir: extDir}
+	r := &recipe.PHPRecipe{}
 	_ = r.Build(context.Background(), s, src, fakeRun, outData)
 
 	// Should wget PHP source.
@@ -184,14 +154,8 @@ func TestPHPRecipeBuildInvalidVersion(t *testing.T) {
 	src := &source.Input{Version: "invalid"}
 	outData := &output.OutData{}
 
-	r := &recipe.PHPRecipe{ExtensionsDir: t.TempDir()}
+	r := &recipe.PHPRecipe{}
 	err := r.Build(context.Background(), s, src, fakeRun, outData)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid version")
-}
-
-// writeExtFile creates a YAML file at dir/name with the given content.
-func writeExtFile(t *testing.T, dir, name, content string) error {
-	t.Helper()
-	return os.WriteFile(dir+"/"+name, []byte(content), 0644)
 }

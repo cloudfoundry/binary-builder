@@ -7,7 +7,6 @@
 //	  --stack cflinuxfs5 \
 //	  --source-file source/data.json \
 //	  --stacks-dir binary-builder/stacks \
-//	  --php-extensions-dir binary-builder/php_extensions \
 //	  --artifacts-dir artifacts \
 //	  --builds-dir builds-artifacts \
 //	  --dep-metadata-dir dep-metadata \
@@ -49,7 +48,6 @@ func run() error {
 	stackName := fs.String("stack", "", "Stack name (e.g. cflinuxfs4, cflinuxfs5) [required]")
 	sourceFile := fs.String("source-file", "source/data.json", "Path to source/data.json")
 	stacksDir := fs.String("stacks-dir", "binary-builder/stacks", "Directory containing stack YAML files")
-	phpExtensionsDir := fs.String("php-extensions-dir", "binary-builder/php_extensions", "Directory containing PHP extension YAML files")
 	artifactsDir := fs.String("artifacts-dir", "artifacts", "Output directory for built artifacts")
 	buildsDir := fs.String("builds-dir", "builds-artifacts", "Output directory for builds-artifacts JSON")
 	depMetadataDir := fs.String("dep-metadata-dir", "dep-metadata", "Output directory for dep-metadata JSON")
@@ -76,7 +74,7 @@ func run() error {
 	}
 
 	// Build recipe registry.
-	reg := buildRegistry(*phpExtensionsDir)
+	reg := buildRegistry()
 
 	// Look up the recipe.
 	rec, err := reg.Get(src.Name)
@@ -204,7 +202,7 @@ func handleArtifact(src *source.Input, rec recipe.Recipe, s *stack.Stack, artifa
 }
 
 // buildRegistry constructs and populates the full recipe registry.
-func buildRegistry(phpExtensionsDir string) *recipe.Registry {
+func buildRegistry() *recipe.Registry {
 	f := fetch.NewHTTPFetcher()
 	reg := recipe.NewRegistry()
 
@@ -228,7 +226,7 @@ func buildRegistry(phpExtensionsDir string) *recipe.Registry {
 	reg.Register(&recipe.HWCRecipe{Fetcher: f})
 
 	// PHP recipe.
-	reg.Register(&recipe.PHPRecipe{Fetcher: f, ExtensionsDir: phpExtensionsDir})
+	reg.Register(&recipe.PHPRecipe{Fetcher: f})
 
 	// Simple / repack recipes.
 	reg.Register(&recipe.PipRecipe{Fetcher: f})

@@ -64,9 +64,11 @@ var phpConfigureFlags = []string{
 }
 
 // PHPRecipe builds PHP and all of its extensions.
+// Extension data (which PECL extensions and native modules to build) is embedded
+// directly in the internal/php package — see internal/php/extensions.go and the
+// YAML files alongside it.
 type PHPRecipe struct {
-	Fetcher       fetch.Fetcher
-	ExtensionsDir string // path to php_extensions/ directory; defaults to "php_extensions"
+	Fetcher fetch.Fetcher
 }
 
 func (p *PHPRecipe) Name() string { return "php" }
@@ -76,11 +78,6 @@ func (p *PHPRecipe) Artifact() ArtifactMeta {
 }
 
 func (p *PHPRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, run runner.Runner, outData *output.OutData) error {
-	extDir := p.ExtensionsDir
-	if extDir == "" {
-		extDir = "php_extensions"
-	}
-
 	// Parse version: "8.3.2" → major="8", minor="3"
 	parts := strings.SplitN(src.Version, ".", 3)
 	if len(parts) < 2 {
@@ -89,8 +86,8 @@ func (p *PHPRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input
 	phpMajor := parts[0]
 	phpMinor := parts[1]
 
-	// Load extension set (base + patch).
-	extSet, err := php.Load(extDir, phpMajor, phpMinor)
+	// Load extension set (base + patch) from embedded YAML data in internal/php/.
+	extSet, err := php.Load(phpMajor, phpMinor)
 	if err != nil {
 		return fmt.Errorf("php: loading extensions: %w", err)
 	}

@@ -42,16 +42,22 @@ artifact (a `.tgz` or `.zip`) to the current working directory.
 
 ### PHP
 
-PHP requires an extensions YAML file:
+PHP is built the same way as any other dependency — no extra flags needed.
+Extension and native module definitions are embedded directly in the binary
+(see `internal/php/assets/`):
 
 ```
 binary-builder build \
   --stack cflinuxfs4 \
   --name php \
   --version 8.1.32 \
-  --sha256 <checksum> \
-  --php-extensions-file ./php_extensions/php81-extensions.yml
+  --sha256 <checksum>
 ```
+
+To add support for a new PHP minor version, create
+`internal/php/assets/php<major><minor>-extensions-patch.yml` with any
+additions or exclusions relative to the major-version base file. No code
+changes are required — the file is discovered automatically at build time.
 
 ## Building
 
@@ -68,8 +74,14 @@ make unit-test
 # Unit tests with race detector
 make unit-test-race
 
-# Parity test for a single dep (requires Docker + network)
-make parity-test DEP=ruby VERSION=3.3.6 SHA256=<checksum>
+# Parity test for a single dep from the matrix (requires Docker + network)
+# VERSION is not an argument — each dep runs at the version pinned in run-all.sh.
+make parity-test DEP=ruby
+make parity-test DEP=php STACK=cflinuxfs4
+
+# To test a specific version not in the matrix, call compare-builds.sh directly
+# with a custom data.json:
+test/parity/compare-builds.sh --dep php --data-json /tmp/php-8.3.0-data.json --stack cflinuxfs4
 
 # Parity test for all deps
 make parity-test-all
@@ -79,11 +91,10 @@ make parity-test-all
 
 - `cmd/binary-builder/` — CLI entry point
 - `internal/recipe/` — per-dependency build recipes
-- `internal/php/` — PHP extension build logic
+- `internal/php/` — PHP extension build logic and embedded extension data (`assets/`)
 - `internal/archive/` — tarball / zip manipulation helpers
 - `internal/runner/` — subprocess execution helpers
 - `stacks/` — per-stack YAML configuration (versions, URLs, paths)
-- `php_extensions/` — PHP extension lists per PHP minor version
 - `test/parity/` — Parity test scripts (compare Ruby vs Go builder outputs)
 
 ## Parity Tests
@@ -144,7 +155,6 @@ binary-builder build \
   --stack <stack> \
   --source-file /tmp/data.json \
   --stacks-dir /binary-builder/stacks \
-  --php-extensions-dir /binary-builder/php_extensions \
   --artifacts-dir /out/artifact \
   --builds-dir /out/builds \
   --dep-metadata-dir /out/dep-metadata \

@@ -231,7 +231,6 @@ run_go_builder() {
         --stack ${STACK} \
         --source-file /tmp/data.json \
         --stacks-dir /binary-builder/stacks \
-        --php-extensions-dir /binary-builder/php_extensions \
         --artifacts-dir /out/artifact \
         --builds-dir /out/builds \
         --dep-metadata-dir /out/dep-metadata \

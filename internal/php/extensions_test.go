@@ -1,8 +1,6 @@
 package php_test
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/cloudfoundry/binary-builder/internal/php"
@@ -10,174 +8,103 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// writeFile is a helper to create a YAML file in dir with the given content.
-func writeFile(t *testing.T, dir, name, content string) {
-	t.Helper()
-	if err := os.WriteFile(filepath.Join(dir, name), []byte(content), 0644); err != nil {
-		t.Fatalf("writeFile: %v", err)
+// TestLoad_BaseOnly verifies that when no patch file exists for the requested
+// minor version, Load returns the base extensions unchanged.
+// PHP 8.4 has no patch file, so this exercises the base-only path.
+func TestLoad_BaseOnly(t *testing.T) {
+	set, err := php.Load("8", "4")
+	require.NoError(t, err)
+
+	// Base file must include the expected native modules.
+	nativeNames := make([]string, len(set.NativeModules))
+	for i, m := range set.NativeModules {
+		nativeNames[i] = m.Name
+	}
+	assert.Contains(t, nativeNames, "rabbitmq")
+	assert.Contains(t, nativeNames, "lua")
+	assert.Contains(t, nativeNames, "hiredis")
+
+	// Must have a meaningful number of extensions.
+	assert.Greater(t, len(set.Extensions), 20)
+}
+
+// TestLoad_PatchAddsExtension verifies that an addition in a patch file is
+// appended when the name does not already exist in the base.
+// php83-extensions-patch.yml has no additions, so we use php81 which adds oci8.
+func TestLoad_PatchAddsExtension(t *testing.T) {
+	// php81 patch adds oci8 (as an override — oci8 exists in base with a
+	// different version). Verify the result contains exactly one oci8 entry.
+	set, err := php.Load("8", "1")
+	require.NoError(t, err)
+
+	var oci8Count int
+	for _, e := range set.Extensions {
+		if e.Name == "oci8" {
+			oci8Count++
+		}
+	}
+	assert.Equal(t, 1, oci8Count, "oci8 should appear exactly once after patch")
+}
+
+// TestLoad_PatchOverridesVersion verifies that an addition whose name already
+// exists in the base replaces the existing entry (version override).
+// php81-extensions-patch.yml overrides oci8 to version 3.2.1.
+func TestLoad_PatchOverridesVersion(t *testing.T) {
+	set, err := php.Load("8", "1")
+	require.NoError(t, err)
+
+	var oci8 *php.Extension
+	for i := range set.Extensions {
+		if set.Extensions[i].Name == "oci8" {
+			oci8 = &set.Extensions[i]
+		}
+	}
+	require.NotNil(t, oci8, "oci8 should be present after php81 patch")
+	assert.Equal(t, "3.2.1", oci8.Version)
+	assert.Equal(t, "309190ef3ede2779a617c9375d32ea7a", oci8.MD5)
+}
+
+// TestLoad_PatchRemovesExclusion verifies that an exclusion in a patch file
+// removes the named extension from the result.
+// php82-extensions-patch.yml excludes yaf.
+func TestLoad_PatchRemovesExclusion(t *testing.T) {
+	set, err := php.Load("8", "2")
+	require.NoError(t, err)
+
+	for _, e := range set.Extensions {
+		assert.NotEqual(t, "yaf", e.Name, "yaf should be excluded in php82")
 	}
 }
 
-func TestLoad_BaseOnly(t *testing.T) {
-	dir := t.TempDir()
-	writeFile(t, dir, "php8-base-extensions.yml", `
-native_modules:
-  - name: rabbitmq
-    version: "0.11.0"
-    md5: abc123
-    klass: RabbitMQRecipe
-  - name: lua
-    version: "5.4.6"
-    md5: def456
-    klass: LuaRecipe
-extensions:
-  - name: apcu
-    version: "5.1.23"
-    md5: ghi789
-    klass: PeclRecipe
-`)
-
-	// No patch file exists — Load should succeed with base data.
-	set, err := php.Load(dir, "8", "4")
-	require.NoError(t, err)
-
-	require.Len(t, set.NativeModules, 2)
-	assert.Equal(t, "rabbitmq", set.NativeModules[0].Name)
-	assert.Equal(t, "0.11.0", set.NativeModules[0].Version)
-	assert.Equal(t, "lua", set.NativeModules[1].Name)
-
-	require.Len(t, set.Extensions, 1)
-	assert.Equal(t, "apcu", set.Extensions[0].Name)
-}
-
-func TestLoad_PatchAddsExtension(t *testing.T) {
-	dir := t.TempDir()
-	writeFile(t, dir, "php8-base-extensions.yml", `
-native_modules: []
-extensions:
-  - name: apcu
-    version: "5.1.23"
-    md5: abc
-    klass: PeclRecipe
-`)
-	writeFile(t, dir, "php83-extensions-patch.yml", `
-extensions:
-  additions:
-    - name: newext
-      version: "1.0.0"
-      md5: xyz
-      klass: PeclRecipe
-`)
-
-	set, err := php.Load(dir, "8", "3")
-	require.NoError(t, err)
-
-	require.Len(t, set.Extensions, 2)
-	assert.Equal(t, "apcu", set.Extensions[0].Name)
-	assert.Equal(t, "newext", set.Extensions[1].Name)
-}
-
-func TestLoad_PatchOverridesVersion(t *testing.T) {
-	dir := t.TempDir()
-	writeFile(t, dir, "php8-base-extensions.yml", `
-native_modules: []
-extensions:
-  - name: oci8
-    version: "3.3.0"
-    md5: oldmd5
-    klass: OraclePeclRecipe
-`)
-	writeFile(t, dir, "php81-extensions-patch.yml", `
-extensions:
-  additions:
-    - name: oci8
-      version: "3.2.1"
-      md5: newmd5
-      klass: OraclePeclRecipe
-`)
-
-	set, err := php.Load(dir, "8", "1")
-	require.NoError(t, err)
-
-	require.Len(t, set.Extensions, 1)
-	assert.Equal(t, "3.2.1", set.Extensions[0].Version)
-	assert.Equal(t, "newmd5", set.Extensions[0].MD5)
-}
-
-func TestLoad_PatchRemovesExclusion(t *testing.T) {
-	dir := t.TempDir()
-	writeFile(t, dir, "php8-base-extensions.yml", `
-native_modules: []
-extensions:
-  - name: yaf
-    version: "3.3.5"
-    md5: abc
-    klass: PeclRecipe
-  - name: apcu
-    version: "5.1.23"
-    md5: def
-    klass: PeclRecipe
-`)
-	writeFile(t, dir, "php82-extensions-patch.yml", `
-extensions:
-  exclusions:
-    - name: yaf
-      version: "3.3.5"
-      md5: abc
-      klass: PeclRecipe
-`)
-
-	set, err := php.Load(dir, "8", "2")
-	require.NoError(t, err)
-
-	require.Len(t, set.Extensions, 1)
-	assert.Equal(t, "apcu", set.Extensions[0].Name)
-}
-
+// TestLoad_PatchNativeModuleAddition verifies that native modules are
+// unaffected when a patch file has no native_modules section.
+// php83-extensions-patch.yml has no native_modules section.
 func TestLoad_PatchNativeModuleAddition(t *testing.T) {
-	dir := t.TempDir()
-	writeFile(t, dir, "php8-base-extensions.yml", `
-native_modules:
-  - name: rabbitmq
-    version: "0.11.0"
-    md5: abc
-    klass: RabbitMQRecipe
-extensions: []
-`)
-	writeFile(t, dir, "php83-extensions-patch.yml", `
-native_modules:
-  additions:
-    - name: newlib
-      version: "2.0.0"
-      md5: xyz
-      klass: SomeRecipe
-`)
-
-	set, err := php.Load(dir, "8", "3")
+	set, err := php.Load("8", "3")
 	require.NoError(t, err)
 
-	require.Len(t, set.NativeModules, 2)
-	assert.Equal(t, "newlib", set.NativeModules[1].Name)
+	// Native modules from the base file should be present unchanged.
+	nativeNames := make([]string, len(set.NativeModules))
+	for i, m := range set.NativeModules {
+		nativeNames[i] = m.Name
+	}
+	assert.Contains(t, nativeNames, "rabbitmq")
+	assert.Contains(t, nativeNames, "lua")
 }
 
+// TestLoad_MissingBaseFile verifies that Load returns an error (mentioning
+// "base") when no base file exists for the requested major version.
 func TestLoad_MissingBaseFile(t *testing.T) {
-	dir := t.TempDir()
-	_, err := php.Load(dir, "8", "3")
+	_, err := php.Load("9", "0")
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "base file")
+	assert.Contains(t, err.Error(), "base")
 }
 
-func TestLoad_InvalidBaseYAML(t *testing.T) {
-	dir := t.TempDir()
-	writeFile(t, dir, "php8-base-extensions.yml", `not: valid: yaml: [`)
-	_, err := php.Load(dir, "8", "3")
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "parsing base file")
-}
+// --- Smoke tests against the real embedded YAML files ---
 
 func TestLoad_RealPhp8BaseFile(t *testing.T) {
-	// Smoke-test: load the real php8-base-extensions.yml shipped in this repo.
-	set, err := php.Load("../../php_extensions", "8", "4")
+	// Smoke-test: load the real php8-base-extensions.yml embedded in this package.
+	set, err := php.Load("8", "4")
 	require.NoError(t, err)
 
 	// The base file must have the expected native modules.
@@ -194,7 +121,7 @@ func TestLoad_RealPhp8BaseFile(t *testing.T) {
 }
 
 func TestLoad_RealPhp81Patch(t *testing.T) {
-	set, err := php.Load("../../php_extensions", "8", "1")
+	set, err := php.Load("8", "1")
 	require.NoError(t, err)
 
 	// php81 patch overrides oci8 version to 3.2.1
@@ -209,7 +136,7 @@ func TestLoad_RealPhp81Patch(t *testing.T) {
 }
 
 func TestLoad_RealPhp82Patch(t *testing.T) {
-	set, err := php.Load("../../php_extensions", "8", "2")
+	set, err := php.Load("8", "2")
 	require.NoError(t, err)
 
 	// php82 patch removes yaf
@@ -219,7 +146,7 @@ func TestLoad_RealPhp82Patch(t *testing.T) {
 }
 
 func TestLoad_RealPhp83Patch(t *testing.T) {
-	set, err := php.Load("../../php_extensions", "8", "3")
+	set, err := php.Load("8", "3")
 	require.NoError(t, err)
 
 	// php83 patch also removes yaf

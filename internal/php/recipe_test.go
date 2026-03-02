@@ -52,7 +52,7 @@ func TestRecipeFor_UnknownKlass(t *testing.T) {
 
 func TestLoad_AllKlassesInBaseFileAreKnown(t *testing.T) {
 	// Verify every klass in the real base extensions file maps to a known recipe.
-	set, err := php.Load("../../php_extensions", "8", "4")
+	set, err := php.Load("8", "4")
 	require.NoError(t, err)
 
 	all := append(set.NativeModules, set.Extensions...)
