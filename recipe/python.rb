@@ -58,7 +58,7 @@ class PythonRecipe < BaseRecipe
 
   def install_apt(packages)
     STDOUT.print "Running 'install dependencies' for #{@name} #{@version}... "
-    if run("sudo apt-get update && sudo apt-get -y install #{packages}")
+    if run("apt-get update && apt-get -y install #{packages}")
       STDOUT.puts "OK"
     else
       raise "Failed to complete install dependencies task"

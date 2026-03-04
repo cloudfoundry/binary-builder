@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'mini_portile2'
+require 'etc'
 require 'tmpdir'
 require 'fileutils'
 require_relative 'determine_checksum'
@@ -24,7 +25,7 @@ class BaseRecipe < MiniPortile
   end
 
   def compile
-    execute('compile', [make_cmd, '-j4'])
+    execute('compile', [make_cmd, "-j#{Etc.nprocessors}"])
   end
 
   def archive_filename
