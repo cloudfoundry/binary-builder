@@ -23,6 +23,11 @@
 #   source-rserve-latest/data.json
 #   source-shiny-latest/data.json
 # These are mounted into both containers at the working directory.
+#
+# The Ruby builder clones binary-builder master inside the container (for the
+# cflinuxfs4/ Ruby source tree) and mounts the local buildpacks-ci working tree
+# (task scripts stay in sync with local changes).  The Go builder mounts the
+# local binary-builder working tree so that in-progress changes are tested.
 
 set -euo pipefail
 
@@ -49,7 +54,8 @@ done
 VERSION=$(jq -r '.version.ref // .version // "unknown"' "${DATA_JSON}")
 IMAGE="cloudfoundry/${STACK}"
 
-# Resolve binary-builder repo root (two levels up from this script)
+# Resolve binary-builder repo root (two levels up from this script).
+# Used by the Go builder to mount the local working tree.
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 RUBY_OUT="$(mktemp -d)"
@@ -112,6 +118,11 @@ prepare_source() {
 }
 
 # ── Ruby builder ─────────────────────────────────────────────────────────────
+#
+# The Ruby builder clones binary-builder master inside the container (for the
+# cflinuxfs4/ Ruby source tree) but mounts the local buildpacks-ci working tree
+# (so the task scripts stay in sync with local changes and are not affected by
+# upstream breakage).
 
 run_ruby_builder() {
   echo "--> Running Ruby builder..."
@@ -125,9 +136,8 @@ run_ruby_builder() {
     ruby_subdeps_args=(-v "${SUB_DEPS_DIR_ABS}:/tmp/host-sub-deps:ro,z")
   fi
 
-  docker run --rm \
-    -v "${REPO_ROOT}:/binary-builder:z" \
-    -v "${REPO_ROOT}/../buildpacks-ci:/buildpacks-ci:z" \
+   docker run --rm \
+    -v "${REPO_ROOT}/../buildpacks-ci:/buildpacks-ci-ro:ro,z" \
     -v "${DATA_JSON_ABS}:/tmp/data.json:ro,z" \
     -v "${SOURCE_DIR}:/tmp/host-source:ro,z" \
     -v "${RUBY_OUT}:/out:z" \
@@ -137,12 +147,25 @@ run_ruby_builder() {
     bash -c '
       set -euo pipefail
 
-      RUBY_VERSION="3.3.6"
-      if ! command -v ruby &>/dev/null || ! ruby --version | grep -q "3.3"; then
-        apt-get update -qq
+      apt-get update -qq
+      apt-get install -y -qq git
+
+      # Copy buildpacks-ci to a writable location so tasks that write files
+      # (e.g. php_extensions/php-final-extensions.yml) can do so freely.
+      cp -a /buildpacks-ci-ro /buildpacks-ci
+
+      # Clone binary-builder master for the Ruby source tree (cflinuxfs4/
+      # Gemfile, Gemfile.lock, bin/binary-builder, etc.).  We do NOT clone
+      # buildpacks-ci — the local working tree is mounted instead so the task
+      # scripts stay consistent with local changes.
+      echo "--> Cloning binary-builder master..."
+      git clone --depth=1 https://github.com/cloudfoundry/binary-builder.git /srv/binary-builder
+
+      RUBY_VERSION="3.4.6"
+      if ! command -v ruby &>/dev/null || ! ruby --version | grep -q "3.4"; then
         apt-get install -y -qq wget build-essential zlib1g-dev libssl-dev libreadline-dev libyaml-dev libffi-dev
         pushd /tmp
-        wget -q "https://cache.ruby-lang.org/pub/ruby/3.3/ruby-${RUBY_VERSION}.tar.gz"
+        wget -q "https://cache.ruby-lang.org/pub/ruby/3.4/ruby-${RUBY_VERSION}.tar.gz"
         tar -xzf "ruby-${RUBY_VERSION}.tar.gz"
         cd "ruby-${RUBY_VERSION}"
         ./configure --disable-install-doc
@@ -157,8 +180,8 @@ run_ruby_builder() {
       cp /tmp/data.json /task/source/data.json
       # Copy any pre-downloaded source files (libunwind tarball, dotnet tarball, etc.)
       cp /tmp/host-source/* /task/source/ 2>/dev/null || true
-      ln -sf /binary-builder /task/binary-builder
-      ln -sf /buildpacks-ci  /task/buildpacks-ci
+      ln -sf /srv/binary-builder /task/binary-builder
+      ln -sf /buildpacks-ci      /task/buildpacks-ci
 
       # For r dep: copy sub-dep data.json dirs into task working directory.
       if [[ -d /tmp/host-sub-deps ]]; then
@@ -204,7 +227,9 @@ run_go_builder() {
       # Install mise if not present, then use it to install the required Go version
       if ! command -v mise &>/dev/null; then
         apt-get update -qq
-        apt-get install -y -qq curl ca-certificates
+        # zstd is required so the system tar can auto-detect compression when
+        # mise extracts the Go toolchain tarball inside this container.
+        apt-get install -y -qq curl ca-certificates zstd
         curl -fsSL https://mise.run | MISE_QUIET=1 sh
       fi
       export PATH=\"\${HOME}/.local/bin:\${PATH}\"
@@ -305,6 +330,14 @@ compare_outputs() {
       go_files=""
     fi
 
+    # Known Ruby builder bug: SnmpRecipe sets @php_path = nil (constructor takes
+    # name/version/options only, no php_path), so "cd #{@php_path}" expands to
+    # "cd" (empty) and the mibs/conf copy runs in the wrong directory — the
+    # snmp-mibs-downloader tree never appears in the Ruby artifact.  The Go
+    # builder is correct.  Filter from both sides before comparing.
+    ruby_files=$(echo "${ruby_files}" | grep -v 'mibs/conf/snmp-mibs-downloader')
+    go_files=$(echo "${go_files}"     | grep -v 'mibs/conf/snmp-mibs-downloader')
+
     if [[ -n "${ruby_files}" ]] && [[ "${ruby_files}" != "${go_files}" ]]; then
       echo "MISMATCH: artifact file list"
       diff <(echo "${ruby_files}") <(echo "${go_files}") || true
@@ -388,17 +421,9 @@ compare_outputs() {
 
 prepare_source
 
-ruby_failed=0
-run_ruby_builder || ruby_failed=$?
+run_ruby_builder
 
 run_go_builder
-
-if [[ "${ruby_failed}" -ne 0 ]]; then
-  echo ""
-  echo "WARN: Ruby builder failed (exit ${ruby_failed}) — skipping comparison."
-  echo "RUBY BROKEN: Parity test skipped for ${DEP} ${VERSION} on ${STACK} (Ruby builder non-functional)"
-  exit 0
-fi
 
 mismatches=0
 compare_outputs || mismatches=$?

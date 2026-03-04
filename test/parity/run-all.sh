@@ -267,10 +267,14 @@ run_dep_r "$(write_data_json r 4.4.2 \
   "1578cd603e8d866b58743e49d8bf99c569e81079b6a60cf33cdf7bdffeb817ec" \
   "" url "")"
 
-# libunwind 1.6.2 — https://github.com/libunwind/libunwind/archive/refs/tags/v1.6.2.tar.gz
+# libunwind 1.6.2 — use the release download URL so both builders agree on the directory name.
+# The refs/tags archive URL extracts to libunwind-1.6.2/ but Ruby builder derives "v1.6.2" from
+# the filename v1.6.2.tar.gz and tries Dir.chdir("v1.6.2"), which fails.
+# The release tarball libunwind-1.6.2.tar.gz extracts to libunwind-1.6.2/ and Ruby builder
+# correctly derives "libunwind-1.6.2" from the filename.
 run_dep libunwind "$(write_data_json libunwind 1.6.2 \
-  "https://github.com/libunwind/libunwind/archive/refs/tags/v1.6.2.tar.gz" \
-  "b76546101ca00c5525ae939104ca1b9de4a444a61cfa9bfe7e505c66c4fb1f10" \
+  "https://github.com/libunwind/libunwind/releases/download/v1.6.2/libunwind-1.6.2.tar.gz" \
+  "4a6aec666991fb45d0889c44aede8ad6eb108071c3554fcdff671f9c94794976" \
   "" github_releases "libunwind/libunwind")"
 
 # libgdiplus 6.1 — https://github.com/mono/libgdiplus/archive/refs/tags/6.1.tar.gz
