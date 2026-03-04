@@ -1,10 +1,11 @@
 package recipe
 
 import (
-	"path/filepath"
 	"context"
 	"fmt"
+	"path/filepath"
 
+	"github.com/cloudfoundry/binary-builder/internal/fetch"
 	"github.com/cloudfoundry/binary-builder/internal/output"
 	"github.com/cloudfoundry/binary-builder/internal/runner"
 	"github.com/cloudfoundry/binary-builder/internal/source"
@@ -13,7 +14,9 @@ import (
 
 // OpenrestyRecipe builds OpenResty (nginx + Lua) via configure/make.
 // No GPG verification (known gap, carried forward from Ruby code as a TODO).
-type OpenrestyRecipe struct{}
+type OpenrestyRecipe struct {
+	Fetcher fetch.Fetcher
+}
 
 func (o *OpenrestyRecipe) Name() string { return "openresty" }
 func (o *OpenrestyRecipe) Artifact() ArtifactMeta {
@@ -27,8 +30,8 @@ func (o *OpenrestyRecipe) Build(ctx context.Context, _ *stack.Stack, src *source
 	destDir := fmt.Sprintf("/tmp/openresty-install-%s", version)
 	artifactPath := filepath.Join(mustCwd(), fmt.Sprintf("openresty-%s-linux-x64.tgz", version))
 
-	// Download source — no GPG verification (TODO: add when keys are published).
-	if err := run.Run("wget", "-q", "-O", srcTarball, src.URL); err != nil {
+	// Download source via Fetcher (no GPG verification — TODO: add when keys are published).
+	if err := o.Fetcher.Download(ctx, src.URL, srcTarball, src.PrimaryChecksum()); err != nil {
 		return fmt.Errorf("openresty: downloading source: %w", err)
 	}
 

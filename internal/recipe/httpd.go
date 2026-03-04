@@ -3,9 +3,7 @@ package recipe
 import (
 	"context"
 	"fmt"
-	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/cloudfoundry/binary-builder/internal/apt"
 	"github.com/cloudfoundry/binary-builder/internal/archive"
@@ -17,13 +15,10 @@ import (
 	"github.com/cloudfoundry/binary-builder/internal/stack"
 )
 
-// modAuthOpenIDCVersion is the pinned version of mod_auth_openidc.
-const modAuthOpenIDCVersion = "2.3.8"
-
 // HTTPDRecipe builds Apache HTTPD along with its full dependency chain:
 // APR → APR-Iconv → APR-Util → HTTPD → mod_auth_openidc.
-// APR/APR-Iconv/APR-Util versions are discovered dynamically from the
-// GitHub releases API.
+// APR/APR-Iconv/APR-Util/mod_auth_openidc versions, URLs and SHA256s are
+// pinned in the stack YAML under httpd_sub_deps.
 type HTTPDRecipe struct {
 	Fetcher fetch.Fetcher
 }
@@ -46,43 +41,34 @@ func (h *HTTPDRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Inp
 		return fmt.Errorf("httpd: mkdir /app: %w", err)
 	}
 
-	// Step 3: Discover APR, APR-Iconv, APR-Util latest versions from GitHub.
-	aprVersion, err := h.latestGitTagVersion(ctx, "apache/apr")
-	if err != nil {
-		return fmt.Errorf("httpd: getting APR version: %w", err)
-	}
-
-	aprIconvVersion, err := h.latestGitTagVersion(ctx, "apache/apr-iconv")
-	if err != nil {
-		return fmt.Errorf("httpd: getting APR-Iconv version: %w", err)
-	}
-
-	aprUtilVersion, err := h.latestGitTagVersion(ctx, "apache/apr-util")
-	if err != nil {
-		return fmt.Errorf("httpd: getting APR-Util version: %w", err)
-	}
+	// Step 3: Read sub-dep config from stack YAML.
+	aprDep := s.HTTPDSubDeps.APR
+	aprIconvDep := s.HTTPDSubDeps.APRIconv
+	aprUtilDep := s.HTTPDSubDeps.APRUtil
 
 	// Step 4: Build APR.
-	aprPrefix := fmt.Sprintf("/tmp/apr-%s-prefix", aprVersion)
+	aprPrefix := fmt.Sprintf("/tmp/apr-%s-prefix", aprDep.Version)
 	aprPortile := &portile.Portile{
-		Name:    "apr",
-		Version: aprVersion,
-		URL:     fmt.Sprintf("https://archive.apache.org/dist/apr/apr-%s.tar.gz", aprVersion),
-		Prefix:  aprPrefix,
-		Runner:  run,
-		Fetcher: h.Fetcher,
+		Name:     "apr",
+		Version:  aprDep.Version,
+		URL:      aprDep.URL,
+		Checksum: source.Checksum{Algorithm: "sha256", Value: aprDep.SHA256},
+		Prefix:   aprPrefix,
+		Runner:   run,
+		Fetcher:  h.Fetcher,
 	}
 	if err := aprPortile.Cook(ctx); err != nil {
 		return fmt.Errorf("httpd: building APR: %w", err)
 	}
 
 	// Step 5: Build APR-Iconv (depends on APR).
-	aprIconvPrefix := fmt.Sprintf("/tmp/apr-iconv-%s-prefix", aprIconvVersion)
+	aprIconvPrefix := fmt.Sprintf("/tmp/apr-iconv-%s-prefix", aprIconvDep.Version)
 	aprIconvPortile := &portile.Portile{
-		Name:    "apr-iconv",
-		Version: aprIconvVersion,
-		URL:     fmt.Sprintf("https://archive.apache.org/dist/apr/apr-iconv-%s.tar.gz", aprIconvVersion),
-		Prefix:  aprIconvPrefix,
+		Name:     "apr-iconv",
+		Version:  aprIconvDep.Version,
+		URL:      aprIconvDep.URL,
+		Checksum: source.Checksum{Algorithm: "sha256", Value: aprIconvDep.SHA256},
+		Prefix:   aprIconvPrefix,
 		Options: []string{
 			fmt.Sprintf("--with-apr=%s/bin/apr-1-config", aprPrefix),
 		},
@@ -94,12 +80,13 @@ func (h *HTTPDRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Inp
 	}
 
 	// Step 6: Build APR-Util (depends on APR + APR-Iconv).
-	aprUtilPrefix := fmt.Sprintf("/tmp/apr-util-%s-prefix", aprUtilVersion)
+	aprUtilPrefix := fmt.Sprintf("/tmp/apr-util-%s-prefix", aprUtilDep.Version)
 	aprUtilPortile := &portile.Portile{
-		Name:    "apr-util",
-		Version: aprUtilVersion,
-		URL:     fmt.Sprintf("https://archive.apache.org/dist/apr/apr-util-%s.tar.gz", aprUtilVersion),
-		Prefix:  aprUtilPrefix,
+		Name:     "apr-util",
+		Version:  aprUtilDep.Version,
+		URL:      aprUtilDep.URL,
+		Checksum: source.Checksum{Algorithm: "sha256", Value: aprUtilDep.SHA256},
+		Prefix:   aprUtilPrefix,
 		Options: []string{
 			fmt.Sprintf("--with-apr=%s", aprPrefix),
 			fmt.Sprintf("--with-iconv=%s", aprIconvPrefix),
@@ -158,17 +145,14 @@ func (h *HTTPDRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Inp
 		"APR_LIBS":   aprLibs,
 		"APR_CFLAGS": aprCFlags,
 	}
-	modAuthVersion := modAuthOpenIDCVersion
-	modAuthURL := fmt.Sprintf(
-		"https://github.com/zmartzone/mod_auth_openidc/releases/download/v%s/mod_auth_openidc-%s.tar.gz",
-		modAuthVersion, modAuthVersion,
-	)
-	modAuthPrefix := fmt.Sprintf("/tmp/mod_auth_openidc-%s-prefix", modAuthVersion)
+	modAuthDep := s.HTTPDSubDeps.ModAuthOpenidc
+	modAuthChecksum := source.Checksum{Algorithm: "sha256", Value: modAuthDep.SHA256}
+	modAuthPrefix := fmt.Sprintf("/tmp/mod_auth_openidc-%s-prefix", modAuthDep.Version)
 
 	// We need to pass env vars to the configure step. The portile package runs
 	// configure via RunInDir without env, so we handle mod_auth_openidc manually:
 	// download, extract, configure with env, make, make install.
-	if err := h.buildModAuthOpenidc(ctx, run, modAuthURL, modAuthVersion, modAuthPrefix, httpdPrefix, modAuthEnv); err != nil {
+	if err := h.buildModAuthOpenidc(ctx, run, modAuthDep.URL, modAuthDep.Version, modAuthPrefix, httpdPrefix, modAuthEnv, modAuthChecksum); err != nil {
 		return fmt.Errorf("httpd: building mod_auth_openidc: %w", err)
 	}
 
@@ -191,47 +175,6 @@ func (h *HTTPDRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Inp
 	return nil
 }
 
-// latestGitTagVersion fetches the latest semver tag from a GitHub repo using
-// git ls-remote, mirroring the Ruby recipe's `latest_github_version` method:
-//
-//	git -c 'versionsort.suffix=-' ls-remote --exit-code --refs \
-//	    --sort='version:refname' --tags https://github.com/<repo> '*.*.*' \
-//	    | tail -1 | cut -d/ -f3
-func (h *HTTPDRecipe) latestGitTagVersion(ctx context.Context, repo string) (string, error) {
-	repoURL := fmt.Sprintf("https://github.com/%s", repo)
-	cmd := exec.CommandContext(ctx,
-		"git", "-c", "versionsort.suffix=-",
-		"ls-remote", "--exit-code", "--refs",
-		"--sort=version:refname", "--tags",
-		repoURL, "*.*.*",
-	)
-	out, err := cmd.Output()
-	if err != nil {
-		return "", fmt.Errorf("fetching latest release for %s: %w", repo, err)
-	}
-
-	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
-	if len(lines) == 0 || lines[0] == "" {
-		return "", fmt.Errorf("no tags found for %s", repo)
-	}
-
-	// Take the last line (highest version), extract tag name after last '/'.
-	last := lines[len(lines)-1]
-	parts := strings.Split(last, "/")
-	tag := parts[len(parts)-1]
-
-	// Strip leading 'v' if present.
-	if len(tag) > 0 && tag[0] == 'v' {
-		tag = tag[1:]
-	}
-
-	if tag == "" {
-		return "", fmt.Errorf("empty tag for %s", repo)
-	}
-
-	return tag, nil
-}
-
 // buildModAuthOpenidc manually handles the configure/make/install cycle for
 // mod_auth_openidc, passing APR_LIBS and APR_CFLAGS via RunWithEnv.
 func (h *HTTPDRecipe) buildModAuthOpenidc(
@@ -239,10 +182,11 @@ func (h *HTTPDRecipe) buildModAuthOpenidc(
 	run runner.Runner,
 	url, version, prefix, httpdPrefix string,
 	env map[string]string,
+	checksum source.Checksum,
 ) error {
 	// Download tarball.
 	tarball := fmt.Sprintf("/tmp/mod_auth_openidc-%s.tar.gz", version)
-	if err := h.Fetcher.Download(ctx, url, tarball, source.Checksum{}); err != nil {
+	if err := h.Fetcher.Download(ctx, url, tarball, checksum); err != nil {
 		return fmt.Errorf("download: %w", err)
 	}
 

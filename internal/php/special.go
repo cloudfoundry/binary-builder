@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/cloudfoundry/binary-builder/internal/runner"
+	"github.com/cloudfoundry/binary-builder/internal/source"
 )
 
 // IonCubeRecipe downloads a pre-built ioncube loader binary (no compile step).
@@ -17,7 +18,8 @@ func (i *IonCubeRecipe) Build(ctx context.Context, ext Extension, ec ExtensionCo
 	archiveName := fmt.Sprintf("ioncube-%s.tar.gz", ext.Version)
 	installPath := fmt.Sprintf("/tmp/ioncube-%s", ext.Version)
 
-	if err := run.Run("wget", "-O", fmt.Sprintf("/tmp/%s", archiveName), url); err != nil {
+	// IonCube provides no checksum — skip verification (checksum.Value == "").
+	if err := ec.Fetcher.Download(ctx, url, fmt.Sprintf("/tmp/%s", archiveName), source.Checksum{}); err != nil {
 		return fmt.Errorf("php/ioncube: download: %w", err)
 	}
 	if err := run.Run("mkdir", "-p", installPath); err != nil {
@@ -39,7 +41,8 @@ func (o *OraclePeclRecipe) Build(ctx context.Context, ext Extension, ec Extensio
 		fmt.Sprintf("--with-php-config=%s/bin/php-config", ec.PHPPath),
 		"--with-oci8=shared,instantclient,/oracle",
 	}
-	if err := buildPecl(ctx, ext.Name, ext.Version, url, ec, opts, run); err != nil {
+	checksum := source.Checksum{Algorithm: "md5", Value: ext.MD5}
+	if err := buildPecl(ctx, ext.Name, ext.Version, url, checksum, ec, opts, run); err != nil {
 		return err
 	}
 	// Copy Oracle libs into PHP prefix.

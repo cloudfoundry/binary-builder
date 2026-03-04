@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/cloudfoundry/binary-builder/internal/fetch"
 	"github.com/cloudfoundry/binary-builder/internal/runner"
 )
 
@@ -19,6 +20,7 @@ type ExtensionContext struct {
 	IonCubePath   string // set after ioncube download
 	PHPMajor      string // e.g. "8"
 	PHPMinor      string // e.g. "3"
+	Fetcher       fetch.Fetcher
 }
 
 // ExtensionRecipe is the interface implemented by every PHP extension builder.

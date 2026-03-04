@@ -40,7 +40,7 @@ func TestPHPRecipeBuildInstallsAptPackages(t *testing.T) {
 	src := &source.Input{Version: "8.3.2"}
 	outData := &output.OutData{}
 
-	r := &recipe.PHPRecipe{}
+	r := &recipe.PHPRecipe{Fetcher: newFakeFetcher()}
 	_ = r.Build(context.Background(), s, src, fakeRun, outData)
 
 	assert.True(t, hasCallMatching(fakeRun.Calls, "apt-get", "libssl-dev"), "should apt-get install libssl-dev")
@@ -64,7 +64,7 @@ func TestPHPRecipeBuildCreatesSymlinks(t *testing.T) {
 	src := &source.Input{Version: "8.3.2"}
 	outData := &output.OutData{}
 
-	r := &recipe.PHPRecipe{}
+	r := &recipe.PHPRecipe{Fetcher: newFakeFetcher()}
 	_ = r.Build(context.Background(), s, src, fakeRun, outData)
 
 	assert.True(t, hasCallMatching(fakeRun.Calls, "ln", "/usr/local/include/curl"), "should create curl symlink")
@@ -83,7 +83,7 @@ func TestPHPRecipeBuildConfigureFlags(t *testing.T) {
 	src := &source.Input{Version: "8.3.2"}
 	outData := &output.OutData{}
 
-	r := &recipe.PHPRecipe{}
+	r := &recipe.PHPRecipe{Fetcher: newFakeFetcher()}
 	_ = r.Build(context.Background(), s, src, fakeRun, outData)
 
 	// The configure command is run via bash -c with LIBS=-lz prefix.
@@ -112,7 +112,7 @@ func TestPHPRecipeBuildPopulatesSubDependencies(t *testing.T) {
 	src := &source.Input{Version: "8.3.2"}
 	outData := &output.OutData{}
 
-	r := &recipe.PHPRecipe{}
+	r := &recipe.PHPRecipe{Fetcher: newFakeFetcher()}
 	_ = r.Build(context.Background(), s, src, fakeRun, outData)
 
 	// SubDependencies should be populated from the embedded extension YAML.
@@ -132,14 +132,19 @@ func TestPHPRecipeBuildDownloadsSource(t *testing.T) {
 		AptPackages: map[string][]string{"php_build": {}},
 		PHPSymlinks: []stack.Symlink{},
 	}
-	src := &source.Input{Version: "8.3.2"}
+	src := &source.Input{
+		Version: "8.3.2",
+		URL:     "https://www.php.net/distributions/php-8.3.2.tar.gz",
+		SHA256:  "abc123",
+	}
 	outData := &output.OutData{}
 
-	r := &recipe.PHPRecipe{}
+	f := newFakeFetcher()
+	r := &recipe.PHPRecipe{Fetcher: f}
 	_ = r.Build(context.Background(), s, src, fakeRun, outData)
 
-	// Should wget PHP source.
-	assert.True(t, hasCallMatching(fakeRun.Calls, "wget", "php-8.3.2.tar.gz"), "should download PHP source")
+	// Should download PHP source via Fetcher (not wget).
+	assert.True(t, hasDownload(f, src.URL), "should download PHP source via Fetcher")
 }
 
 func TestPHPRecipeBuildInvalidVersion(t *testing.T) {
@@ -154,7 +159,7 @@ func TestPHPRecipeBuildInvalidVersion(t *testing.T) {
 	src := &source.Input{Version: "invalid"}
 	outData := &output.OutData{}
 
-	r := &recipe.PHPRecipe{}
+	r := &recipe.PHPRecipe{Fetcher: newFakeFetcher()}
 	err := r.Build(context.Background(), s, src, fakeRun, outData)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid version")

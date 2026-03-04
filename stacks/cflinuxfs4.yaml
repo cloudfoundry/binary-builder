@@ -5,7 +5,7 @@ docker_image: cloudfoundry/cflinuxfs4
 
 ruby_bootstrap:
   url: https://buildpacks.cloudfoundry.org/dependencies/ruby/ruby_3.3.6_linux_x64_cflinuxfs4_e4311262.tgz
-  sha256: e4311262
+  sha256: e4311262803d0e1a01c83001e3e98ad58700b5cc36eff12433f24312b11e3dc9
   install_dir: /opt/ruby
 
 compilers:
@@ -121,7 +121,26 @@ jruby:
 
 go:
   bootstrap_url: https://go.dev/dl/go1.24.2.linux-amd64.tar.gz
+  bootstrap_sha256: 68097bd680839cbc9d464a0edce4f7c333975e27a90246890e9f1078c7e702ad
 
 python:
   tcl_version: "8.6"
   use_force_yes: true
+
+httpd_sub_deps:
+  apr:
+    version: "1.7.4"
+    url: https://archive.apache.org/dist/apr/apr-1.7.4.tar.gz
+    sha256: a4137dd82a185076fa50ba54232d920a17c6469c30b0876569e1c2a05ff311d9
+  apr_iconv:
+    version: "1.2.2"
+    url: https://archive.apache.org/dist/apr/apr-iconv-1.2.2.tar.gz
+    sha256: ce94c7722ede927ce1e5a368675ace17d96d60ff9b8918df216ee5c1298c6a5e
+  apr_util:
+    version: "1.6.3"
+    url: https://archive.apache.org/dist/apr/apr-util-1.6.3.tar.gz
+    sha256: 2b74d8932703826862ca305b094eef2983c27b39d5c9414442e9976a9acf1983
+  mod_auth_openidc:
+    version: "2.3.8"
+    url: https://github.com/OpenIDC/mod_auth_openidc/releases/download/v2.3.8/mod_auth_openidc-2.3.8.tar.gz
+    sha256: 0f078444fed34085bc83e27eb3439556718f50dcea275307ffb66d498bdabb8f

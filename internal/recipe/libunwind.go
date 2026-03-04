@@ -37,8 +37,16 @@ func (l *LibunwindRecipe) Build(ctx context.Context, s *stack.Stack, src *source
 	parts := strings.Split(src.URL, "/")
 	filename := parts[len(parts)-1]
 	tag := strings.TrimSuffix(strings.TrimSuffix(filename, ".tar.gz"), ".tgz")
-	// GitHub archives for tag vX.Y.Z extract to libunwind-X.Y.Z (repo name + version, no "v").
-	dirName := "libunwind-" + strings.TrimPrefix(tag, "v")
+	// Two URL styles are in use:
+	//   refs/tags/v1.6.2.tar.gz   → tag="v1.6.2"         → extracts to libunwind-1.6.2/
+	//   libunwind-1.6.2.tar.gz    → tag="libunwind-1.6.2" → extracts to libunwind-1.6.2/
+	// Avoid double-prefixing when the filename already starts with "libunwind-".
+	var dirName string
+	if strings.HasPrefix(tag, "libunwind-") {
+		dirName = tag
+	} else {
+		dirName = "libunwind-" + strings.TrimPrefix(tag, "v")
+	}
 
 	srcTarball := fmt.Sprintf("source/%s", filename)
 	srcDir := fmt.Sprintf("/tmp/%s", dirName)

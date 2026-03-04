@@ -51,12 +51,30 @@ type GoConfig struct {
 	// BootstrapURL is the URL of the pre-built Go binary used to bootstrap
 	// compilation from source. Update when Go raises its minimum bootstrap version.
 	BootstrapURL string `yaml:"bootstrap_url"`
+	// BootstrapSHA256 is the SHA256 checksum of the bootstrap Go binary tarball.
+	BootstrapSHA256 string `yaml:"bootstrap_sha256"`
 }
 
 // PythonConfig holds Python-specific build settings.
 type PythonConfig struct {
 	TCLVersion  string `yaml:"tcl_version"`
 	UseForceYes bool   `yaml:"use_force_yes"`
+}
+
+// HTTPDSubDep holds the pinned version, download URL and SHA256 for a single
+// HTTPD sub-dependency (APR, APR-Iconv, APR-Util, mod_auth_openidc).
+type HTTPDSubDep struct {
+	Version string `yaml:"version"`
+	URL     string `yaml:"url"`
+	SHA256  string `yaml:"sha256"`
+}
+
+// HTTPDSubDepsConfig groups all HTTPD sub-dependency pinned versions.
+type HTTPDSubDepsConfig struct {
+	APR            HTTPDSubDep `yaml:"apr"`
+	APRIconv       HTTPDSubDep `yaml:"apr_iconv"`
+	APRUtil        HTTPDSubDep `yaml:"apr_util"`
+	ModAuthOpenidc HTTPDSubDep `yaml:"mod_auth_openidc"`
 }
 
 // Symlink represents a filesystem symlink to create during builds.
@@ -80,6 +98,7 @@ type Stack struct {
 	JRuby          JRubyConfig         `yaml:"jruby"`
 	Go             GoConfig            `yaml:"go"`
 	Python         PythonConfig        `yaml:"python"`
+	HTTPDSubDeps   HTTPDSubDepsConfig  `yaml:"httpd_sub_deps"`
 }
 
 // Load reads a stack YAML file from stacksDir for the given stack name.

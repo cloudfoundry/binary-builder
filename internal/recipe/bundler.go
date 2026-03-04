@@ -31,10 +31,8 @@ func (b *BundlerRecipe) Build(ctx context.Context, s *stack.Stack, src *source.I
 	bootstrap := s.RubyBootstrap
 	rubyTarball := filepath.Join("/tmp", filepath.Base(bootstrap.URL))
 
-	// Download the pre-built Ruby bootstrap binary.
-	// No checksum verification: bootstrap.SHA256 is an 8-char filename fingerprint,
-	// not a full SHA256. The Ruby builder also skips verification (plain curl -L).
-	if err := b.Fetcher.Download(ctx, bootstrap.URL, rubyTarball, source.Checksum{}); err != nil {
+	// Download the pre-built Ruby bootstrap binary with SHA256 verification.
+	if err := b.Fetcher.Download(ctx, bootstrap.URL, rubyTarball, source.Checksum{Algorithm: "sha256", Value: bootstrap.SHA256}); err != nil {
 		return fmt.Errorf("bundler: downloading ruby bootstrap: %w", err)
 	}
 	defer os.Remove(rubyTarball)

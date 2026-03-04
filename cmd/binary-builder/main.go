@@ -214,7 +214,7 @@ func buildRegistry() *recipe.Registry {
 	reg.Register(&recipe.GoRecipe{Fetcher: f})
 	reg.Register(&recipe.NginxRecipe{Fetcher: f})
 	reg.Register(&recipe.NginxStaticRecipe{Fetcher: f})
-	reg.Register(&recipe.OpenrestyRecipe{})
+	reg.Register(&recipe.OpenrestyRecipe{Fetcher: f})
 	reg.Register(&recipe.HTTPDRecipe{Fetcher: f})
 	reg.Register(&recipe.JRubyRecipe{Fetcher: f})
 	reg.Register(&recipe.RRecipe{Fetcher: f})

@@ -92,7 +92,7 @@ func TestCookSequence(t *testing.T) {
 	assert.Equal(t, "-p", f.Calls[0].Args[0])
 
 	assert.Equal(t, "tar", f.Calls[1].Name)
-	assert.Equal(t, "xf", f.Calls[1].Args[0])
+	assert.Equal(t, "xzf", f.Calls[1].Args[0]) // .tar.gz → explicit gzip flag
 
 	assert.Equal(t, "mv", f.Calls[2].Name)
 
@@ -220,4 +220,28 @@ func TestCookCustomJobs(t *testing.T) {
 	}
 
 	assert.Equal(t, "-j2", makeCall.Args[0])
+}
+
+func TestExtractFlag(t *testing.T) {
+	cases := []struct {
+		filename string
+		want     string
+	}{
+		{"ruby-3.3.6.tar.gz", "xzf"},
+		{"R-4.4.2.tar.gz", "xzf"},
+		{"something.tgz", "xzf"},
+		{"archive.tar.bz2", "xjf"},
+		{"archive.tar.xz", "xJf"},
+		{"archive.tar.zst", "xf"}, // unknown: fall through to auto-detect
+		{"archive.tar", "xf"},
+		// Case-insensitive.
+		{"ARCHIVE.TAR.GZ", "xzf"},
+		{"ARCHIVE.TAR.BZ2", "xjf"},
+		{"ARCHIVE.TAR.XZ", "xJf"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.filename, func(t *testing.T) {
+			assert.Equal(t, tc.want, portile.ExtractFlag(tc.filename))
+		})
+	}
 }

@@ -126,10 +126,29 @@ func (p *Portile) extractedDirName() string {
 	return fmt.Sprintf("%s-%s", p.Name, p.Version)
 }
 
+// ExtractFlag returns an explicit tar compression flag derived from the
+// filename extension. This avoids relying on tar's auto-detect heuristic,
+// which misidentifies .tar.gz files as zstd-compressed in some environments
+// (e.g. cflinuxfs4) where zstd is not installed.
+func ExtractFlag(filename string) string {
+	lower := strings.ToLower(filename)
+	switch {
+	case strings.HasSuffix(lower, ".tar.gz"), strings.HasSuffix(lower, ".tgz"):
+		return "xzf"
+	case strings.HasSuffix(lower, ".tar.bz2"):
+		return "xjf"
+	case strings.HasSuffix(lower, ".tar.xz"):
+		return "xJf"
+	default:
+		return "xf"
+	}
+}
+
 func (p *Portile) extract(_ context.Context) error {
 	srcDir := filepath.Join(p.TmpPath(), p.extractedDirName())
 
-	if err := p.Runner.Run("tar", "xf", p.tarballPath(), "-C", p.TmpPath()); err != nil {
+	flag := ExtractFlag(p.tarballPath())
+	if err := p.Runner.Run("tar", flag, p.tarballPath(), "-C", p.TmpPath()); err != nil {
 		return err
 	}
 

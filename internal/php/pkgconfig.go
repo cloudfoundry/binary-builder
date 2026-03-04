@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/cloudfoundry/binary-builder/internal/runner"
+	"github.com/cloudfoundry/binary-builder/internal/source"
 )
 
 // HiredisRecipe downloads and builds the hiredis C library from GitHub.
@@ -14,13 +15,14 @@ type HiredisRecipe struct{}
 func (h *HiredisRecipe) Build(ctx context.Context, ext Extension, ec ExtensionContext, run runner.Runner) error {
 	url := fmt.Sprintf("https://github.com/redis/hiredis/archive/v%s.tar.gz", ext.Version)
 	archiveName := fmt.Sprintf("hiredis-%s.tar.gz", ext.Version)
+	dest := fmt.Sprintf("/tmp/%s", archiveName)
 	srcDir := fmt.Sprintf("/tmp/hiredis-%s", ext.Version)
 	installPath := fmt.Sprintf("/tmp/hiredis-install-%s", ext.Version)
 
-	if err := run.Run("wget", "-O", fmt.Sprintf("/tmp/%s", archiveName), url); err != nil {
+	if err := ec.Fetcher.Download(ctx, url, dest, source.Checksum{}); err != nil {
 		return fmt.Errorf("php/hiredis: download: %w", err)
 	}
-	if err := run.Run("tar", "xzf", fmt.Sprintf("/tmp/%s", archiveName), "-C", "/tmp/"); err != nil {
+	if err := run.Run("tar", "xzf", dest, "-C", "/tmp/"); err != nil {
 		return fmt.Errorf("php/hiredis: extract: %w", err)
 	}
 	installCmd := fmt.Sprintf("LIBRARY_PATH=lib PREFIX='%s' make install", installPath)
@@ -38,12 +40,13 @@ type RabbitMQRecipe struct{}
 func (r *RabbitMQRecipe) Build(ctx context.Context, ext Extension, ec ExtensionContext, run runner.Runner) error {
 	url := fmt.Sprintf("https://github.com/alanxz/rabbitmq-c/archive/v%s.tar.gz", ext.Version)
 	archiveName := fmt.Sprintf("rabbitmq-%s.tar.gz", ext.Version)
+	dest := fmt.Sprintf("/tmp/%s", archiveName)
 	srcDir := fmt.Sprintf("/tmp/rabbitmq-c-%s", ext.Version)
 
-	if err := run.Run("wget", "-O", fmt.Sprintf("/tmp/%s", archiveName), url); err != nil {
+	if err := ec.Fetcher.Download(ctx, url, dest, source.Checksum{}); err != nil {
 		return fmt.Errorf("php/rabbitmq: download: %w", err)
 	}
-	if err := run.Run("tar", "xzf", fmt.Sprintf("/tmp/%s", archiveName), "-C", "/tmp/"); err != nil {
+	if err := run.Run("tar", "xzf", dest, "-C", "/tmp/"); err != nil {
 		return fmt.Errorf("php/rabbitmq: extract: %w", err)
 	}
 	for _, step := range [][]string{
@@ -66,12 +69,13 @@ type LibRdKafkaRecipe struct{}
 func (l *LibRdKafkaRecipe) Build(ctx context.Context, ext Extension, ec ExtensionContext, run runner.Runner) error {
 	url := fmt.Sprintf("https://github.com/edenhill/librdkafka/archive/v%s.tar.gz", ext.Version)
 	archiveName := fmt.Sprintf("librdkafka-%s.tar.gz", ext.Version)
+	dest := fmt.Sprintf("/tmp/%s", archiveName)
 	srcDir := fmt.Sprintf("/tmp/librdkafka-%s", ext.Version)
 
-	if err := run.Run("wget", "-O", fmt.Sprintf("/tmp/%s", archiveName), url); err != nil {
+	if err := ec.Fetcher.Download(ctx, url, dest, source.Checksum{}); err != nil {
 		return fmt.Errorf("php/librdkafka: download: %w", err)
 	}
-	if err := run.Run("tar", "xzf", fmt.Sprintf("/tmp/%s", archiveName), "-C", "/tmp/"); err != nil {
+	if err := run.Run("tar", "xzf", dest, "-C", "/tmp/"); err != nil {
 		return fmt.Errorf("php/librdkafka: extract: %w", err)
 	}
 	if err := run.RunInDir(srcDir, "bash", "./configure", "--prefix=/usr"); err != nil {
@@ -93,13 +97,14 @@ type LibSodiumRecipe struct{}
 func (l *LibSodiumRecipe) Build(ctx context.Context, ext Extension, ec ExtensionContext, run runner.Runner) error {
 	url := fmt.Sprintf("https://github.com/jedisct1/libsodium/archive/%s-RELEASE.tar.gz", ext.Version)
 	archiveName := fmt.Sprintf("libsodium-%s.tar.gz", ext.Version)
+	dest := fmt.Sprintf("/tmp/%s", archiveName)
 	srcDir := fmt.Sprintf("/tmp/libsodium-%s-RELEASE", ext.Version)
 	installPath := fmt.Sprintf("/tmp/libsodium-install-%s", ext.Version)
 
-	if err := run.Run("wget", "-O", fmt.Sprintf("/tmp/%s", archiveName), url); err != nil {
+	if err := ec.Fetcher.Download(ctx, url, dest, source.Checksum{}); err != nil {
 		return fmt.Errorf("php/libsodium: download: %w", err)
 	}
-	if err := run.Run("tar", "xzf", fmt.Sprintf("/tmp/%s", archiveName), "-C", "/tmp/"); err != nil {
+	if err := run.Run("tar", "xzf", dest, "-C", "/tmp/"); err != nil {
 		return fmt.Errorf("php/libsodium: extract: %w", err)
 	}
 	if err := run.RunInDir(srcDir, "sh", "./configure", fmt.Sprintf("--prefix=%s", installPath)); err != nil {

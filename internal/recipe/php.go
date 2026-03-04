@@ -106,9 +106,9 @@ func (p *PHPRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input
 	}
 
 	// Step 3: download and extract PHP source.
-	phpURL := fmt.Sprintf("https://github.com/php/web-php-distributions/raw/master/php-%s.tar.gz", src.Version)
+	// Use the URL and checksum provided by go-depwatcher (src.URL / src.PrimaryChecksum).
 	phpTarball := fmt.Sprintf("/tmp/php-%s.tar.gz", src.Version)
-	if err := run.Run("wget", "-O", phpTarball, phpURL); err != nil {
+	if err := p.Fetcher.Download(ctx, src.URL, phpTarball, src.PrimaryChecksum()); err != nil {
 		return fmt.Errorf("php: download source: %w", err)
 	}
 	if err := run.Run("tar", "xzf", phpTarball, "-C", "/tmp/"); err != nil {
@@ -136,6 +136,7 @@ func (p *PHPRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input
 		PHPSourceDir: phpSrcDir,
 		PHPMajor:     phpMajor,
 		PHPMinor:     phpMinor,
+		Fetcher:      p.Fetcher,
 	}
 
 	// Step 5: build native modules (in order — some later extensions depend on them).

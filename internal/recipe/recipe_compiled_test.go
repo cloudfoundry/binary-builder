@@ -56,6 +56,32 @@ func newCompiledStack(t *testing.T) *stack.Stack {
 			JDKSHA256:     "cafebabe",
 			JDKInstallDir: t.TempDir() + "/java",
 		},
+		Go: stack.GoConfig{
+			BootstrapURL:    "https://example.com/go-bootstrap.tar.gz",
+			BootstrapSHA256: "deadbeef",
+		},
+		HTTPDSubDeps: stack.HTTPDSubDepsConfig{
+			APR: stack.HTTPDSubDep{
+				Version: "1.7.4",
+				URL:     "https://example.com/apr-1.7.4.tar.gz",
+				SHA256:  "aprsha256",
+			},
+			APRIconv: stack.HTTPDSubDep{
+				Version: "1.2.2",
+				URL:     "https://example.com/apr-iconv-1.2.2.tar.gz",
+				SHA256:  "apriconvsha256",
+			},
+			APRUtil: stack.HTTPDSubDep{
+				Version: "1.6.3",
+				URL:     "https://example.com/apr-util-1.6.3.tar.gz",
+				SHA256:  "aprutilsha256",
+			},
+			ModAuthOpenidc: stack.HTTPDSubDep{
+				Version: "2.3.8",
+				URL:     "https://example.com/mod_auth_openidc-2.3.8.tar.gz",
+				SHA256:  "modauthsha256",
+			},
+		},
 	}
 }
 
@@ -317,9 +343,10 @@ func TestGoRecipeStripsGoPrefix(t *testing.T) {
 	err := r.Build(context.Background(), s, src, run, &output.OutData{})
 	require.NoError(t, err)
 
-	// Should download source.
-	require.Len(t, f.DownloadedURLs, 1)
-	assert.Equal(t, src.URL, f.DownloadedURLs[0].URL)
+	// Should download bootstrap AND source — 2 downloads total.
+	require.Len(t, f.DownloadedURLs, 2)
+	assert.True(t, hasDownload(f, s.Go.BootstrapURL), "should download bootstrap go binary")
+	assert.True(t, hasDownload(f, src.URL), "should download go source")
 
 	// Artifact path should use stripped version.
 	assert.True(t, hasCallMatching(run.Calls, "tar", "1.24.2"), "artifact should use version without go prefix")
@@ -430,17 +457,18 @@ func TestNginxStaticRecipeAlsoRunsGPGVerify(t *testing.T) {
 // ── OpenrestyRecipe ───────────────────────────────────────────────────────────
 
 func TestOpenrestyRecipeName(t *testing.T) {
-	r := &recipe.OpenrestyRecipe{}
+	r := &recipe.OpenrestyRecipe{Fetcher: newFakeFetcher()}
 	assert.Equal(t, "openresty", r.Name())
 }
 
 func TestOpenrestyRecipeArtifact(t *testing.T) {
-	r := &recipe.OpenrestyRecipe{}
+	r := &recipe.OpenrestyRecipe{Fetcher: newFakeFetcher()}
 	assert.Equal(t, "x64", r.Artifact().Arch)
 }
 
 func TestOpenrestyRecipeBuild(t *testing.T) {
-	r := &recipe.OpenrestyRecipe{}
+	f := newFakeFetcher()
+	r := &recipe.OpenrestyRecipe{Fetcher: f}
 	run := runner.NewFakeRunner()
 	s := newCompiledStack(t)
 	src := newInput("openresty", "1.21.4.3", "https://openresty.org/download/openresty-1.21.4.3.tar.gz")
@@ -448,8 +476,9 @@ func TestOpenrestyRecipeBuild(t *testing.T) {
 	err := r.Build(context.Background(), s, src, run, &output.OutData{})
 	require.NoError(t, err)
 
-	// Should download source via wget (no GPG verification).
-	assert.True(t, hasCallMatching(run.Calls, "wget", src.URL), "should wget source")
+	// Should download source via Fetcher (not wget).
+	assert.True(t, hasDownload(f, src.URL), "should download source via Fetcher")
+	assert.False(t, hasCallMatching(run.Calls, "wget", src.URL), "must not use wget")
 	assert.False(t, hasCallMatching(run.Calls, "gpg", ""), "openresty must not run gpg verify")
 
 	// Should configure with PIC flags.
@@ -912,24 +941,11 @@ func TestHTTPDRecipeArtifact(t *testing.T) {
 	assert.Equal(t, "x64", r.Artifact().Arch)
 }
 
-// httpdFetcher returns a FakeFetcher pre-populated with valid JSON responses
-// for the 3 GitHub API URLs used by the HTTPD recipe.
-func httpdFetcher() *FakeFetcher {
-	f := newFakeFetcher()
-	f.BodyMap["https://api.github.com/repos/apache/apr/releases/latest"] =
-		[]byte(`{"tag_name":"1.7.4"}`)
-	f.BodyMap["https://api.github.com/repos/apache/apr-iconv/releases/latest"] =
-		[]byte(`{"tag_name":"1.2.2"}`)
-	f.BodyMap["https://api.github.com/repos/apache/apr-util/releases/latest"] =
-		[]byte(`{"tag_name":"1.6.3"}`)
-	return f
-}
-
 func TestHTTPDRecipeBuild(t *testing.T) {
 	useTempWorkDir(t)
 	writeFakeArtifact(t, "httpd-2.4.58-linux-x64.tgz")
 
-	f := httpdFetcher()
+	f := newFakeFetcher()
 	r := &recipe.HTTPDRecipe{Fetcher: f}
 	run := runner.NewFakeRunner()
 	s := newCompiledStack(t)
@@ -971,7 +987,7 @@ func TestHTTPDRecipeSetupTar(t *testing.T) {
 	useTempWorkDir(t)
 	writeFakeArtifact(t, "httpd-2.4.58-linux-x64.tgz")
 
-	f := httpdFetcher()
+	f := newFakeFetcher()
 	r := &recipe.HTTPDRecipe{Fetcher: f}
 	run := runner.NewFakeRunner()
 	s := newCompiledStack(t)
@@ -1008,16 +1024,13 @@ func TestHTTPDRecipeSetupTar(t *testing.T) {
 		"setup_tar should remove manual")
 }
 
-func TestHTTPDRecipeLatestGitTagVersion(t *testing.T) {
-	// Verify that APR versions discovered via git ls-remote are used correctly in configure calls.
-	// The latestGitTagVersion method calls `git ls-remote` directly (not via the runner/fetcher),
-	// so this test uses a real git call. It verifies that the configure call for APR uses a
-	// version string that does NOT start with 'v' (the method strips any leading 'v').
-	f := newFakeFetcher()
-
+func TestHTTPDRecipeVersionsFromStackConfig(t *testing.T) {
+	// Verify that APR sub-dep versions are read from the stack YAML config and
+	// that configure calls use the plain version string (no leading 'v' prefix).
 	useTempWorkDir(t)
 	writeFakeArtifact(t, "httpd-2.4.58-linux-x64.tgz")
 
+	f := newFakeFetcher()
 	r := &recipe.HTTPDRecipe{Fetcher: f}
 	run := runner.NewFakeRunner()
 	s := newCompiledStack(t)
@@ -1027,10 +1040,10 @@ func TestHTTPDRecipeLatestGitTagVersion(t *testing.T) {
 	err := r.Build(context.Background(), s, src, run, &output.OutData{})
 	require.NoError(t, err)
 
-	// The APR version from git tags must not include a leading 'v' prefix.
+	// The APR version from stack config must not include a leading 'v' prefix.
 	assert.False(t, hasCallMatching(run.Calls, "./configure", "apr-v"),
-		"configure prefix must not include the 'v' prefix from git tags")
-	// A configure call for APR must have occurred.
+		"configure prefix must not include a 'v' prefix")
+	// A configure call for APR-Util or HTTPD must reference --with-apr.
 	assert.True(t, hasCallMatching(run.Calls, "./configure", "--with-apr"),
 		"configure for APR-Util or HTTPD should reference --with-apr")
 }
@@ -1051,7 +1064,7 @@ func TestCompiledRecipeArtifactMetaSanity(t *testing.T) {
 		{&recipe.GoRecipe{Fetcher: f}, "linux", "x64"},
 		{&recipe.NginxRecipe{Fetcher: f}, "linux", "x64"},
 		{&recipe.NginxStaticRecipe{Fetcher: f}, "linux", "x64"},
-		{&recipe.OpenrestyRecipe{}, "linux", "x64"},
+		{&recipe.OpenrestyRecipe{Fetcher: f}, "linux", "x64"},
 		{&recipe.LibunwindRecipe{}, "linux", "noarch"},
 		{&recipe.LibgdiplusRecipe{}, "linux", "noarch"},
 		{&recipe.DepRecipe{Fetcher: f}, "linux", "x64"},
