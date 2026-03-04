@@ -1,5 +1,6 @@
-/*.tgz
+//*.tgz
 /*.tar.gz
+internal/recipe/artifacts/
 .bundle
 .ccache
 /logs
