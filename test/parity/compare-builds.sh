@@ -24,10 +24,10 @@
 #   source-shiny-latest/data.json
 # These are mounted into both containers at the working directory.
 #
-# The Ruby builder clones binary-builder master inside the container (for the
-# cflinuxfs4/ Ruby source tree) and mounts the local buildpacks-ci working tree
-# (task scripts stay in sync with local changes).  The Go builder mounts the
-# local binary-builder working tree so that in-progress changes are tested.
+# The Ruby builder clones the ruby-builder-final tag inside the container (for
+# the cflinuxfs4/ Ruby source tree) and mounts the local buildpacks-ci working
+# tree (task scripts stay in sync with local changes).  The Go builder mounts
+# the local binary-builder working tree so that in-progress changes are tested.
 
 set -euo pipefail
 
@@ -119,10 +119,10 @@ prepare_source() {
 
 # ── Ruby builder ─────────────────────────────────────────────────────────────
 #
-# The Ruby builder clones binary-builder master inside the container (for the
-# cflinuxfs4/ Ruby source tree) but mounts the local buildpacks-ci working tree
-# (so the task scripts stay in sync with local changes and are not affected by
-# upstream breakage).
+# The Ruby builder clones the ruby-builder-final tag inside the container (for
+# the cflinuxfs4/ Ruby source tree) and mounts the local buildpacks-ci working
+# tree (task scripts stay in sync with local changes).  The Go builder mounts
+# the local binary-builder working tree so that in-progress changes are tested.
 
 run_ruby_builder() {
   echo "--> Running Ruby builder..."
@@ -154,12 +154,12 @@ run_ruby_builder() {
       # (e.g. php_extensions/php-final-extensions.yml) can do so freely.
       cp -a /buildpacks-ci-ro /buildpacks-ci
 
-      # Clone binary-builder master for the Ruby source tree (cflinuxfs4/
-      # Gemfile, Gemfile.lock, bin/binary-builder, etc.).  We do NOT clone
-      # buildpacks-ci — the local working tree is mounted instead so the task
-      # scripts stay consistent with local changes.
-      echo "--> Cloning binary-builder master..."
-      git clone --depth=1 https://github.com/cloudfoundry/binary-builder.git /srv/binary-builder
+      # Clone the ruby-builder-final tag for the Ruby source tree (cflinuxfs4/
+      # Gemfile, Gemfile.lock, bin/binary-builder, etc.).  This tag points to
+      # the last commit on main before the Go builder was merged, so the parity
+      # baseline stays stable regardless of what main contains afterwards.
+      echo "--> Cloning binary-builder ruby-builder-final tag..."
+      git clone --depth=1 --branch ruby-builder-final https://github.com/cloudfoundry/binary-builder.git /srv/binary-builder
 
       RUBY_VERSION="3.4.6"
       if ! command -v ruby &>/dev/null || ! ruby --version | grep -q "3.4"; then
