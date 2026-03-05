@@ -124,12 +124,3 @@ func replaceShebangs(binDir string) error {
 		return os.WriteFile(path, []byte(newContent), 0755)
 	})
 }
-
-// mustCwd returns the current working directory, panicking on error.
-func mustCwd() string {
-	cwd, err := os.Getwd()
-	if err != nil {
-		panic(fmt.Sprintf("bundler: getting cwd: %v", err))
-	}
-	return cwd
-}

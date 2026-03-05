@@ -3,11 +3,8 @@ package recipe
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
-	"github.com/cloudfoundry/binary-builder/internal/archive"
 	"github.com/cloudfoundry/binary-builder/internal/fetch"
 	"github.com/cloudfoundry/binary-builder/internal/output"
 	"github.com/cloudfoundry/binary-builder/internal/runner"
@@ -24,10 +21,12 @@ func (b *BowerRecipe) Name() string { return "bower" }
 func (b *BowerRecipe) Artifact() ArtifactMeta {
 	return ArtifactMeta{OS: "linux", Arch: "noarch", Stack: ""}
 }
-
-func (b *BowerRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, r runner.Runner, _ *output.OutData) error {
-	dest := filepath.Join(os.TempDir(), fmt.Sprintf("bower-%s.tgz", src.Version))
-	return b.Fetcher.Download(ctx, src.URL, dest, src.PrimaryChecksum())
+func (b *BowerRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, r runner.Runner, out *output.OutData) error {
+	return (&RepackRecipe{
+		DepName: "bower",
+		Meta:    ArtifactMeta{OS: "linux", Arch: "noarch"},
+		Fetcher: b.Fetcher,
+	}).Build(ctx, s, src, r, out)
 }
 
 // YarnRecipe downloads yarn, strips 'v' prefix from version, strips top-level dir.
@@ -39,23 +38,14 @@ func (y *YarnRecipe) Name() string { return "yarn" }
 func (y *YarnRecipe) Artifact() ArtifactMeta {
 	return ArtifactMeta{OS: "linux", Arch: "noarch", Stack: ""}
 }
-
-func (y *YarnRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, r runner.Runner, outData *output.OutData) error {
-	// Yarn versions may carry a "v" prefix (e.g. "v1.22.19"). Strip it so the
-	// artifact filename and outData.Version are consistent without the prefix.
-	// Do NOT mutate src.Version directly — it was already copied into outData
-	// before Build was called, so mutating src would leave outData.Version with
-	// the prefix while the file on disk would not, causing findIntermediateArtifact
-	// to fail to match the glob.
-	version := strings.TrimPrefix(src.Version, "v")
-	outData.Version = version
-
-	dest := filepath.Join(os.TempDir(), fmt.Sprintf("yarn-%s.tgz", version))
-	if err := y.Fetcher.Download(ctx, src.URL, dest, src.PrimaryChecksum()); err != nil {
-		return fmt.Errorf("downloading yarn: %w", err)
-	}
-
-	return archive.StripTopLevelDir(dest)
+func (y *YarnRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, r runner.Runner, out *output.OutData) error {
+	return (&RepackRecipe{
+		DepName:            "yarn",
+		Meta:               ArtifactMeta{OS: "linux", Arch: "noarch"},
+		Fetcher:            y.Fetcher,
+		StripTopLevelDir:   true,
+		StripVersionPrefix: "v",
+	}).Build(ctx, s, src, r, out)
 }
 
 // SetuptoolsRecipe downloads setuptools, strips top-level dir (handles both tar.gz and zip).
@@ -67,21 +57,18 @@ func (s *SetuptoolsRecipe) Name() string { return "setuptools" }
 func (s *SetuptoolsRecipe) Artifact() ArtifactMeta {
 	return ArtifactMeta{OS: "linux", Arch: "noarch", Stack: ""}
 }
-
-func (s *SetuptoolsRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, r runner.Runner, _ *output.OutData) error {
-	// Infer filename from URL.
-	parts := strings.Split(src.URL, "/")
-	filename := parts[len(parts)-1]
-	dest := filepath.Join(os.TempDir(), filename)
-
-	if err := s.Fetcher.Download(ctx, src.URL, dest, src.PrimaryChecksum()); err != nil {
-		return fmt.Errorf("downloading setuptools: %w", err)
-	}
-
-	if strings.HasSuffix(src.URL, ".tar.gz") || strings.HasSuffix(src.URL, ".tgz") {
-		return archive.StripTopLevelDir(dest)
-	}
-	return archive.StripTopLevelDirFromZip(dest)
+func (s *SetuptoolsRecipe) Build(ctx context.Context, stk *stack.Stack, src *source.Input, r runner.Runner, out *output.OutData) error {
+	return (&RepackRecipe{
+		DepName:          "setuptools",
+		Meta:             ArtifactMeta{OS: "linux", Arch: "noarch"},
+		Fetcher:          s.Fetcher,
+		StripTopLevelDir: true,
+		// Setuptools infers the destination filename from the URL's last path segment.
+		DestFilename: func(_, url string) string {
+			parts := strings.Split(url, "/")
+			return parts[len(parts)-1]
+		},
+	}).Build(ctx, stk, src, r, out)
 }
 
 // RubygemsRecipe downloads rubygems and strips top-level dir.
@@ -93,14 +80,13 @@ func (rg *RubygemsRecipe) Name() string { return "rubygems" }
 func (rg *RubygemsRecipe) Artifact() ArtifactMeta {
 	return ArtifactMeta{OS: "linux", Arch: "noarch", Stack: ""}
 }
-
-func (rg *RubygemsRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, r runner.Runner, _ *output.OutData) error {
-	dest := filepath.Join(os.TempDir(), fmt.Sprintf("rubygems-%s.tgz", src.Version))
-	if err := rg.Fetcher.Download(ctx, src.URL, dest, src.PrimaryChecksum()); err != nil {
-		return fmt.Errorf("downloading rubygems: %w", err)
-	}
-
-	return archive.StripTopLevelDir(dest)
+func (rg *RubygemsRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, r runner.Runner, out *output.OutData) error {
+	return (&RepackRecipe{
+		DepName:          "rubygems",
+		Meta:             ArtifactMeta{OS: "linux", Arch: "noarch"},
+		Fetcher:          rg.Fetcher,
+		StripTopLevelDir: true,
+	}).Build(ctx, s, src, r, out)
 }
 
 // MinicondaRecipe is a URL passthrough — no file produced, just sets outData.

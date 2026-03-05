@@ -3,6 +3,8 @@ package recipe
 import (
 	"crypto/sha256"
 	"fmt"
+	"io"
+	"os"
 )
 
 // computeSHA256 returns the hex-encoded SHA256 of the given data.
@@ -15,6 +17,29 @@ func computeSHA256(data []byte) string {
 type SourceEntry struct {
 	URL    string
 	SHA256 string // hex SHA256 of the source tarball
+}
+
+// fileSHA256 returns the hex-encoded SHA256 digest of the file at path.
+func fileSHA256(path string) (string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
+}
+
+// mustCwd returns the current working directory, panicking on error.
+func mustCwd() string {
+	cwd, err := os.Getwd()
+	if err != nil {
+		panic(fmt.Sprintf("recipe: getting cwd: %v", err))
+	}
+	return cwd
 }
 
 // buildSourcesYAML returns the content of a sources.yml file matching the

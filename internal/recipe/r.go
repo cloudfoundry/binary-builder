@@ -2,10 +2,7 @@ package recipe
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
-	"io"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -168,20 +165,6 @@ func (r *RRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, 
 	outData.GitCommitSHA = sourceSHA
 
 	return nil
-}
-
-// fileSHA256 returns the hex-encoded SHA256 digest of the file at path.
-func fileSHA256(path string) (string, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
 // formatRserveVersion converts "1.8.14" → "1.8-14"

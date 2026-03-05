@@ -1,9 +1,9 @@
 package recipe
 
 import (
-	"path/filepath"
 	"context"
 	"fmt"
+	"path/filepath"
 
 	"github.com/cloudfoundry/binary-builder/internal/fetch"
 	"github.com/cloudfoundry/binary-builder/internal/output"
@@ -11,6 +11,82 @@ import (
 	"github.com/cloudfoundry/binary-builder/internal/source"
 	"github.com/cloudfoundry/binary-builder/internal/stack"
 )
+
+// GoToolRecipe implements the common pattern for building Go CLI tools (dep, glide, godep):
+//
+//  1. Download the source tarball to /tmp/<name>-<version>.tar.gz
+//  2. mkdir -p <tmpPath>
+//  3. tar xzf to <tmpPath>
+//  4. Rename <tmpPath>/<name>-* → <tmpPath>/<name>
+//  5. Run BuildCmd (sh -c "cd <srcDir> && GOPATH=... go get/build ...")
+//  6. Move binary + license to /tmp
+//  7. [optional] extra staging step (e.g. glide's mkdir /tmp/bin + copy)
+//  8. tar czf artifact from PackFiles
+type GoToolRecipe struct {
+	ToolName    string // "dep", "glide", "godep"
+	OrgPath     string // GitHub org path, e.g. "github.com/golang"
+	LicenseName string // "LICENSE" or "License" (godep uses capital-L, no-E)
+	// BuildCmd returns the shell command string executed via sh -c inside srcDir.
+	BuildCmd func(srcDir, version string) string
+	// PackFiles returns the paths to pack into the artifact tarball, relative to /tmp.
+	PackFiles func(name string) []string
+	// ExtraStaging runs after move and before packing; used by glide to stage /tmp/bin.
+	// May be nil.
+	ExtraStaging func(ctx context.Context, name string, run runner.Runner) error
+	Fetcher      fetch.Fetcher
+}
+
+func (g *GoToolRecipe) Name() string { return g.ToolName }
+func (g *GoToolRecipe) Artifact() ArtifactMeta {
+	return ArtifactMeta{OS: "linux", Arch: "x64", Stack: ""}
+}
+
+func (g *GoToolRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, run runner.Runner, _ *output.OutData) error {
+	name := g.ToolName
+	version := src.Version
+	tmpPath := fmt.Sprintf("/tmp/src/%s", g.OrgPath)
+	srcDir := fmt.Sprintf("%s/%s", tmpPath, name)
+	srcTarball := fmt.Sprintf("/tmp/%s-%s.tar.gz", name, version)
+	artifactPath := filepath.Join(mustCwd(), fmt.Sprintf("%s-v%s-linux-x64.tgz", name, version))
+
+	if err := g.Fetcher.Download(ctx, src.URL, srcTarball, src.PrimaryChecksum()); err != nil {
+		return fmt.Errorf("%s: downloading source: %w", name, err)
+	}
+	if err := run.Run("mkdir", "-p", tmpPath); err != nil {
+		return fmt.Errorf("%s: mkdir: %w", name, err)
+	}
+	if err := run.Run("tar", "xzf", srcTarball, "-C", tmpPath); err != nil {
+		return fmt.Errorf("%s: extracting source: %w", name, err)
+	}
+	if err := run.Run("sh", "-c",
+		fmt.Sprintf("mv %s/%s-* %s", tmpPath, name, srcDir)); err != nil {
+		return fmt.Errorf("%s: renaming source dir: %w", name, err)
+	}
+	if err := run.Run("sh", "-c", g.BuildCmd(srcDir, version)); err != nil {
+		return fmt.Errorf("%s: build: %w", name, err)
+	}
+
+	// Move binary to /tmp/<name>.
+	if err := run.Run("mv", fmt.Sprintf("%s/%s", srcDir, name), fmt.Sprintf("/tmp/%s", name)); err != nil {
+		return fmt.Errorf("%s: moving binary: %w", name, err)
+	}
+	// Move license file to /tmp/<license>.
+	if err := run.Run("mv", fmt.Sprintf("%s/%s", srcDir, g.LicenseName), fmt.Sprintf("/tmp/%s", g.LicenseName)); err != nil {
+		return fmt.Errorf("%s: moving license: %w", name, err)
+	}
+
+	if g.ExtraStaging != nil {
+		if err := g.ExtraStaging(ctx, name, run); err != nil {
+			return fmt.Errorf("%s: extra staging: %w", name, err)
+		}
+	}
+
+	packArgs := append([]string{"czf", artifactPath}, g.PackFiles(name)...)
+	if err := run.RunInDir("/tmp", "tar", packArgs...); err != nil {
+		return fmt.Errorf("%s: packing artifact: %w", name, err)
+	}
+	return nil
+}
 
 // DepRecipe builds the `dep` Go dependency manager tool.
 //
@@ -32,50 +108,21 @@ func (d *DepRecipe) Artifact() ArtifactMeta {
 	return ArtifactMeta{OS: "linux", Arch: "x64", Stack: ""}
 }
 
-func (d *DepRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, run runner.Runner, _ *output.OutData) error {
-	version := src.Version
-	tmpPath := "/tmp/src/github.com/golang"
-	srcDir := fmt.Sprintf("%s/dep", tmpPath)
-	srcTarball := fmt.Sprintf("/tmp/dep-%s.tar.gz", version)
-	artifactPath := filepath.Join(mustCwd(), fmt.Sprintf("dep-v%s-linux-x64.tgz", version))
-
-	if err := d.Fetcher.Download(ctx, src.URL, srcTarball, src.PrimaryChecksum()); err != nil {
-		return fmt.Errorf("dep: downloading source: %w", err)
-	}
-
-	if err := run.Run("mkdir", "-p", tmpPath); err != nil {
-		return err
-	}
-	if err := run.Run("tar", "xzf", srcTarball, "-C", tmpPath); err != nil {
-		return fmt.Errorf("dep: extracting source: %w", err)
-	}
-	// Rename dep-VERSION → dep (matching Ruby's FileUtils.mv(Dir.glob("dep-*").first, "dep")).
-	if err := run.Run("sh", "-c",
-		fmt.Sprintf("mv %s/dep-* %s", tmpPath, srcDir)); err != nil {
-		return fmt.Errorf("dep: renaming source dir: %w", err)
-	}
-
-	// go get with GOPATH workspace, run inside srcDir.
-	// Binary lands at /tmp/bin/dep (GOPATH second entry /tmp, bin subdir).
-	gopath := fmt.Sprintf("%s/deps/_workspace:/tmp", srcDir)
-	if err := run.Run("sh", "-c",
-		fmt.Sprintf("cd %s && GOPATH=%s /usr/local/go/bin/go get -asmflags -trimpath ./...", srcDir, gopath)); err != nil {
-		return fmt.Errorf("dep: go get: %w", err)
-	}
-
-	// Move LICENSE to /tmp/LICENSE.
-	if err := run.Run("mv", fmt.Sprintf("%s/LICENSE", srcDir), "/tmp/LICENSE"); err != nil {
-		return fmt.Errorf("dep: moving LICENSE: %w", err)
-	}
-
-	// Pack: bin/dep + bin/LICENSE inside the tgz.
-	// /tmp/bin/dep already exists from go get; /tmp/LICENSE was just moved there.
-	if err := run.RunInDir("/tmp", "tar", "czf", artifactPath,
-		"bin/dep", "bin/LICENSE"); err != nil {
-		return fmt.Errorf("dep: packing artifact: %w", err)
-	}
-
-	return nil
+func (d *DepRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, run runner.Runner, out *output.OutData) error {
+	return (&GoToolRecipe{
+		ToolName:    "dep",
+		OrgPath:     "github.com/golang",
+		LicenseName: "LICENSE",
+		BuildCmd: func(srcDir, _ string) string {
+			gopath := fmt.Sprintf("%s/deps/_workspace:/tmp", srcDir)
+			return fmt.Sprintf("cd %s && GOPATH=%s /usr/local/go/bin/go get -asmflags -trimpath ./...", srcDir, gopath)
+		},
+		// dep: binary lands at /tmp/bin/dep via GOPATH; pack directly from /tmp.
+		PackFiles: func(name string) []string {
+			return []string{"bin/dep", "bin/LICENSE"}
+		},
+		Fetcher: d.Fetcher,
+	}).Build(ctx, s, src, run, out)
 }
 
 // GlideRecipe builds the `glide` Go package manager tool.
@@ -99,61 +146,32 @@ func (g *GlideRecipe) Artifact() ArtifactMeta {
 	return ArtifactMeta{OS: "linux", Arch: "x64", Stack: ""}
 }
 
-func (g *GlideRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, run runner.Runner, _ *output.OutData) error {
-	version := src.Version
-	tmpPath := "/tmp/src/github.com/Masterminds"
-	srcDir := fmt.Sprintf("%s/glide", tmpPath)
-	srcTarball := fmt.Sprintf("/tmp/glide-%s.tar.gz", version)
-	artifactPath := filepath.Join(mustCwd(), fmt.Sprintf("glide-v%s-linux-x64.tgz", version))
-
-	if err := g.Fetcher.Download(ctx, src.URL, srcTarball, src.PrimaryChecksum()); err != nil {
-		return fmt.Errorf("glide: downloading source: %w", err)
-	}
-
-	if err := run.Run("mkdir", "-p", tmpPath); err != nil {
-		return err
-	}
-	if err := run.Run("tar", "xzf", srcTarball, "-C", tmpPath); err != nil {
-		return fmt.Errorf("glide: extracting source: %w", err)
-	}
-	// Rename glide-VERSION → glide.
-	if err := run.Run("sh", "-c",
-		fmt.Sprintf("mv %s/glide-* %s", tmpPath, srcDir)); err != nil {
-		return fmt.Errorf("glide: renaming source dir: %w", err)
-	}
-
-	// go build with GOPATH=/tmp, run inside srcDir.
-	if err := run.Run("sh", "-c",
-		fmt.Sprintf("cd %s && GOPATH=/tmp /usr/local/go/bin/go build", srcDir)); err != nil {
-		return fmt.Errorf("glide: go build: %w", err)
-	}
-
-	// Move binary and LICENSE to /tmp.
-	if err := run.Run("mv", fmt.Sprintf("%s/glide", srcDir), "/tmp/glide"); err != nil {
-		return fmt.Errorf("glide: moving binary: %w", err)
-	}
-	if err := run.Run("mv", fmt.Sprintf("%s/LICENSE", srcDir), "/tmp/LICENSE"); err != nil {
-		return fmt.Errorf("glide: moving LICENSE: %w", err)
-	}
-
-	// Pack: bin/glide + bin/LICENSE inside the tgz.
-	// ArchiveRecipe copies archive_files into {tmpdir}/bin/ then tars.
-	// We replicate: mkdir /tmp/bin, copy, tar.
-	if err := run.Run("mkdir", "-p", "/tmp/bin"); err != nil {
-		return err
-	}
-	if err := run.Run("cp", "/tmp/glide", "/tmp/bin/glide"); err != nil {
-		return fmt.Errorf("glide: copying binary: %w", err)
-	}
-	if err := run.Run("cp", "/tmp/LICENSE", "/tmp/bin/LICENSE"); err != nil {
-		return fmt.Errorf("glide: copying LICENSE: %w", err)
-	}
-	if err := run.RunInDir("/tmp", "tar", "czf", artifactPath,
-		"bin/glide", "bin/LICENSE"); err != nil {
-		return fmt.Errorf("glide: packing artifact: %w", err)
-	}
-
-	return nil
+func (g *GlideRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, run runner.Runner, out *output.OutData) error {
+	return (&GoToolRecipe{
+		ToolName:    "glide",
+		OrgPath:     "github.com/Masterminds",
+		LicenseName: "LICENSE",
+		BuildCmd: func(srcDir, _ string) string {
+			return fmt.Sprintf("cd %s && GOPATH=/tmp /usr/local/go/bin/go build", srcDir)
+		},
+		PackFiles: func(name string) []string {
+			return []string{"bin/glide", "bin/LICENSE"}
+		},
+		// glide: binary built in srcDir, not GOPATH bin; must stage manually.
+		ExtraStaging: func(_ context.Context, name string, run runner.Runner) error {
+			if err := run.Run("mkdir", "-p", "/tmp/bin"); err != nil {
+				return err
+			}
+			if err := run.Run("cp", fmt.Sprintf("/tmp/%s", name), fmt.Sprintf("/tmp/bin/%s", name)); err != nil {
+				return err
+			}
+			if err := run.Run("cp", "/tmp/LICENSE", "/tmp/bin/LICENSE"); err != nil {
+				return err
+			}
+			return nil
+		},
+		Fetcher: g.Fetcher,
+	}).Build(ctx, s, src, run, out)
 }
 
 // GodepRecipe builds the `godep` Go vendoring tool.
@@ -177,48 +195,19 @@ func (g *GodepRecipe) Artifact() ArtifactMeta {
 	return ArtifactMeta{OS: "linux", Arch: "x64", Stack: ""}
 }
 
-func (g *GodepRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, run runner.Runner, _ *output.OutData) error {
-	version := src.Version
-	tmpPath := "/tmp/src/github.com/tools"
-	srcDir := fmt.Sprintf("%s/godep", tmpPath)
-	srcTarball := fmt.Sprintf("/tmp/godep-%s.tar.gz", version)
-	artifactPath := filepath.Join(mustCwd(), fmt.Sprintf("godep-v%s-linux-x64.tgz", version))
-
-	if err := g.Fetcher.Download(ctx, src.URL, srcTarball, src.PrimaryChecksum()); err != nil {
-		return fmt.Errorf("godep: downloading source: %w", err)
-	}
-
-	if err := run.Run("mkdir", "-p", tmpPath); err != nil {
-		return err
-	}
-	if err := run.Run("tar", "xzf", srcTarball, "-C", tmpPath); err != nil {
-		return fmt.Errorf("godep: extracting source: %w", err)
-	}
-	// Rename godep-VERSION → godep.
-	if err := run.Run("sh", "-c",
-		fmt.Sprintf("mv %s/godep-* %s", tmpPath, srcDir)); err != nil {
-		return fmt.Errorf("godep: renaming source dir: %w", err)
-	}
-
-	// go get with GOPATH workspace, run inside srcDir.
-	// Binary lands at /tmp/bin/godep.
-	gopath := fmt.Sprintf("%s/Godeps/_workspace:/tmp", srcDir)
-	if err := run.Run("sh", "-c",
-		fmt.Sprintf("cd %s && GOPATH=%s /usr/local/go/bin/go get ./...", srcDir, gopath)); err != nil {
-		return fmt.Errorf("godep: go get: %w", err)
-	}
-
-	// Move License (capital L, no E — matches Ruby source) to /tmp/License.
-	if err := run.Run("mv", fmt.Sprintf("%s/License", srcDir), "/tmp/License"); err != nil {
-		return fmt.Errorf("godep: moving License: %w", err)
-	}
-
-	// Pack: bin/godep + bin/License inside the tgz.
-	// /tmp/bin/godep already exists from go get.
-	if err := run.RunInDir("/tmp", "tar", "czf", artifactPath,
-		"bin/godep", "bin/License"); err != nil {
-		return fmt.Errorf("godep: packing artifact: %w", err)
-	}
-
-	return nil
+func (g *GodepRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, run runner.Runner, out *output.OutData) error {
+	return (&GoToolRecipe{
+		ToolName:    "godep",
+		OrgPath:     "github.com/tools",
+		LicenseName: "License",
+		BuildCmd: func(srcDir, _ string) string {
+			gopath := fmt.Sprintf("%s/Godeps/_workspace:/tmp", srcDir)
+			return fmt.Sprintf("cd %s && GOPATH=%s /usr/local/go/bin/go get ./...", srcDir, gopath)
+		},
+		// godep: binary lands at /tmp/bin/godep via GOPATH; pack directly from /tmp.
+		PackFiles: func(_ string) []string {
+			return []string{"bin/godep", "bin/License"}
+		},
+		Fetcher: g.Fetcher,
+	}).Build(ctx, s, src, run, out)
 }
