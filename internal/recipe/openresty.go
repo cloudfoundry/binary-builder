@@ -3,8 +3,8 @@ package recipe
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 
+	"github.com/cloudfoundry/binary-builder/internal/autoconf"
 	"github.com/cloudfoundry/binary-builder/internal/fetch"
 	"github.com/cloudfoundry/binary-builder/internal/output"
 	"github.com/cloudfoundry/binary-builder/internal/runner"
@@ -23,83 +23,71 @@ func (o *OpenrestyRecipe) Artifact() ArtifactMeta {
 	return ArtifactMeta{OS: "linux", Arch: "x64", Stack: ""}
 }
 
-func (o *OpenrestyRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, run runner.Runner, _ *output.OutData) error {
-	version := src.Version
-	srcTarball := fmt.Sprintf("/tmp/openresty-%s.tar.gz", version)
-	srcDir := fmt.Sprintf("/tmp/openresty-%s", version)
-	destDir := fmt.Sprintf("/tmp/openresty-install-%s", version)
-	artifactPath := filepath.Join(mustCwd(), fmt.Sprintf("openresty-%s-linux-x64.tgz", version))
+func (o *OpenrestyRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, run runner.Runner, out *output.OutData) error {
+	return o.newAutoconf().Build(ctx, s, src, run, out)
+}
 
-	// Download source via Fetcher (no GPG verification — TODO: add when keys are published).
-	if err := o.Fetcher.Download(ctx, src.URL, srcTarball, src.PrimaryChecksum()); err != nil {
-		return fmt.Errorf("openresty: downloading source: %w", err)
-	}
+// newAutoconf constructs the AutoconfRecipe for openresty.
+func (o *OpenrestyRecipe) newAutoconf() *autoconf.Recipe {
+	return &autoconf.Recipe{
+		DepName: "openresty",
+		Fetcher: o.Fetcher,
+		Hooks: autoconf.Hooks{
+			// No apt packages needed for openresty.
+			AptPackages: func(_ *stack.Stack) []string { return nil },
 
-	if err := run.Run("tar", "xzf", srcTarball, "-C", "/tmp"); err != nil {
-		return fmt.Errorf("openresty: extracting source: %w", err)
-	}
+			// SourceProvider downloads and extracts the openresty source tarball.
+			SourceProvider: func(ctx context.Context, src *source.Input, f fetch.Fetcher, r runner.Runner) (string, error) {
+				version := src.Version
+				srcTarball := fmt.Sprintf("/tmp/openresty-%s.tar.gz", version)
+				if err := f.Download(ctx, src.URL, srcTarball, src.PrimaryChecksum()); err != nil {
+					return "", fmt.Errorf("downloading source: %w", err)
+				}
+				if err := r.Run("tar", "xzf", srcTarball, "-C", "/tmp"); err != nil {
+					return "", fmt.Errorf("extracting source: %w", err)
+				}
+				return fmt.Sprintf("/tmp/openresty-%s", version), nil
+			},
 
-	// Configure with PIC flags and -j2 parallelism.
-	// Flags match Ruby builder.rb build_openresty exactly.
-	prefix := fmt.Sprintf("%s/openresty", destDir)
-	configureArgs := []string{
-		fmt.Sprintf("--prefix=%s", prefix),
-		"-j2",
-		"--error-log-path=stderr",
-		"--with-http_ssl_module",
-		"--with-http_v2_module",
-		"--with-http_realip_module",
-		"--with-http_gunzip_module",
-		"--with-http_gzip_static_module",
-		"--with-http_auth_request_module",
-		"--with-http_random_index_module",
-		"--with-http_secure_link_module",
-		"--with-http_stub_status_module",
-		"--without-http_uwsgi_module",
-		"--without-http_scgi_module",
-		"--with-pcre",
-		"--with-pcre-jit",
-		"--with-cc-opt=-fPIC -pie",
-		"--with-ld-opt=-fPIC -pie -z now",
-		"--with-compat",
-		"--with-mail=dynamic",
-		"--with-mail_ssl_module",
-		"--with-stream=dynamic",
-	}
+			// ConfigureArgs returns the full openresty configure flags.
+			// Flags match Ruby builder.rb build_openresty exactly.
+			ConfigureArgs: func(_, prefix string) []string {
+				return []string{
+					fmt.Sprintf("--prefix=%s", prefix),
+					"-j2",
+					"--error-log-path=stderr",
+					"--with-http_ssl_module",
+					"--with-http_v2_module",
+					"--with-http_realip_module",
+					"--with-http_gunzip_module",
+					"--with-http_gzip_static_module",
+					"--with-http_auth_request_module",
+					"--with-http_random_index_module",
+					"--with-http_secure_link_module",
+					"--with-http_stub_status_module",
+					"--without-http_uwsgi_module",
+					"--without-http_scgi_module",
+					"--with-pcre",
+					"--with-pcre-jit",
+					"--with-cc-opt=-fPIC -pie",
+					"--with-ld-opt=-fPIC -pie -z now",
+					"--with-compat",
+					"--with-mail=dynamic",
+					"--with-mail_ssl_module",
+					"--with-stream=dynamic",
+				}
+			},
 
-	if err := run.RunInDir(srcDir, "./configure", configureArgs...); err != nil {
-		return fmt.Errorf("openresty: configure: %w", err)
-	}
+			MakeArgs: func() []string { return []string{"-j2"} },
 
-	if err := run.RunInDir(srcDir, "make", "-j2"); err != nil {
-		return fmt.Errorf("openresty: make: %w", err)
+			// AfterInstall removes the bin/openresty symlink and cleans nginx runtime dirs.
+			AfterInstall: func(ctx context.Context, prefix string, r runner.Runner) error {
+				if err := r.Run("rm", "-rf", fmt.Sprintf("%s/bin/openresty", prefix)); err != nil {
+					return fmt.Errorf("removing bin/openresty: %w", err)
+				}
+				nginxDir := fmt.Sprintf("%s/nginx", prefix)
+				return removeNginxRuntimeDirs(r, nginxDir)
+			},
+		},
 	}
-
-	if err := run.Run("mkdir", "-p", prefix); err != nil {
-		return err
-	}
-
-	if err := run.RunInDir(srcDir, "make", "install"); err != nil {
-		return fmt.Errorf("openresty: make install: %w", err)
-	}
-
-	// Clean up: remove nginx/html, nginx/conf, bin/openresty; recreate nginx/conf.
-	nginxDir := fmt.Sprintf("%s/nginx", prefix)
-	if err := run.Run("rm", "-rf",
-		fmt.Sprintf("%s/html", nginxDir),
-		fmt.Sprintf("%s/conf", nginxDir),
-		fmt.Sprintf("%s/bin/openresty", prefix),
-	); err != nil {
-		return fmt.Errorf("openresty: cleanup: %w", err)
-	}
-	if err := run.Run("mkdir", "-p", fmt.Sprintf("%s/conf", nginxDir)); err != nil {
-		return err
-	}
-
-	// Pack from inside the openresty install dir.
-	if err := run.Run("tar", "czf", artifactPath, "-C", prefix, "."); err != nil {
-		return fmt.Errorf("openresty: packing artifact: %w", err)
-	}
-
-	return nil
 }

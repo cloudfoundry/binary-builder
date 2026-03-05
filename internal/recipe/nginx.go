@@ -3,10 +3,10 @@ package recipe
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"slices"
 
 	"github.com/cloudfoundry/binary-builder/internal/archive"
+	"github.com/cloudfoundry/binary-builder/internal/autoconf"
 	"github.com/cloudfoundry/binary-builder/internal/fetch"
 	"github.com/cloudfoundry/binary-builder/internal/gpg"
 	"github.com/cloudfoundry/binary-builder/internal/output"
@@ -56,125 +56,125 @@ func (n *NginxRecipe) Artifact() ArtifactMeta {
 	return ArtifactMeta{OS: "linux", Arch: "x64", Stack: ""}
 }
 
-func (n *NginxRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, run runner.Runner, _ *output.OutData) error {
-	return buildNginxVariant(ctx, src, run, n.Fetcher, false)
+func (n *NginxRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, run runner.Runner, out *output.OutData) error {
+	return newNginxAutoconf(n.Fetcher, false).Build(ctx, s, src, run, out)
 }
 
-// buildNginxVariant implements the shared nginx/nginx-static build logic.
+// NginxStaticRecipe builds nginx with PIE flags and a minimal module set.
+type NginxStaticRecipe struct {
+	Fetcher fetch.Fetcher
+}
+
+func (n *NginxStaticRecipe) Name() string { return "nginx-static" }
+func (n *NginxStaticRecipe) Artifact() ArtifactMeta {
+	return ArtifactMeta{OS: "linux", Arch: "x64", Stack: ""}
+}
+
+func (n *NginxStaticRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, run runner.Runner, out *output.OutData) error {
+	return newNginxAutoconf(n.Fetcher, true).Build(ctx, s, src, run, out)
+}
+
+// newNginxAutoconf constructs the AutoconfRecipe for nginx or nginx-static.
 //
-// Ruby uses `--prefix=/` with `DESTDIR={destDir}/nginx` for make install, so the
-// install tree ends up at {destDir}/nginx/{sbin,modules,…}.
-// Then html/ and conf/ are removed from that tree and an empty conf/ recreated.
+// isStatic=true → PIE flags, minimal modules (nginx-static)
+// isStatic=false → PIC flags + dynamic modules (nginx)
 //
-// Packing differs by variant:
-//   - nginx-static: tars the `nginx` directory (from inside destDir), producing
-//     an archive whose top-level entry is `nginx/`. The outer builder strips that.
-//   - nginx (non-static): tars `.` from inside destDir (which contains `nginx/`),
-//     producing an archive whose top-level entry is `nginx/`. The outer builder strips that.
-//
-// isStatic=true uses PIE flags; isStatic=false uses PIC flags + dynamic modules.
-func buildNginxVariant(ctx context.Context, src *source.Input, run runner.Runner, fetcher fetch.Fetcher, isStatic bool) error {
-	version := src.Version
-	srcTarURL := src.URL
-	sigURL := src.URL + ".asc"
-
-	// Verify GPG signature of the tarball.
-	if err := gpg.VerifySignature(ctx, srcTarURL, sigURL, nginxGPGKeys, run); err != nil {
-		return fmt.Errorf("nginx: GPG verification: %w", err)
-	}
-
-	srcDir := fmt.Sprintf("/tmp/nginx-%s", version)
-	// destDir is the DESTDIR for make install. With --prefix=/ the nginx tree
-	// is installed to {destDir}/nginx/{sbin,modules,...}.
-	destDir := fmt.Sprintf("/tmp/nginx-install-%s", version)
-	nginxInstallDir := fmt.Sprintf("%s/nginx", destDir)
-
-	// Download and extract source.
-	srcTarball := fmt.Sprintf("/tmp/nginx-%s.tar.gz", version)
-	if err := fetcher.Download(ctx, srcTarURL, srcTarball, src.PrimaryChecksum()); err != nil {
-		return fmt.Errorf("nginx: downloading source: %w", err)
-	}
-	if err := run.Run("tar", "xzf", srcTarball, "-C", "/tmp"); err != nil {
-		return fmt.Errorf("nginx: extracting source: %w", err)
-	}
-
-	// Build configure args. Base args include --prefix=/ (Ruby parity).
-	// Custom args are appended after the base args (nginx configure flags are order-independent).
-	var customArgs []string
+// Install layout: --prefix=/ with DESTDIR=<prefix>/nginx causes the install
+// tree to land at <prefix>/nginx/{sbin,modules,...}.
+// AfterPack strips the top-level dir so the final artifact's root is nginx/.
+func newNginxAutoconf(fetcher fetch.Fetcher, isStatic bool) *autoconf.Recipe {
+	depName := "nginx"
 	if isStatic {
-		// nginx-static: PIE flags, minimal modules (no dynamic modules).
-		customArgs = []string{
-			"--with-cc-opt=-fPIE -pie",
-			"--with-ld-opt=-fPIE -pie -z now",
-		}
-	} else {
-		// nginx: PIC flags + dynamic modules.
-		customArgs = []string{
-			"--with-cc-opt=-fPIC -pie",
-			"--with-ld-opt=-fPIC -pie -z now",
-			"--with-compat",
-			"--with-mail=dynamic",
-			"--with-mail_ssl_module",
-			"--with-stream=dynamic",
-			"--with-http_sub_module",
-		}
-	}
-	// Use slices.Concat to avoid appending to the package-level slice's backing array.
-	configureArgs := slices.Concat(nginxBaseConfigureArgs, customArgs)
-
-	if err := run.RunInDir(srcDir, "./configure", configureArgs...); err != nil {
-		return fmt.Errorf("nginx: configure: %w", err)
+		depName = "nginx-static"
 	}
 
-	if err := run.RunInDir(srcDir, "make"); err != nil {
-		return fmt.Errorf("nginx: make: %w", err)
-	}
+	return &autoconf.Recipe{
+		DepName: depName,
+		Fetcher: fetcher,
+		Hooks: autoconf.Hooks{
+			// No apt packages needed for nginx.
+			AptPackages: func(_ *stack.Stack) []string { return nil },
 
-	if err := run.Run("mkdir", "-p", nginxInstallDir); err != nil {
-		return err
-	}
+			// BeforeDownload verifies the GPG signature of the source tarball.
+			BeforeDownload: func(ctx context.Context, src *source.Input, r runner.Runner) error {
+				sigURL := src.URL + ".asc"
+				return gpg.VerifySignature(ctx, src.URL, sigURL, nginxGPGKeys, r)
+			},
 
-	// make install with DESTDIR so --prefix=/ resolves relative to destDir.
-	if err := run.RunWithEnv(
-		map[string]string{"DESTDIR": nginxInstallDir},
-		"make", "-C", srcDir, "install",
-	); err != nil {
-		return fmt.Errorf("nginx: make install: %w", err)
-	}
+			// SourceProvider downloads and extracts the nginx source tarball.
+			SourceProvider: func(ctx context.Context, src *source.Input, f fetch.Fetcher, r runner.Runner) (string, error) {
+				version := src.Version
+				srcTarball := fmt.Sprintf("/tmp/nginx-%s.tar.gz", version)
+				if err := f.Download(ctx, src.URL, srcTarball, src.PrimaryChecksum()); err != nil {
+					return "", fmt.Errorf("downloading source: %w", err)
+				}
+				if err := r.Run("tar", "xzf", srcTarball, "-C", "/tmp"); err != nil {
+					return "", fmt.Errorf("extracting source: %w", err)
+				}
+				return fmt.Sprintf("/tmp/nginx-%s", src.Version), nil
+			},
 
-	// Remove html/ and conf/ from install tree, recreate empty conf/.
+			// AfterExtract creates the DESTDIR install directory before make install.
+			AfterExtract: func(_ context.Context, _, prefix string, r runner.Runner) error {
+				nginxInstallDir := fmt.Sprintf("%s/nginx", prefix)
+				return r.Run("mkdir", "-p", nginxInstallDir)
+			},
+
+			// ConfigureArgs returns the full nginx configure flags for this variant.
+			// Base args include --prefix=/ (Ruby parity); variant args follow.
+			ConfigureArgs: func(_, _ string) []string {
+				var variantArgs []string
+				if isStatic {
+					variantArgs = []string{
+						"--with-cc-opt=-fPIE -pie",
+						"--with-ld-opt=-fPIE -pie -z now",
+					}
+				} else {
+					variantArgs = []string{
+						"--with-cc-opt=-fPIC -pie",
+						"--with-ld-opt=-fPIC -pie -z now",
+						"--with-compat",
+						"--with-mail=dynamic",
+						"--with-mail_ssl_module",
+						"--with-stream=dynamic",
+						"--with-http_sub_module",
+					}
+				}
+				// Use slices.Concat to avoid appending to the package-level slice's backing array.
+				return slices.Concat(nginxBaseConfigureArgs, variantArgs)
+			},
+
+			// InstallEnv sets DESTDIR so --prefix=/ resolves relative to <prefix>/nginx.
+			InstallEnv: func(prefix string) map[string]string {
+				return map[string]string{"DESTDIR": fmt.Sprintf("%s/nginx", prefix)}
+			},
+
+			// AfterInstall removes html/ and conf/ from the nginx install tree.
+			AfterInstall: func(_ context.Context, prefix string, r runner.Runner) error {
+				nginxInstallDir := fmt.Sprintf("%s/nginx", prefix)
+				return removeNginxRuntimeDirs(r, nginxInstallDir)
+			},
+
+			// AfterPack strips the top-level directory from the artifact so the
+			// archive root is nginx/ (matching the Ruby builder output).
+			AfterPack: func(artifactPath string) error {
+				return archive.StripTopLevelDir(artifactPath)
+			},
+		},
+	}
+}
+
+// removeNginxRuntimeDirs removes html/ and conf/ from nginxDir, then recreates
+// an empty conf/. Shared between nginx and openresty post-install cleanup.
+func removeNginxRuntimeDirs(run runner.Runner, nginxDir string) error {
 	if err := run.Run("rm", "-rf",
-		fmt.Sprintf("%s/html", nginxInstallDir),
-		fmt.Sprintf("%s/conf", nginxInstallDir),
+		fmt.Sprintf("%s/html", nginxDir),
+		fmt.Sprintf("%s/conf", nginxDir),
 	); err != nil {
-		return fmt.Errorf("nginx: removing html/conf: %w", err)
+		return fmt.Errorf("removing html/conf: %w", err)
 	}
-	if err := run.Run("mkdir", "-p", fmt.Sprintf("%s/conf", nginxInstallDir)); err != nil {
-		return err
+	if err := run.Run("mkdir", "-p", fmt.Sprintf("%s/conf", nginxDir)); err != nil {
+		return fmt.Errorf("recreating conf: %w", err)
 	}
-
-	// Pack the artifact.
-	// Both variants produce an archive with `nginx/` as the top-level dir.
-	// Recipes write artifacts to an absolute path in CWD so main.go can find them.
-	var artifactBasename string
-	if isStatic {
-		artifactBasename = fmt.Sprintf("nginx-static-%s-linux-x64.tgz", version)
-	} else {
-		artifactBasename = fmt.Sprintf("nginx-%s-linux-x64.tgz", version)
-	}
-	artifactPath := filepath.Join(mustCwd(), artifactBasename)
-
-	if isStatic {
-		// Pack `nginx` dir from inside destDir → top-level entry is nginx/.
-		if err := run.RunInDir(destDir, "tar", "czf", artifactPath, "nginx"); err != nil {
-			return fmt.Errorf("nginx-static: packing artifact: %w", err)
-		}
-	} else {
-		// Pack `.` from inside destDir → top-level entry is nginx/ (only dir present).
-		if err := run.RunInDir(destDir, "tar", "czf", artifactPath, "."); err != nil {
-			return fmt.Errorf("nginx: packing artifact: %w", err)
-		}
-	}
-
-	return archive.StripTopLevelDir(artifactPath)
+	return nil
 }

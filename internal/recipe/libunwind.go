@@ -3,10 +3,10 @@ package recipe
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"strings"
 
-	"github.com/cloudfoundry/binary-builder/internal/apt"
+	"github.com/cloudfoundry/binary-builder/internal/autoconf"
+	"github.com/cloudfoundry/binary-builder/internal/fetch"
 	"github.com/cloudfoundry/binary-builder/internal/output"
 	"github.com/cloudfoundry/binary-builder/internal/runner"
 	"github.com/cloudfoundry/binary-builder/internal/source"
@@ -23,65 +23,50 @@ func (l *LibunwindRecipe) Artifact() ArtifactMeta {
 	return ArtifactMeta{OS: "linux", Arch: "noarch", Stack: ""}
 }
 
-func (l *LibunwindRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, run runner.Runner, _ *output.OutData) error {
-	// Install autotools needed to regenerate ./configure from configure.ac.
-	// GitHub source archives only contain autotools sources, not the generated script.
-	a := apt.New(run)
-	if err := a.Install(ctx, s.AptPackages["libunwind_build"]...); err != nil {
-		return fmt.Errorf("libunwind: apt install libunwind_build: %w", err)
-	}
+func (l *LibunwindRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, run runner.Runner, out *output.OutData) error {
+	return newLibunwindAutoconf().Build(ctx, s, src, run, out)
+}
 
-	version := src.Version
+// newLibunwindAutoconf constructs the AutoconfRecipe for libunwind.
+func newLibunwindAutoconf() *autoconf.Recipe {
+	return &autoconf.Recipe{
+		DepName: "libunwind",
+		// No Fetcher: SourceProvider reads from source/ instead.
+		Hooks: autoconf.Hooks{
+			AptPackages: func(s *stack.Stack) []string {
+				return s.AptPackages["libunwind_build"]
+			},
 
-	// Derive the directory name from the URL filename by stripping .tar.gz.
-	parts := strings.Split(src.URL, "/")
-	filename := parts[len(parts)-1]
-	tag := strings.TrimSuffix(strings.TrimSuffix(filename, ".tar.gz"), ".tgz")
-	// Two URL styles are in use:
-	//   refs/tags/v1.6.2.tar.gz   → tag="v1.6.2"         → extracts to libunwind-1.6.2/
-	//   libunwind-1.6.2.tar.gz    → tag="libunwind-1.6.2" → extracts to libunwind-1.6.2/
-	// Avoid double-prefixing when the filename already starts with "libunwind-".
-	var dirName string
-	if strings.HasPrefix(tag, "libunwind-") {
-		dirName = tag
-	} else {
-		dirName = "libunwind-" + strings.TrimPrefix(tag, "v")
-	}
+			// SourceProvider reads the pre-downloaded tarball from source/ and
+			// extracts it to /tmp, returning the extracted directory path.
+			SourceProvider: func(ctx context.Context, src *source.Input, _ fetch.Fetcher, r runner.Runner) (string, error) {
+				parts := strings.Split(src.URL, "/")
+				filename := parts[len(parts)-1]
+				tag := strings.TrimSuffix(strings.TrimSuffix(filename, ".tar.gz"), ".tgz")
+				// Two URL styles:
+				//   refs/tags/v1.6.2.tar.gz   → tag="v1.6.2"         → extracts to libunwind-1.6.2/
+				//   libunwind-1.6.2.tar.gz    → tag="libunwind-1.6.2" → extracts to libunwind-1.6.2/
+				var dirName string
+				if strings.HasPrefix(tag, "libunwind-") {
+					dirName = tag
+				} else {
+					dirName = "libunwind-" + strings.TrimPrefix(tag, "v")
+				}
 
-	srcTarball := fmt.Sprintf("source/%s", filename)
-	srcDir := fmt.Sprintf("/tmp/%s", dirName)
-	builtPath := fmt.Sprintf("/tmp/libunwind-built-%s", version)
-	artifactPath := filepath.Join(mustCwd(), fmt.Sprintf("%s.tgz", dirName))
+				srcTarball := fmt.Sprintf("source/%s", filename)
+				if err := r.Run("tar", "xzf", srcTarball, "-C", "/tmp"); err != nil {
+					return "", fmt.Errorf("extracting source: %w", err)
+				}
+				return fmt.Sprintf("/tmp/%s", dirName), nil
+			},
 
-	// Extract the pre-downloaded tarball.
-	if err := run.Run("tar", "xzf", srcTarball, "-C", "/tmp"); err != nil {
-		return fmt.Errorf("libunwind: extracting source: %w", err)
-	}
+			// AfterExtract regenerates ./configure from configure.ac.
+			// GitHub source archives only contain autotools sources, not the generated script.
+			AfterExtract: func(ctx context.Context, srcDir, _ string, r runner.Runner) error {
+				return r.RunInDir(srcDir, "autoreconf", "-i")
+			},
 
-	if err := run.Run("mkdir", "-p", builtPath); err != nil {
-		return err
+			PackDirs: func() []string { return []string{"include", "lib"} },
+		},
 	}
-
-	// Regenerate ./configure from configure.ac (GitHub archives ship only autotools sources).
-	if err := run.RunInDir(srcDir, "autoreconf", "-i"); err != nil {
-		return fmt.Errorf("libunwind: autoreconf: %w", err)
-	}
-
-	// Configure, make, install.
-	if err := run.RunInDir(srcDir, "./configure", fmt.Sprintf("--prefix=%s", builtPath)); err != nil {
-		return fmt.Errorf("libunwind: configure: %w", err)
-	}
-	if err := run.RunInDir(srcDir, "make"); err != nil {
-		return fmt.Errorf("libunwind: make: %w", err)
-	}
-	if err := run.RunInDir(srcDir, "make", "install"); err != nil {
-		return fmt.Errorf("libunwind: make install: %w", err)
-	}
-
-	// Pack only include/ and lib/ directories.
-	if err := run.RunInDir(builtPath, "tar", "czf", artifactPath, "include", "lib"); err != nil {
-		return fmt.Errorf("libunwind: packing artifact: %w", err)
-	}
-
-	return nil
 }
