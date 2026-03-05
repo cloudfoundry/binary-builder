@@ -149,13 +149,68 @@ type Recipe interface {
 }
 ```
 
+### Shared recipe abstractions
+
+Before writing a new recipe from scratch, check whether one of these abstractions fits:
+
+| Abstraction | Location | Use when |
+|-------------|----------|----------|
+| `autoconf.Recipe` | `internal/autoconf/` | configure / make / make install cycle (libunwind, libgdiplus, openresty, nginx) |
+| `RepackRecipe` | `internal/recipe/repack.go` | Download an archive and optionally strip its top-level dir (bower, yarn, setuptools, rubygems) |
+| `BundleRecipe` | `internal/recipe/bundle.go` | `pip3 download` multiple packages into a tarball (pip, pipenv) |
+| `GoToolRecipe` | `internal/recipe/dep.go` | Download + build a Go tool with `go get`/`go build` (dep, glide, godep) |
+| `PassthroughRecipe` | `internal/recipe/passthrough.go` | No build step — just record the upstream URL and SHA256 |
+
+#### Using `autoconf.Recipe`
+
+`autoconf.Recipe` lives in `internal/autoconf/` (separate package to avoid import cycles).
+It is **not** a `recipe.Recipe` itself — wrap it in a thin struct in `internal/recipe/`:
+
+```go
+type MyRecipe struct{ Fetcher fetch.Fetcher }
+
+func (r *MyRecipe) Name() string         { return "mylib" }
+func (r *MyRecipe) Artifact() ArtifactMeta { return ArtifactMeta{OS: "linux", Arch: "x64"} }
+
+func (r *MyRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input,
+    run runner.Runner, out *output.OutData) error {
+    return (&autoconf.Recipe{
+        DepName: "mylib",
+        Fetcher: r.Fetcher,
+        Hooks: autoconf.Hooks{
+            AptPackages:   func(s *stack.Stack) []string { return s.AptPackages["mylib_build"] },
+            ConfigureArgs: func(_, prefix string) []string { return []string{"--prefix=" + prefix, "--enable-shared"} },
+            PackDirs:      func() []string { return []string{"include", "lib"} },
+        },
+    }).Build(ctx, s, src, run, out)
+}
+```
+
+Available hooks (all optional — nil = default behaviour):
+
+| Hook | Default | Typical override |
+|------|---------|-----------------|
+| `AptPackages` | `s.AptPackages["{name}_build"]` | Custom package list |
+| `BeforeDownload` | no-op | GPG verification (nginx) |
+| `SourceProvider` | fetch tarball, extract to `/tmp/{name}-{version}` | `git clone` (libgdiplus), read from `source/` (libunwind) |
+| `AfterExtract` | no-op | `autoreconf -i`, `autogen.sh` |
+| `ConfigureArgs` | `["--prefix={prefix}"]` | Full custom args |
+| `ConfigureEnv` | nil | `CFLAGS`, `CXXFLAGS` |
+| `MakeArgs` | nil | `["-j2"]` |
+| `InstallEnv` | nil (falls back to `ConfigureEnv`) | `DESTDIR` (nginx) |
+| `AfterInstall` | no-op | Remove runtime dirs, symlinks |
+| `PackDirs` | `["."]` | `["include", "lib"]`, `["lib"]` |
+| `AfterPack` | no-op | `archive.StripTopLevelDir` (nginx) |
+
 ### Adding a new recipe
 1. Create `internal/recipe/{name}.go` with a struct implementing `Recipe`.
 2. Register it in `buildRegistry()` in `cmd/binary-builder/main.go`.
 3. Add a test in `internal/recipe/recipe_test.go` or a new `{name}_test.go` file.
 4. If the dep is architecture-neutral, set `Arch: "noarch"` in `ArtifactMeta`.
-5. For URL-passthrough deps (no build step), embed `*PassthroughRecipe` or
+5. For URL-passthrough deps (no build step), use `PassthroughRecipe` or
    set `outData.URL`/`outData.SHA256` directly.
+6. For autoconf-based deps, use `autoconf.Recipe` with hooks (see above).
+7. For download-and-strip deps, use `RepackRecipe`.
 
 ### Stack-specific behaviour
 Recipes **must not** contain `if s.Name == "cflinuxfs4"` guards. Instead:
