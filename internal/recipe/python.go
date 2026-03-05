@@ -38,11 +38,18 @@ func (p *PythonRecipe) Build(ctx context.Context, s *stack.Stack, src *source.In
 	if s.Python.UseForceYes {
 		aptFlag = "--force-yes"
 	}
-	debPkgs := []string{
-		fmt.Sprintf("libtcl%s", tclVersion),
-		fmt.Sprintf("libtk%s", tclVersion),
-		"libxss1",
-	}
+	// debPkgs are .deb packages that are downloaded and extracted (not installed)
+	// into the build prefix to bundle tcl/tk and its X11 dependencies.
+	// libtcl/libtk versions come from s.Python.TCLVersion (stack config).
+	// Additional packages (e.g. libxss1) live in s.AptPackages["python_deb_extras"]
+	// so they can be adjusted per stack without modifying Go source.
+	debPkgs := append(
+		[]string{
+			fmt.Sprintf("libtcl%s", tclVersion),
+			fmt.Sprintf("libtk%s", tclVersion),
+		},
+		s.AptPackages["python_deb_extras"]...,
+	)
 
 	builtPath := fmt.Sprintf("/app/vendor/python-%s", src.Version)
 	artifactPath := filepath.Join(mustCwd(), fmt.Sprintf("python-%s-linux-x64.tgz", src.Version))

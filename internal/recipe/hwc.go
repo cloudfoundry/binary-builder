@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/cloudfoundry/binary-builder/internal/apt"
 	"github.com/cloudfoundry/binary-builder/internal/fetch"
 	"github.com/cloudfoundry/binary-builder/internal/output"
 	"github.com/cloudfoundry/binary-builder/internal/runner"
@@ -13,7 +14,10 @@ import (
 	"github.com/cloudfoundry/binary-builder/internal/stack"
 )
 
-// HWCRecipe cross-compiles the Hostable Web Core (HWC) for Windows using mingw-w64.
+// HWCRecipe cross-compiles the Hostable Web Core (HWC) for Windows.
+// The cross-compiler apt packages (e.g. mingw-w64) are read from
+// s.AptPackages["hwc_build"] so they can be overridden per stack in
+// stacks/*.yaml without modifying Go source.
 //
 // Ruby recipe (hwc.rb) builds two Windows binaries:
 //   - hwc-windows-amd64  (via release-binaries.bash amd64)  → /tmp/hwc.exe
@@ -31,19 +35,18 @@ func (h *HWCRecipe) Artifact() ArtifactMeta {
 	return ArtifactMeta{OS: "windows", Arch: "x86-64", Stack: "any-stack"}
 }
 
-func (h *HWCRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, run runner.Runner, _ *output.OutData) error {
+func (h *HWCRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, run runner.Runner, _ *output.OutData) error {
 	version := src.Version
 	tmpPath := "/tmp/src/code.cloudfoundry.org"
 	srcDir := fmt.Sprintf("%s/hwc", tmpPath)
 	srcTarball := fmt.Sprintf("/tmp/hwc-%s.tar.gz", version)
 	artifactPath := filepath.Join(mustCwd(), fmt.Sprintf("hwc-%s-windows-x86-64.zip", version))
 
-	// Install mingw-w64 cross-compiler.
-	if err := run.RunWithEnv(
-		map[string]string{"DEBIAN_FRONTEND": "noninteractive"},
-		"apt-get", "install", "-y", "mingw-w64",
-	); err != nil {
-		return fmt.Errorf("hwc: installing mingw-w64: %w", err)
+	// Install cross-compiler packages (e.g. mingw-w64). The package list lives in
+	// stacks/*.yaml under apt_packages.hwc_build so it can be adjusted per stack
+	// without touching Go source.
+	if err := apt.New(run).Install(ctx, s.AptPackages["hwc_build"]...); err != nil {
+		return fmt.Errorf("hwc: installing hwc_build packages: %w", err)
 	}
 
 	// Download source.

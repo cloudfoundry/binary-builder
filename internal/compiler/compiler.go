@@ -25,12 +25,17 @@ func NewGCC(config stack.GCCConfig, a *apt.APT, r runner.Runner) *GCC {
 }
 
 // Setup installs GCC, optionally adds a PPA, and sets up update-alternatives.
-// On cflinuxfs4: adds PPA, installs gcc-12/g++-12.
-// On cflinuxfs5: skips PPA (empty string), installs gcc-14/g++-14 (native).
+// On cflinuxfs4: installs tool_packages (software-properties-common), adds PPA, installs gcc-12/g++-12.
+// On cflinuxfs5: installs tool_packages, skips PPA (empty string), installs gcc-14/g++-14 (native).
 func (g *GCC) Setup(ctx context.Context) error {
-	// Install software-properties-common for add-apt-repository.
-	if err := g.APT.Install(ctx, "software-properties-common"); err != nil {
-		return fmt.Errorf("installing software-properties-common: %w", err)
+	// Install prerequisite tool packages required before add-apt-repository
+	// (e.g. software-properties-common). The list lives in stacks/*.yaml under
+	// compilers.gcc.tool_packages so it can be adjusted per stack without
+	// touching Go source.
+	if len(g.Config.ToolPackages) > 0 {
+		if err := g.APT.Install(ctx, g.Config.ToolPackages...); err != nil {
+			return fmt.Errorf("installing GCC tool packages: %w", err)
+		}
 	}
 
 	// Add PPA only when configured (cflinuxfs4 needs it, cflinuxfs5 does not).

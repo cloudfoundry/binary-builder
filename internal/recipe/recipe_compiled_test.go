@@ -30,9 +30,10 @@ func newCompiledStack(t *testing.T) *stack.Stack {
 		},
 		Compilers: stack.CompilerConfig{
 			GCC: stack.GCCConfig{
-				Version:  12,
-				Packages: []string{"gcc-12", "g++-12"},
-				PPA:      "ppa:ubuntu-toolchain-r/test",
+				Version:      12,
+				Packages:     []string{"gcc-12", "g++-12"},
+				PPA:          "ppa:ubuntu-toolchain-r/test",
+				ToolPackages: []string{"software-properties-common"},
 			},
 			Gfortran: stack.GfortranConfig{
 				Version:  11,
@@ -42,10 +43,13 @@ func newCompiledStack(t *testing.T) *stack.Stack {
 			},
 		},
 		AptPackages: map[string][]string{
-			"ruby_build":       {"libffi-dev"},
-			"python_build":     {"libdb-dev", "libgdbm-dev", "tk8.6-dev"},
-			"node_build":       {},
-			"libgdiplus_build": {"automake", "libtool", "libglib2.0-dev", "libcairo2-dev"},
+			"ruby_build":        {"libffi-dev"},
+			"python_build":      {"libdb-dev", "libgdbm-dev", "tk8.6-dev"},
+			"python_deb_extras": {"libxss1"},
+			"node_build":        {},
+			"hwc_build":         {"mingw-w64"},
+			"pip_build":         {"python3", "python3-pip"},
+			"libgdiplus_build":  {"automake", "libtool", "libglib2.0-dev", "libcairo2-dev"},
 		},
 		Python: stack.PythonConfig{
 			TCLVersion:  "8.6",

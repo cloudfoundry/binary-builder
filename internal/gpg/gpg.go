@@ -15,8 +15,18 @@ import (
 // VerifySignature downloads a file and its .asc signature, imports all
 // public keys, and runs gpg --verify. Returns an error if verification fails.
 //
-// If gpg is not found in PATH, it is installed via apt-get (matching the
-// behavior of the Ruby builder's GPGHelper.verify_gpg_signature).
+// If gpg is not found in PATH, it is installed via apt-get before proceeding.
+//
+// Design note — hardcoded "gpg" package name:
+// Unlike most apt packages in this codebase (which are declared in
+// stacks/*.yaml so they can differ per Ubuntu version), "gpg" is intentionally
+// hardcoded here. The package name is identical across all supported Ubuntu
+// versions (22.04, 24.04, …) and is a universal baseline tool rather than a
+// stack-specific dependency. Threading *stack.Stack through VerifySignature and
+// all its callers would add API complexity for zero practical benefit. If this
+// assumption ever changes (e.g. a future stack ships gpg under a different
+// package name), introduce a gpg_tools key in stacks/*.yaml and pass a
+// *stack.Stack parameter to this function.
 func VerifySignature(ctx context.Context, fileURL, signatureURL string, publicKeyURLs []string, r runner.Runner) error {
 	// Install gpg if not present — mirrors Ruby's GPGHelper behaviour.
 	if _, err := exec.LookPath("gpg"); err != nil {

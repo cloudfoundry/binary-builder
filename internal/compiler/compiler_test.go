@@ -17,21 +17,28 @@ func TestGCCSetupCflinuxfs4(t *testing.T) {
 	a := apt.New(f)
 
 	config := stack.GCCConfig{
-		Version:  12,
-		Packages: []string{"gcc-12", "g++-12"},
-		PPA:      "ppa:ubuntu-toolchain-r/test",
+		Version:      12,
+		Packages:     []string{"gcc-12", "g++-12"},
+		PPA:          "ppa:ubuntu-toolchain-r/test",
+		ToolPackages: []string{"software-properties-common"},
 	}
 
 	gcc := compiler.NewGCC(config, a, f)
 	err := gcc.Setup(context.Background())
 	require.NoError(t, err)
 
-	// Expect: install software-properties-common, add-apt-repository, apt-get update,
+	// Expect: install software-properties-common (from ToolPackages), add-apt-repository, apt-get update,
 	//         install gcc-12 g++-12, update-alternatives
 	var callNames []string
 	for _, c := range f.Calls {
 		callNames = append(callNames, c.Name)
 	}
+
+	// Should see software-properties-common installed first (from ToolPackages).
+	require.NotEmpty(t, f.Calls)
+	firstAptInstall := f.Calls[0]
+	assert.Equal(t, "apt-get", firstAptInstall.Name)
+	assert.Contains(t, firstAptInstall.Args, "software-properties-common")
 
 	// Should see add-apt-repository (PPA is non-empty).
 	assert.Contains(t, callNames, "add-apt-repository")
@@ -66,14 +73,21 @@ func TestGCCSetupCflinuxfs5(t *testing.T) {
 	a := apt.New(f)
 
 	config := stack.GCCConfig{
-		Version:  14,
-		Packages: []string{"gcc-14", "g++-14"},
-		PPA:      "", // No PPA needed on cflinuxfs5.
+		Version:      14,
+		Packages:     []string{"gcc-14", "g++-14"},
+		PPA:          "", // No PPA needed on cflinuxfs5.
+		ToolPackages: []string{"software-properties-common"},
 	}
 
 	gcc := compiler.NewGCC(config, a, f)
 	err := gcc.Setup(context.Background())
 	require.NoError(t, err)
+
+	// ToolPackages should be installed even when PPA is empty.
+	require.NotEmpty(t, f.Calls)
+	firstAptInstall := f.Calls[0]
+	assert.Equal(t, "apt-get", firstAptInstall.Name)
+	assert.Contains(t, firstAptInstall.Args, "software-properties-common")
 
 	// Should NOT see add-apt-repository (PPA is empty).
 	for _, c := range f.Calls {
@@ -87,6 +101,30 @@ func TestGCCSetupCflinuxfs5(t *testing.T) {
 			assert.Contains(t, c.Args, "/usr/bin/gcc-14")
 			assert.Contains(t, c.Args, "/usr/bin/g++-14")
 			break
+		}
+	}
+}
+
+func TestGCCSetupNoToolPackages(t *testing.T) {
+	// When ToolPackages is empty, no tool install call should be made.
+	f := runner.NewFakeRunner()
+	a := apt.New(f)
+
+	config := stack.GCCConfig{
+		Version:      12,
+		Packages:     []string{"gcc-12", "g++-12"},
+		PPA:          "",
+		ToolPackages: nil, // explicitly empty
+	}
+
+	gcc := compiler.NewGCC(config, a, f)
+	require.NoError(t, gcc.Setup(context.Background()))
+
+	// No apt-get call should contain "software-properties-common".
+	for _, c := range f.Calls {
+		if c.Name == "apt-get" {
+			assert.NotContains(t, c.Args, "software-properties-common",
+				"no tool package install expected when ToolPackages is empty")
 		}
 	}
 }

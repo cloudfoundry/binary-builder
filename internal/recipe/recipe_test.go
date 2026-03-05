@@ -85,8 +85,17 @@ func (f *FakeFetcher) ReadBody(_ context.Context, url string) ([]byte, error) {
 
 func newStack(t *testing.T) *stack.Stack {
 	t.Helper()
-	s := &stack.Stack{Name: "cflinuxfs4"}
-	return s
+	return &stack.Stack{
+		Name: "cflinuxfs4",
+		AptPackages: map[string][]string{
+			"hwc_build":         {"mingw-w64"},
+			"pip_build":         {"python3", "python3-pip"},
+			"python_deb_extras": {"libxss1"},
+			"python_build":      {"libdb-dev", "libgdbm-dev", "tk8.6-dev"},
+			"node_build":        {},
+		},
+		Python: stack.PythonConfig{TCLVersion: "8.6"},
+	}
 }
 
 func newInput(name, version, url string) *source.Input {
@@ -574,6 +583,85 @@ func TestPipenvRecipeNameAndArtifact(t *testing.T) {
 	r := &recipe.PipenvRecipe{}
 	assert.Equal(t, "pipenv", r.Name())
 	assert.Equal(t, "noarch", r.Artifact().Arch)
+}
+
+// ── HWCRecipe ─────────────────────────────────────────────────────────────────
+
+func TestHWCRecipeInstallsFromStackConfig(t *testing.T) {
+	useTempWorkDir(t)
+	f := newFakeFetcher()
+	fakeRunner := runner.NewFakeRunner()
+
+	s := &stack.Stack{
+		Name:        "cflinuxfs4",
+		AptPackages: map[string][]string{"hwc_build": {"mingw-w64"}},
+	}
+	src := newInput("hwc", "2.9.0", "https://example.com/hwc.tgz")
+	r := &recipe.HWCRecipe{Fetcher: f}
+	_ = r.Build(context.Background(), s, src, fakeRunner, &output.OutData{})
+
+	// mingw-w64 must be installed via apt-get from the stack config, not hardcoded.
+	assert.True(t, hasCallMatching(fakeRunner.Calls, "apt-get", "mingw-w64"),
+		"hwc_build apt package 'mingw-w64' must be installed from stack config")
+}
+
+func TestHWCRecipeUsesStackAptPackages(t *testing.T) {
+	// Verify that a custom hwc_build list is honoured — the recipe must not
+	// hardcode the package name.
+	useTempWorkDir(t)
+	f := newFakeFetcher()
+	fakeRunner := runner.NewFakeRunner()
+
+	s := &stack.Stack{
+		Name:        "future-stack",
+		AptPackages: map[string][]string{"hwc_build": {"mingw-w64-custom"}},
+	}
+	src := newInput("hwc", "2.9.0", "https://example.com/hwc.tgz")
+	r := &recipe.HWCRecipe{Fetcher: f}
+	_ = r.Build(context.Background(), s, src, fakeRunner, &output.OutData{})
+
+	assert.True(t, hasCallMatching(fakeRunner.Calls, "apt-get", "mingw-w64-custom"),
+		"recipe must use hwc_build packages from stack config, not a hardcoded value")
+	assert.False(t, hasCallMatching(fakeRunner.Calls, "apt-get", "mingw-w64\x00"),
+		"hardcoded 'mingw-w64' (without suffix) must not appear when stack config overrides it")
+}
+
+// ── PipRecipe / pip_build config ──────────────────────────────────────────────
+
+func TestPipRecipeInstallsFromStackConfig(t *testing.T) {
+	f := newFakeFetcher()
+	fakeRunner := runner.NewFakeRunner()
+
+	s := &stack.Stack{
+		Name:        "cflinuxfs4",
+		AptPackages: map[string][]string{"pip_build": {"python3", "python3-pip"}},
+	}
+	src := newInput("pip", "24.0", "https://example.com/pip.tgz")
+	r := &recipe.PipRecipe{Fetcher: f}
+	_ = r.Build(context.Background(), s, src, fakeRunner, &output.OutData{})
+
+	// python3 and python3-pip must come from stack config.
+	assert.True(t, hasCallMatching(fakeRunner.Calls, "apt-get", "python3"),
+		"pip_build package 'python3' must be installed from stack config")
+	assert.True(t, hasCallMatching(fakeRunner.Calls, "apt-get", "python3-pip"),
+		"pip_build package 'python3-pip' must be installed from stack config")
+}
+
+func TestPipRecipeUsesStackPipBuildPackages(t *testing.T) {
+	// Verify a custom pip_build list is honoured.
+	f := newFakeFetcher()
+	fakeRunner := runner.NewFakeRunner()
+
+	s := &stack.Stack{
+		Name:        "future-stack",
+		AptPackages: map[string][]string{"pip_build": {"python3.12", "python3.12-pip"}},
+	}
+	src := newInput("pip", "24.0", "https://example.com/pip.tgz")
+	r := &recipe.PipRecipe{Fetcher: f}
+	_ = r.Build(context.Background(), s, src, fakeRunner, &output.OutData{})
+
+	assert.True(t, hasCallMatching(fakeRunner.Calls, "apt-get", "python3.12"),
+		"recipe must honour custom pip_build packages from stack config")
 }
 
 // ── DotnetSDKRecipe ───────────────────────────────────────────────────────────

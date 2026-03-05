@@ -24,6 +24,11 @@ type GCCConfig struct {
 	Version  int      `yaml:"version"`
 	Packages []string `yaml:"packages"`
 	PPA      string   `yaml:"ppa"`
+	// ToolPackages lists prerequisite apt packages needed before GCC setup
+	// (e.g. software-properties-common for add-apt-repository). Stored here
+	// rather than hardcoded in compiler.go so that future stacks can override
+	// the list without touching Go source.
+	ToolPackages []string `yaml:"tool_packages"`
 }
 
 // CompilerConfig groups all compiler configurations.

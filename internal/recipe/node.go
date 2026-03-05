@@ -36,7 +36,7 @@ func (n *NodeRecipe) Artifact() ArtifactMeta {
 
 func (n *NodeRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, run runner.Runner, _ *output.OutData) error {
 	// Step 1: Install python3/pip3 build tools (node configure requires python3).
-	if err := setupPythonAndPip(run); err != nil {
+	if err := setupPythonAndPip(ctx, s, run); err != nil {
 		return fmt.Errorf("node: setup python/pip: %w", err)
 	}
 

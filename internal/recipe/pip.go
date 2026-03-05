@@ -22,9 +22,9 @@ func (p *PipRecipe) Artifact() ArtifactMeta {
 	return ArtifactMeta{OS: "linux", Arch: "noarch", Stack: ""}
 }
 
-func (p *PipRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, r runner.Runner, _ *output.OutData) error {
+func (p *PipRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, r runner.Runner, _ *output.OutData) error {
 	// Setup python and pip.
-	if err := setupPythonAndPip(r); err != nil {
+	if err := setupPythonAndPip(ctx, s, r); err != nil {
 		return fmt.Errorf("pip: setup python: %w", err)
 	}
 
@@ -85,8 +85,8 @@ func (p *PipenvRecipe) Artifact() ArtifactMeta {
 	return ArtifactMeta{OS: "linux", Arch: "noarch", Stack: ""}
 }
 
-func (p *PipenvRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, r runner.Runner, _ *output.OutData) error {
-	if err := setupPythonAndPip(r); err != nil {
+func (p *PipenvRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, r runner.Runner, _ *output.OutData) error {
+	if err := setupPythonAndPip(ctx, s, r); err != nil {
 		return fmt.Errorf("pipenv: setup python: %w", err)
 	}
 
@@ -133,17 +133,21 @@ func (p *PipenvRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.In
 	return nil
 }
 
-// setupPythonAndPip installs python3 and pip3, then upgrades pip and setuptools.
-func setupPythonAndPip(r runner.Runner) error {
+// setupPythonAndPip installs the Python interpreter and pip via apt, then
+// upgrades pip and setuptools. The packages to install are read from
+// s.AptPackages["pip_build"] (stacks/*.yaml) so they can be adjusted per
+// stack without modifying Go source.
+func setupPythonAndPip(ctx context.Context, s *stack.Stack, r runner.Runner) error {
 	if err := r.RunWithEnv(
 		map[string]string{"DEBIAN_FRONTEND": "noninteractive"},
 		"apt-get", "update",
 	); err != nil {
 		return err
 	}
+	installArgs := append([]string{"install", "-y"}, s.AptPackages["pip_build"]...)
 	if err := r.RunWithEnv(
 		map[string]string{"DEBIAN_FRONTEND": "noninteractive"},
-		"apt-get", "install", "-y", "python3", "python3-pip",
+		"apt-get", installArgs...,
 	); err != nil {
 		return err
 	}
