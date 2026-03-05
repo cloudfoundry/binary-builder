@@ -23,10 +23,21 @@ func newCompiledStack(t *testing.T) *stack.Stack {
 	t.Helper()
 	return &stack.Stack{
 		Name: "cflinuxfs4",
-		RubyBootstrap: stack.RubyBootstrap{
-			URL:        "https://example.com/ruby-bootstrap.tgz",
-			SHA256:     "deadbeef",
-			InstallDir: "/opt/ruby",
+		Bootstrap: stack.BootstrapConfig{
+			Ruby: stack.BootstrapBinary{
+				URL:        "https://example.com/ruby-bootstrap.tgz",
+				SHA256:     "deadbeef",
+				InstallDir: "/opt/ruby",
+			},
+			JRuby: stack.BootstrapBinary{
+				URL:        "https://example.com/openjdk.tar.gz",
+				SHA256:     "cafebabe",
+				InstallDir: t.TempDir() + "/java",
+			},
+			Go: stack.BootstrapBinary{
+				URL:    "https://example.com/go-bootstrap.tar.gz",
+				SHA256: "deadbeef",
+			},
 		},
 		Compilers: stack.CompilerConfig{
 			GCC: stack.GCCConfig{
@@ -54,15 +65,6 @@ func newCompiledStack(t *testing.T) *stack.Stack {
 		Python: stack.PythonConfig{
 			TCLVersion:  "8.6",
 			UseForceYes: true,
-		},
-		JRuby: stack.JRubyConfig{
-			JDKURL:        "https://example.com/openjdk.tar.gz",
-			JDKSHA256:     "cafebabe",
-			JDKInstallDir: t.TempDir() + "/java",
-		},
-		Go: stack.GoConfig{
-			BootstrapURL:    "https://example.com/go-bootstrap.tar.gz",
-			BootstrapSHA256: "deadbeef",
 		},
 		HTTPDSubDeps: stack.HTTPDSubDepsConfig{
 			APR: stack.HTTPDSubDep{
@@ -174,7 +176,7 @@ func TestBundlerRecipeBuild(t *testing.T) {
 
 	// Should have downloaded the Ruby bootstrap binary.
 	require.Len(t, f.DownloadedURLs, 1)
-	assert.Equal(t, s.RubyBootstrap.URL, f.DownloadedURLs[0].URL)
+	assert.Equal(t, s.Bootstrap.Ruby.URL, f.DownloadedURLs[0].URL)
 
 	// Should create the install dir and extract the bootstrap.
 	assert.True(t, hasCallMatching(run.Calls, "mkdir", "/opt/ruby"), "should mkdir install dir")
@@ -183,7 +185,7 @@ func TestBundlerRecipeBuild(t *testing.T) {
 	// Should call gem install with version.
 	// The gem binary is invoked by full path (e.g. /opt/ruby/bin/gem) to avoid
 	// PATH resolution issues, so we match on the bootstrap install dir.
-	gemBin := filepath.Join(s.RubyBootstrap.InstallDir, "bin", "gem")
+	gemBin := filepath.Join(s.Bootstrap.Ruby.InstallDir, "bin", "gem")
 	assert.True(t, hasCallMatching(run.Calls, gemBin, "bundler"), "should call gem install bundler")
 	assert.True(t, hasCallMatching(run.Calls, gemBin, "2.5.6"), "should install specific version")
 	assert.True(t, hasCallMatching(run.Calls, gemBin, "--no-document"), "should skip documentation")
@@ -349,7 +351,7 @@ func TestGoRecipeStripsGoPrefix(t *testing.T) {
 
 	// Should download bootstrap AND source — 2 downloads total.
 	require.Len(t, f.DownloadedURLs, 2)
-	assert.True(t, hasDownload(f, s.Go.BootstrapURL), "should download bootstrap go binary")
+	assert.True(t, hasDownload(f, s.Bootstrap.Go.URL), "should download bootstrap go binary")
 	assert.True(t, hasDownload(f, src.URL), "should download go source")
 
 	// Artifact path should use stripped version.
@@ -875,7 +877,7 @@ func TestJRubyRecipeBuild(t *testing.T) {
 
 	// The recipe globs for jdk*/ inside JDKInstallDir after extracting the JDK
 	// tarball. FakeRunner doesn't execute commands, so create the subdir manually.
-	require.NoError(t, os.MkdirAll(filepath.Join(s.JRuby.JDKInstallDir, "jdk8u452"), 0755))
+	require.NoError(t, os.MkdirAll(filepath.Join(s.Bootstrap.JRuby.InstallDir, "jdk8u452"), 0755))
 
 	src := newInput("jruby", "9.4.5.0", "https://repo1.maven.org/maven2/org/jruby/jruby-dist/9.4.5.0/jruby-dist-9.4.5.0-src.zip")
 
@@ -883,7 +885,7 @@ func TestJRubyRecipeBuild(t *testing.T) {
 	require.NoError(t, err)
 
 	// JDK must be downloaded from the stack-configured URL.
-	assert.True(t, hasDownload(f, s.JRuby.JDKURL), "should download JDK from stack JRuby.JDKURL")
+	assert.True(t, hasDownload(f, s.Bootstrap.JRuby.URL), "should download JDK from stack JRuby.JDKURL")
 
 	// Maven must be downloaded.
 	assert.True(t, hasDownloadContaining(f, "apache-maven"), "should download Maven")
@@ -908,7 +910,7 @@ func TestJRubyRecipeVersion93(t *testing.T) {
 	run := runner.NewFakeRunner()
 	s := newCompiledStack(t)
 
-	require.NoError(t, os.MkdirAll(filepath.Join(s.JRuby.JDKInstallDir, "jdk8u452"), 0755))
+	require.NoError(t, os.MkdirAll(filepath.Join(s.Bootstrap.JRuby.InstallDir, "jdk8u452"), 0755))
 
 	src := newInput("jruby", "9.3.14.0", "https://repo1.maven.org/maven2/org/jruby/jruby-dist/9.3.14.0/jruby-dist-9.3.14.0-src.zip")
 

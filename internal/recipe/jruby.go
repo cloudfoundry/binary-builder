@@ -82,15 +82,15 @@ func (j *JRubyRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Inp
 	outData.ArtifactVersion = fullVersion
 
 	// Step 2: Download and install JDK from stack-specific URL.
-	jdkDir := s.JRuby.JDKInstallDir
+	jdkDir := s.Bootstrap.JRuby.InstallDir
 	jdkTar := fmt.Sprintf("%s/openjdk-8-jdk.tar.gz", jdkDir)
 
 	if err := run.Run("mkdir", "-p", jdkDir); err != nil {
 		return fmt.Errorf("jruby: creating JDK dir: %w", err)
 	}
 
-	jdkChecksum := source.Checksum{Algorithm: "sha256", Value: s.JRuby.JDKSHA256}
-	if err := j.Fetcher.Download(ctx, s.JRuby.JDKURL, jdkTar, jdkChecksum); err != nil {
+	jdkChecksum := source.Checksum{Algorithm: "sha256", Value: s.Bootstrap.JRuby.SHA256}
+	if err := j.Fetcher.Download(ctx, s.Bootstrap.JRuby.URL, jdkTar, jdkChecksum); err != nil {
 		return fmt.Errorf("jruby: downloading JDK: %w", err)
 	}
 

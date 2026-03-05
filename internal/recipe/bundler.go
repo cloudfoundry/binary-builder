@@ -28,7 +28,7 @@ func (b *BundlerRecipe) Artifact() ArtifactMeta {
 }
 
 func (b *BundlerRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, run runner.Runner, _ *output.OutData) error {
-	bootstrap := s.RubyBootstrap
+	bootstrap := s.Bootstrap.Ruby
 	rubyTarball := filepath.Join("/tmp", filepath.Base(bootstrap.URL))
 
 	// Download the pre-built Ruby bootstrap binary with SHA256 verification.

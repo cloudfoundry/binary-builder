@@ -59,8 +59,8 @@ func (g *GoRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input,
 	if err := run.Run("mkdir", "-p", bootstrapDir); err != nil {
 		return err
 	}
-	bootstrapChecksum := source.Checksum{Algorithm: "sha256", Value: s.Go.BootstrapSHA256}
-	if err := g.Fetcher.Download(ctx, s.Go.BootstrapURL, bootstrapTarball, bootstrapChecksum); err != nil {
+	bootstrapChecksum := source.Checksum{Algorithm: "sha256", Value: s.Bootstrap.Go.SHA256}
+	if err := g.Fetcher.Download(ctx, s.Bootstrap.Go.URL, bootstrapTarball, bootstrapChecksum); err != nil {
 		return fmt.Errorf("go: downloading bootstrap: %w", err)
 	}
 	if err := run.Run("tar", "xzf", bootstrapTarball, "-C", bootstrapDir, "--strip-components=1"); err != nil {

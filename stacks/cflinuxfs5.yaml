@@ -3,28 +3,6 @@ ubuntu_version: "24.04"
 ubuntu_codename: noble
 docker_image: cloudfoundry/cflinuxfs5
 
-ruby_bootstrap:
-  url: https://buildpacks.cloudfoundry.org/dependencies/ruby/ruby_3.3.6_linux_x64_cflinuxfs4_e4311262.tgz
-  sha256: e4311262803d0e1a01c83001e3e98ad58700b5cc36eff12433f24312b11e3dc9
-  install_dir: /opt/ruby
-
-compilers:
-  gfortran:
-    version: 14
-    bin: /usr/bin/x86_64-linux-gnu-gfortran-14
-    lib_path: /usr/lib/gcc/x86_64-linux-gnu/14
-    packages:
-      - gfortran
-      - libgfortran-14-dev
-  gcc:
-    version: 14
-    packages:
-      - gcc-14
-      - g++-14
-    ppa: ""
-    tool_packages:
-      - software-properties-common
-
 apt_packages:
   php_build:
     - automake
@@ -111,27 +89,35 @@ apt_packages:
   python_deb_extras:
     - libxss1
 
-php_symlinks:
-  - src: /usr/include/x86_64-linux-gnu/curl
-    dst: /usr/local/include/curl
-  - src: /usr/include/x86_64-linux-gnu/gmp.h
-    dst: /usr/include/gmp.h
-  - src: /usr/lib/x86_64-linux-gnu/libldap.so
-    dst: /usr/lib/libldap.so
-  # libldap_r removed — dropped in OpenLDAP 2.6 (Ubuntu 24.04)
+bootstrap:
+  go:
+    url: https://go.dev/dl/go1.24.2.linux-amd64.tar.gz
+    sha256: 68097bd680839cbc9d464a0edce4f7c333975e27a90246890e9f1078c7e702ad
+  jruby:
+    url: https://java-buildpack.cloudfoundry.org/openjdk-jdk/jammy/x86_64/bellsoft-jdk8u452%2B11-linux-amd64.tar.gz
+    sha256: d87d70d286150e662f12650ed22d91f1663c267b27ab3b0775eed1416ef3bd12
+    install_dir: /opt/java
+  ruby:
+    url: https://buildpacks.cloudfoundry.org/dependencies/ruby/ruby_3.3.6_linux_x64_cflinuxfs4_e4311262.tgz
+    sha256: e4311262803d0e1a01c83001e3e98ad58700b5cc36eff12433f24312b11e3dc9
+    install_dir: /opt/ruby
 
-jruby:
-  jdk_url: https://java-buildpack.cloudfoundry.org/openjdk-jdk/jammy/x86_64/bellsoft-jdk8u452%2B11-linux-amd64.tar.gz
-  jdk_sha256: d87d70d286150e662f12650ed22d91f1663c267b27ab3b0775eed1416ef3bd12
-  jdk_install_dir: /opt/java
-
-go:
-  bootstrap_url: https://go.dev/dl/go1.24.2.linux-amd64.tar.gz
-  bootstrap_sha256: 68097bd680839cbc9d464a0edce4f7c333975e27a90246890e9f1078c7e702ad
-
-python:
-  tcl_version: "8.6"
-  use_force_yes: false
+compilers:
+  gfortran:
+    version: 14
+    bin: /usr/bin/x86_64-linux-gnu-gfortran-14
+    lib_path: /usr/lib/gcc/x86_64-linux-gnu/14
+    packages:
+      - gfortran
+      - libgfortran-14-dev
+  gcc:
+    version: 14
+    packages:
+      - gcc-14
+      - g++-14
+    ppa: ""
+    tool_packages:
+      - software-properties-common
 
 httpd_sub_deps:
   apr:
@@ -150,3 +136,16 @@ httpd_sub_deps:
     version: "2.3.8"
     url: https://github.com/OpenIDC/mod_auth_openidc/releases/download/v2.3.8/mod_auth_openidc-2.3.8.tar.gz
     sha256: 0f078444fed34085bc83e27eb3439556718f50dcea275307ffb66d498bdabb8f
+
+php_symlinks:
+  - src: /usr/include/x86_64-linux-gnu/curl
+    dst: /usr/local/include/curl
+  - src: /usr/include/x86_64-linux-gnu/gmp.h
+    dst: /usr/include/gmp.h
+  - src: /usr/lib/x86_64-linux-gnu/libldap.so
+    dst: /usr/lib/libldap.so
+  # libldap_r removed — dropped in OpenLDAP 2.6 (Ubuntu 24.04)
+
+python:
+  tcl_version: "8.6"
+  use_force_yes: false

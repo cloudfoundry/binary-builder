@@ -193,8 +193,8 @@ func TestJRubyConfigCflinuxfs4(t *testing.T) {
 	s, err := stack.Load(stacksDir(t), "cflinuxfs4")
 	require.NoError(t, err)
 
-	assert.Contains(t, s.JRuby.JDKURL, "jammy")
-	assert.Equal(t, "/opt/java", s.JRuby.JDKInstallDir)
+	assert.Contains(t, s.Bootstrap.JRuby.URL, "jammy")
+	assert.Equal(t, "/opt/java", s.Bootstrap.JRuby.InstallDir)
 }
 
 func TestJRubyConfigCflinuxfs5(t *testing.T) {
@@ -203,32 +203,32 @@ func TestJRubyConfigCflinuxfs5(t *testing.T) {
 
 	// No noble JDK bucket exists yet; cflinuxfs5 intentionally uses the jammy
 	// Bellsoft JDK 8 build which is binary-compatible with Ubuntu 24.04.
-	assert.Contains(t, s.JRuby.JDKURL, "jammy")
-	assert.Equal(t, "/opt/java", s.JRuby.JDKInstallDir)
+	assert.Contains(t, s.Bootstrap.JRuby.URL, "jammy")
+	assert.Equal(t, "/opt/java", s.Bootstrap.JRuby.InstallDir)
 }
 
 func TestRubyBootstrapCflinuxfs4(t *testing.T) {
 	s, err := stack.Load(stacksDir(t), "cflinuxfs4")
 	require.NoError(t, err)
 
-	assert.Contains(t, s.RubyBootstrap.URL, "cflinuxfs4")
-	assert.Equal(t, "/opt/ruby", s.RubyBootstrap.InstallDir)
+	assert.Contains(t, s.Bootstrap.Ruby.URL, "cflinuxfs4")
+	assert.Equal(t, "/opt/ruby", s.Bootstrap.Ruby.InstallDir)
 }
 
 func TestGoBootstrapCflinuxfs4(t *testing.T) {
 	s, err := stack.Load(stacksDir(t), "cflinuxfs4")
 	require.NoError(t, err)
 
-	assert.Contains(t, s.Go.BootstrapURL, "go.dev/dl/")
-	assert.Contains(t, s.Go.BootstrapURL, "linux-amd64.tar.gz")
+	assert.Contains(t, s.Bootstrap.Go.URL, "go.dev/dl/")
+	assert.Contains(t, s.Bootstrap.Go.URL, "linux-amd64.tar.gz")
 }
 
 func TestGoBootstrapCflinuxfs5(t *testing.T) {
 	s, err := stack.Load(stacksDir(t), "cflinuxfs5")
 	require.NoError(t, err)
 
-	assert.Contains(t, s.Go.BootstrapURL, "go.dev/dl/")
-	assert.Contains(t, s.Go.BootstrapURL, "linux-amd64.tar.gz")
+	assert.Contains(t, s.Bootstrap.Go.URL, "go.dev/dl/")
+	assert.Contains(t, s.Bootstrap.Go.URL, "linux-amd64.tar.gz")
 }
 
 func TestPythonTCLVersion(t *testing.T) {

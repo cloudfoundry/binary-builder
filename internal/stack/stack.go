@@ -37,27 +37,23 @@ type CompilerConfig struct {
 	GCC      GCCConfig      `yaml:"gcc"`
 }
 
-// RubyBootstrap holds the pre-built Ruby binary used to bootstrap builds.
-type RubyBootstrap struct {
+// BootstrapBinary holds the URL, SHA256 checksum, and optional fixed install
+// directory for a build-time bootstrap binary (Go toolchain, JDK, Ruby).
+// InstallDir is empty for Go because its extract path is version-scoped at
+// runtime (/tmp/go-bootstrap-{version}).
+type BootstrapBinary struct {
 	URL        string `yaml:"url"`
 	SHA256     string `yaml:"sha256"`
 	InstallDir string `yaml:"install_dir"`
 }
 
-// JRubyConfig holds JDK settings for JRuby builds.
-type JRubyConfig struct {
-	JDKURL        string `yaml:"jdk_url"`
-	JDKSHA256     string `yaml:"jdk_sha256"`
-	JDKInstallDir string `yaml:"jdk_install_dir"`
-}
-
-// GoConfig holds Go-specific build settings.
-type GoConfig struct {
-	// BootstrapURL is the URL of the pre-built Go binary used to bootstrap
-	// compilation from source. Update when Go raises its minimum bootstrap version.
-	BootstrapURL string `yaml:"bootstrap_url"`
-	// BootstrapSHA256 is the SHA256 checksum of the bootstrap Go binary tarball.
-	BootstrapSHA256 string `yaml:"bootstrap_sha256"`
+// BootstrapConfig groups all build-time bootstrap binaries.
+// Each language that requires a pre-built tool to compile from source lists it
+// here so that recipes never hard-code URLs or checksums.
+type BootstrapConfig struct {
+	Go    BootstrapBinary `yaml:"go"`
+	JRuby BootstrapBinary `yaml:"jruby"`
+	Ruby  BootstrapBinary `yaml:"ruby"`
 }
 
 // PythonConfig holds Python-specific build settings.
@@ -96,12 +92,10 @@ type Stack struct {
 	UbuntuVersion  string              `yaml:"ubuntu_version"`
 	UbuntuCodename string              `yaml:"ubuntu_codename"`
 	DockerImage    string              `yaml:"docker_image"`
-	RubyBootstrap  RubyBootstrap       `yaml:"ruby_bootstrap"`
+	Bootstrap      BootstrapConfig     `yaml:"bootstrap"`
 	Compilers      CompilerConfig      `yaml:"compilers"`
 	AptPackages    map[string][]string `yaml:"apt_packages"`
 	PHPSymlinks    []Symlink           `yaml:"php_symlinks"`
-	JRuby          JRubyConfig         `yaml:"jruby"`
-	Go             GoConfig            `yaml:"go"`
 	Python         PythonConfig        `yaml:"python"`
 	HTTPDSubDeps   HTTPDSubDepsConfig  `yaml:"httpd_sub_deps"`
 }
