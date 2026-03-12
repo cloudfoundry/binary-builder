@@ -6,39 +6,101 @@ A Go tool for building binaries used by Cloud Foundry buildpacks.
 
 | Dependency | Stacks |
 |---|---|
-| Ruby | cflinuxfs4 |
-| JRuby | cflinuxfs4 |
-| Python | cflinuxfs4 |
-| Node.js | cflinuxfs4 |
-| Go | cflinuxfs4 |
-| PHP | cflinuxfs4 |
-| Nginx / nginx-static / OpenResty | cflinuxfs4 |
-| Apache HTTPD | cflinuxfs4 |
-| Bundler | cflinuxfs4 |
-| RubyGems | cflinuxfs4 |
-| Yarn / Bower / Composer | cflinuxfs4 |
-| Pip / Pipenv / Setuptools | cflinuxfs4 |
-| OpenJDK / Zulu / SAPMachine | cflinuxfs4 |
-| .NET SDK / Runtime / ASP.NET Core | cflinuxfs4 |
-| HWC | cflinuxfs4 |
-| R | cflinuxfs4 |
-| libgdiplus / libunwind | cflinuxfs4 |
-| miniconda3-py39 | cflinuxfs4 |
-| AppDynamics / SkyWalking / JProfiler / YourKit | cflinuxfs4 |
-| Tomcat | cflinuxfs4 |
+| Ruby | cflinuxfs4, cflinuxfs5 |
+| JRuby | cflinuxfs4, cflinuxfs5 |
+| Python | cflinuxfs4, cflinuxfs5 |
+| Node.js | cflinuxfs4, cflinuxfs5 |
+| Go | cflinuxfs4, cflinuxfs5 |
+| PHP | cflinuxfs4, cflinuxfs5 |
+| Nginx / nginx-static / OpenResty | cflinuxfs4, cflinuxfs5 |
+| Apache HTTPD | cflinuxfs4, cflinuxfs5 |
+| Bundler | cflinuxfs4, cflinuxfs5 |
+| RubyGems | cflinuxfs4, cflinuxfs5 |
+| Yarn / Bower / Composer | cflinuxfs4, cflinuxfs5 |
+| Pip / Pipenv / Setuptools | cflinuxfs4, cflinuxfs5 |
+| OpenJDK / Zulu / SAPMachine | cflinuxfs4, cflinuxfs5 |
+| .NET SDK / Runtime / ASP.NET Core | cflinuxfs4, cflinuxfs5 |
+| HWC | cflinuxfs4, cflinuxfs5 |
+| R | cflinuxfs4, cflinuxfs5 |
+| libgdiplus / libunwind | cflinuxfs4, cflinuxfs5 |
+| miniconda3-py39 | cflinuxfs4, cflinuxfs5 |
+| AppDynamics / SkyWalking / JProfiler / YourKit | cflinuxfs4, cflinuxfs5 |
+| Tomcat | cflinuxfs4, cflinuxfs5 |
 
 ## Usage
+
+The tool supports two input modes.
+
+### Mode 1 — Direct flags (manual / local use)
 
 ```
 binary-builder build \
   --stack cflinuxfs4 \
   --name ruby \
   --version 3.3.6 \
-  --sha256 <checksum>
+  --sha256 <source-tarball-checksum>
 ```
 
-The tool reads stack-specific configuration from `stacks/<stack>.yaml` and writes the
-artifact (a `.tgz` or `.zip`) to the current working directory.
+`--url`, `--sha256`, and `--sha512` are optional; include whichever checksums the
+recipe needs to verify the source download.
+
+### Mode 2 — Source file (CI / depwatcher use)
+
+```
+binary-builder build \
+  --stack cflinuxfs4 \
+  --source-file source/data.json
+```
+
+`data.json` is the standard depwatcher output format:
+
+```json
+{
+  "source":  { "name": "ruby", "type": "github_releases", "repo": "ruby/ruby" },
+  "version": { "url": "https://...", "ref": "3.3.6", "sha256": "...", "sha512": "" }
+}
+```
+
+If `--source-file` is omitted and `source/data.json` exists in the current
+working directory, it is used automatically.
+
+### Common flags
+
+| Flag | Default | Description |
+|---|---|---|
+| `--stack` | *(required)* | Stack name, e.g. `cflinuxfs4` or `cflinuxfs5` |
+| `--stacks-dir` | `stacks` | Directory containing per-stack YAML config files |
+| `--output-file` | `summary.json` | Path for the JSON build summary (see below) |
+
+### Output
+
+The artifact (`.tgz` or `.zip`) is written to the **current working directory**
+using the canonical filename:
+
+```
+<name>_<version>_<os>_<arch>_<stack>_<sha8>.<ext>
+```
+
+A JSON summary is written to `--output-file` (default: `summary.json`):
+
+```json
+{
+  "artifact_path":    "ruby_3.3.6_linux_x64_cflinuxfs4_abcdef01.tgz",
+  "version":          "3.3.6",
+  "sha256":           "abcdef01...",
+  "url":              "https://buildpacks.cloudfoundry.org/dependencies/ruby/ruby_3.3.6_...",
+  "source":           { "url": "...", "sha256": "...", "sha512": "...", "md5": "...", "sha1": "..." },
+  "sub_dependencies": { "bundler": { "version": "2.5.6", "source": { ... } } },
+  "git_commit_sha":   "..."
+}
+```
+
+`sub_dependencies` and `git_commit_sha` are omitted when not applicable.
+All build subprocess output (compiler, make, etc.) goes to stdout/stderr so it
+is visible in logs without corrupting the structured JSON output file.
+
+The CI task that wraps this tool is responsible for moving the artifact,
+writing dep-metadata and builds-artifacts JSON, and committing to git.
 
 ### PHP
 
@@ -142,7 +204,7 @@ Runs `buildpacks-ci/tasks/build-binary-new-cflinuxfs4/build.rb` inside a
     binary-builds-new/<dep>/  ← builds JSON output
 ```
 
-`SKIP_COMMIT=true` prevents git commits. Ruby 3.3.6 is compiled from source
+`SKIP_COMMIT=true` prevents git commits. Ruby 3.4.6 is compiled from source
 inside the container if not already present.
 
 **3. Run the Go builder**
@@ -155,11 +217,13 @@ binary-builder build \
   --stack <stack> \
   --source-file /tmp/data.json \
   --stacks-dir /binary-builder/stacks \
-  --artifacts-dir /out/artifact \
-  --builds-dir /out/builds \
-  --dep-metadata-dir /out/dep-metadata \
-  --skip-commit
+  --output-file /out/summary.json
 ```
+
+The JSON summary written to `--output-file` is then used by the script to move
+the artifact, write the dep-metadata JSON, and write the builds-artifacts JSON
+into `/out/` — mirroring exactly what the CI task (`tasks/build-binary/build.sh`)
+does in production.
 
 The source tarball (if any) and R sub-dep dirs are copied into the working
 directory before the build runs.
