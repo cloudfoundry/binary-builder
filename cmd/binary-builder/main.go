@@ -1,16 +1,51 @@
 // Command binary-builder builds a single dependency for a given CF stack.
 //
-// Usage:
+// Two input modes are supported:
+//
+// Mode 1 — Direct flags (manual/local use):
 //
 //	binary-builder build \
+//	  --stack cflinuxfs4 \
 //	  --name ruby \
-//	  --stack cflinuxfs5 \
-//	  --source-file source/data.json \
-//	  --stacks-dir binary-builder/stacks \
-//	  --artifacts-dir artifacts \
-//	  --builds-dir builds-artifacts \
-//	  --dep-metadata-dir dep-metadata \
-//	  [--skip-commit]
+//	  --version 3.3.6 \
+//	  --url https://cache.ruby-lang.org/pub/ruby/3.3/ruby-3.3.6.tar.gz \
+//	  --sha256 8dc48f...
+//
+// Mode 2 — Source file (CI use, depwatcher data.json):
+//
+//	binary-builder build \
+//	  --stack cflinuxfs4 \
+//	  --source-file source/data.json
+//
+// Selection logic:
+//   - If --name is provided → build source.Input directly from flags
+//     (--version is required; --url/--sha256/--sha512 are optional)
+//   - Else if --source-file is explicitly given OR source/data.json exists
+//     at the default path → read from file
+//   - Else → error: provide either --name/--version or --source-file
+//
+// The tool compiles the dependency inside a temp directory and writes the
+// final artifact to the current working directory using the canonical filename:
+//
+//	<name>_<version>_<os>_<arch>_<stack>_<sha8>.<ext>
+//
+// On success it writes a JSON summary to --output-file (default: summary.json):
+//
+//	{
+//	  "artifact_path": "ruby_3.3.6_linux_x64_cflinuxfs4_abcdef01.tgz",
+//	  "version":       "3.3.6",
+//	  "sha256":        "abcdef01...",
+//	  "url":           "https://buildpacks.cloudfoundry.org/dependencies/ruby/ruby_3.3.6_...",
+//	  "source":        {"url": "...", "sha256": "...", ...},
+//	  "sub_dependencies": {...}
+//	}
+//
+// All build subprocess output goes to stdout/stderr and is visible in logs.
+// The JSON summary is always written to a file, never to stdout, so that
+// build noise from compilers and make does not corrupt the structured output.
+//
+// All artifact renaming, dep-metadata writing, builds-artifacts JSON, and git
+// commits are the responsibility of the CI task that wraps this tool.
 package main
 
 import (
@@ -31,6 +66,8 @@ import (
 	"github.com/cloudfoundry/binary-builder/internal/stack"
 )
 
+const defaultOutputFile = "summary.json"
+
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintf(os.Stderr, "binary-builder: %v\n", err)
@@ -45,13 +82,25 @@ func run() error {
 
 	fs := flag.NewFlagSet("build", flag.ExitOnError)
 
+	// Required.
 	stackName := fs.String("stack", "", "Stack name (e.g. cflinuxfs4, cflinuxfs5) [required]")
-	sourceFile := fs.String("source-file", "source/data.json", "Path to source/data.json")
-	stacksDir := fs.String("stacks-dir", "binary-builder/stacks", "Directory containing stack YAML files")
-	artifactsDir := fs.String("artifacts-dir", "artifacts", "Output directory for built artifacts")
-	buildsDir := fs.String("builds-dir", "builds-artifacts", "Output directory for builds-artifacts JSON")
-	depMetadataDir := fs.String("dep-metadata-dir", "dep-metadata", "Output directory for dep-metadata JSON")
-	skipCommit := fs.Bool("skip-commit", false, "Skip git commit of builds-artifacts JSON")
+
+	// Mode 1 — direct flags (manual/local use).
+	name := fs.String("name", "", "Dependency name (e.g. ruby); triggers direct-input mode")
+	version := fs.String("version", "", "Version string (required when --name is set)")
+	url := fs.String("url", "", "Source tarball URL (optional with --name)")
+	sha256 := fs.String("sha256", "", "SHA256 of the source tarball (optional with --name)")
+	sha512 := fs.String("sha512", "", "SHA512 of the source tarball (optional with --name)")
+
+	// Mode 2 — source file (CI / depwatcher use).
+	sourceFile := fs.String("source-file", "source/data.json", "Path to depwatcher data.json")
+
+	stacksDir := fs.String("stacks-dir", "stacks", "Directory containing stack YAML files")
+
+	// Output — JSON summary is always written to a file, never to stdout.
+	// Build subprocess output (compilers, make, etc.) flows to stdout/stderr
+	// so it is visible in logs without corrupting the structured JSON output.
+	outputFile := fs.String("output-file", defaultOutputFile, "Path to write the JSON build summary")
 
 	if err := fs.Parse(os.Args[2:]); err != nil {
 		return err
@@ -61,10 +110,49 @@ func run() error {
 		return fmt.Errorf("--stack is required")
 	}
 
-	// Load source input.
-	src, err := source.FromFile(*sourceFile)
-	if err != nil {
-		return fmt.Errorf("loading source file: %w", err)
+	// Determine whether --source-file was explicitly passed.
+	sourceFileExplicit := false
+	fs.Visit(func(f *flag.Flag) {
+		if f.Name == "source-file" {
+			sourceFileExplicit = true
+		}
+	})
+
+	// Resolve source input using the agreed mode-selection logic.
+	var src *source.Input
+	switch {
+	case *name != "":
+		// Mode 1: build source.Input directly from flags.
+		if *version == "" {
+			return fmt.Errorf("--version is required when --name is set")
+		}
+		src = &source.Input{
+			Name:    *name,
+			Version: *version,
+			URL:     *url,
+			SHA256:  *sha256,
+			SHA512:  *sha512,
+		}
+
+	case sourceFileExplicit:
+		// Mode 2a: --source-file was explicitly provided.
+		var err error
+		src, err = source.FromFile(*sourceFile)
+		if err != nil {
+			return fmt.Errorf("loading source file: %w", err)
+		}
+
+	default:
+		// Mode 2b: check whether the default path exists on disk.
+		if _, statErr := os.Stat(*sourceFile); statErr == nil {
+			var err error
+			src, err = source.FromFile(*sourceFile)
+			if err != nil {
+				return fmt.Errorf("loading source file: %w", err)
+			}
+		} else {
+			return fmt.Errorf("provide either --name (with --version) or --source-file")
+		}
 	}
 
 	// Load stack config.
@@ -73,77 +161,80 @@ func run() error {
 		return fmt.Errorf("loading stack %q: %w", *stackName, err)
 	}
 
-	// Build recipe registry.
-	reg := buildRegistry()
-
 	// Look up the recipe.
+	reg := buildRegistry()
 	rec, err := reg.Get(src.Name)
 	if err != nil {
 		return fmt.Errorf("no recipe for %q — registered: %v", src.Name, reg.Names())
 	}
 
-	// Ensure output directories exist.
-	for _, dir := range []string{*artifactsDir, *depMetadataDir} {
-		if err := os.MkdirAll(dir, 0755); err != nil {
-			return fmt.Errorf("creating directory %s: %w", dir, err)
-		}
-	}
-
-	// Prepare output data.
+	// Prepare output data seeded from the source input.
 	outData := output.NewOutData(src)
 
 	// Run the build.
 	ctx := context.Background()
-	run := &runner.RealRunner{}
+	r := &runner.RealRunner{}
 
-	fmt.Printf("[binary-builder] building %s %s for %s\n", src.Name, src.Version, *stackName)
+	fmt.Fprintf(os.Stderr, "[binary-builder] building %s %s for %s\n", src.Name, src.Version, *stackName)
 
-	if err := rec.Build(ctx, s, src, run, outData); err != nil {
+	if err := rec.Build(ctx, s, src, r, outData); err != nil {
 		return fmt.Errorf("building %s: %w", src.Name, err)
 	}
 
-	// Handle artifact output. Miniconda sets outData.URL directly (no file produced).
-	// All other recipes produce a file in the working directory.
+	// Miniconda sets outData.URL directly (passthrough — no compiled artifact).
+	// All other recipes produce an intermediate file in the working directory.
 	if outData.URL == "" {
-		if err := handleArtifact(src, rec, s, *artifactsDir, outData); err != nil {
+		if err := finalizeArtifact(src, rec, s, outData); err != nil {
 			return err
 		}
 	}
 
-	// Write builds-artifacts JSON and optionally commit.
-	buildOut, err := output.NewBuildOutput(src.Name, run, *buildsDir)
+	// Write the JSON summary to the output file.
+	// Build subprocess output has already flowed to stdout/stderr (visible in
+	// logs), so the output file contains only the clean structured JSON.
+	f, err := os.Create(*outputFile)
 	if err != nil {
-		return fmt.Errorf("creating build output: %w", err)
+		return fmt.Errorf("creating output file %s: %w", *outputFile, err)
 	}
+	defer f.Close()
 
-	buildsFilename := fmt.Sprintf("%s-%s-%s.json", src.Name, outData.Version, *stackName)
-	if err := buildOut.AddOutput(buildsFilename, outData); err != nil {
-		return fmt.Errorf("writing builds output: %w", err)
-	}
-
-	if !*skipCommit {
-		commitMsg := fmt.Sprintf("Build %s %s [%s]", src.Name, outData.Version, *stackName)
-		if err := buildOut.Commit(commitMsg); err != nil {
-			return fmt.Errorf("committing builds output: %w", err)
-		}
-	}
-
-	// Write dep-metadata JSON.
-	depMeta := output.NewDepMetadataOutput(*depMetadataDir)
-	if err := depMeta.WriteMetadata(outData.URL, outData); err != nil {
-		return fmt.Errorf("writing dep-metadata: %w", err)
-	}
-
-	// Print final output data for debugging / Concourse put step consumption.
-	enc := json.NewEncoder(os.Stdout)
+	enc := json.NewEncoder(f)
 	enc.SetIndent("", "  ")
-	return enc.Encode(outData)
+	if err := enc.Encode(buildSummary(outData)); err != nil {
+		return fmt.Errorf("writing JSON summary: %w", err)
+	}
+
+	fmt.Fprintf(os.Stderr, "[binary-builder] summary written to %s\n", *outputFile)
+	return nil
 }
 
-// handleArtifact finds the built file in the working directory, computes its
-// SHA256, moves it into artifactsDir with the canonical filename, and populates
-// outData.URL and outData.SHA256.
-func handleArtifact(src *source.Input, rec recipe.Recipe, s *stack.Stack, artifactsDir string, outData *output.OutData) error {
+// buildSummaryOutput is the JSON struct emitted to stdout.
+type buildSummaryOutput struct {
+	ArtifactPath    string                          `json:"artifact_path"`
+	Version         string                          `json:"version"`
+	SHA256          string                          `json:"sha256,omitempty"`
+	URL             string                          `json:"url,omitempty"`
+	Source          output.OutDataSource            `json:"source"`
+	SubDependencies map[string]output.SubDependency `json:"sub_dependencies,omitempty"`
+	GitCommitSHA    string                          `json:"git_commit_sha,omitempty"`
+}
+
+func buildSummary(outData *output.OutData) buildSummaryOutput {
+	return buildSummaryOutput{
+		ArtifactPath:    filepath.Base(outData.URL),
+		Version:         outData.Version,
+		SHA256:          outData.SHA256,
+		URL:             outData.URL,
+		Source:          outData.Source,
+		SubDependencies: outData.SubDependencies,
+		GitCommitSHA:    outData.GitCommitSHA,
+	}
+}
+
+// finalizeArtifact finds the intermediate artifact file written to CWD by the
+// recipe, computes its SHA256, renames it to the canonical filename, and
+// populates outData.SHA256 and outData.URL.
+func finalizeArtifact(src *source.Input, rec recipe.Recipe, s *stack.Stack, outData *output.OutData) error {
 	meta := rec.Artifact()
 
 	// Resolve the effective stack label for the artifact filename.
@@ -152,18 +243,14 @@ func handleArtifact(src *source.Input, rec recipe.Recipe, s *stack.Stack, artifa
 		stackLabel = s.Name
 	}
 
-	// Use ArtifactVersion for file lookup and naming if set; otherwise fall
-	// back to Version. This allows recipes like jruby to keep the raw source
-	// version in dep-metadata (Version) while using a richer artifact version
-	// string (ArtifactVersion) for the filename, e.g. "9.4.14.0-ruby-3.1".
+	// Use ArtifactVersion when set (e.g. jruby uses "9.4.14.0-ruby-3.1");
+	// otherwise fall back to the raw source version.
 	artifactVersion := outData.ArtifactVersion
 	if artifactVersion == "" {
 		artifactVersion = outData.Version
 	}
 
-	// Find the intermediate artifact file. Recipes write to the working directory.
-	// filepath.Glob does not support brace expansion, so we try each extension
-	// separately. Preference order matches ArtifactOutput.ext in the Ruby code.
+	// Find the intermediate artifact produced by the recipe.
 	intermediatePath, err := findIntermediateArtifact(src.Name, artifactVersion)
 	if err != nil {
 		return err
@@ -177,7 +264,7 @@ func handleArtifact(src *source.Input, rec recipe.Recipe, s *stack.Stack, artifa
 		return fmt.Errorf("computing SHA256 of %s: %w", intermediatePath, err)
 	}
 
-	// Build canonical filename.
+	// Build canonical filename and move artifact to CWD.
 	a := artifact.Artifact{
 		Name:    src.Name,
 		Version: artifactVersion,
@@ -186,10 +273,9 @@ func handleArtifact(src *source.Input, rec recipe.Recipe, s *stack.Stack, artifa
 		Stack:   stackLabel,
 	}
 	finalFilename := a.Filename(sha256hex, ext)
-	finalPath := filepath.Join(artifactsDir, finalFilename)
+	finalPath := filepath.Join(".", finalFilename)
 
-	// Move artifact into artifacts dir. Use cross-device-safe move (copy+delete)
-	// because the workdir and artifactsDir may be on different filesystems.
+	// Use cross-device-safe move in case the recipe wrote to os.TempDir.
 	if err := fileutil.MoveFile(intermediatePath, finalPath); err != nil {
 		return fmt.Errorf("moving artifact to %s: %w", finalPath, err)
 	}
@@ -197,7 +283,7 @@ func handleArtifact(src *source.Input, rec recipe.Recipe, s *stack.Stack, artifa
 	outData.SHA256 = sha256hex
 	outData.URL = a.S3URL(finalFilename)
 
-	fmt.Printf("[binary-builder] artifact: %s\n", outData.URL)
+	fmt.Fprintf(os.Stderr, "[binary-builder] artifact: %s\n", finalFilename)
 	return nil
 }
 
@@ -248,20 +334,17 @@ func buildRegistry() *recipe.Registry {
 	return reg
 }
 
-// findIntermediateArtifact searches the working directory (and os.TempDir as
-// fallback) for the artifact file produced by a recipe. It tries common
-// extensions in priority order. filepath.Glob does not support brace expansion,
-// so we try each extension separately.
+// findIntermediateArtifact searches CWD (and os.TempDir as fallback) for the
+// artifact file produced by a recipe. Extensions are tried in priority order.
 func findIntermediateArtifact(name, version string) (string, error) {
-	// Extensions in priority order (matches ArtifactOutput.ext in Ruby).
+	// Extensions in priority order (matches ArtifactOutput.ext in the old Ruby code).
 	exts := []string{"tgz", "tar.gz", "zip", "tar.xz", "tar.bz2", "sh", "phar", "txt"}
 
-	// Search dirs: CWD first, then os.TempDir. Recipes that cannot write to the
-	// CWD (e.g. pip, pipenv, bower, yarn, rubygems, setuptools) write to TempDir.
+	// Recipes that cannot write to CWD (e.g. pip, pipenv) write to os.TempDir.
 	searchDirs := []string{".", os.TempDir()}
 
 	for _, dir := range searchDirs {
-		// Try name-version prefix first (most specific).
+		// name-version prefix first (most specific).
 		for _, ext := range exts {
 			pattern := filepath.Join(dir, fmt.Sprintf("%s-%s*.%s", name, version, ext))
 			matches, err := filepath.Glob(pattern)
@@ -272,7 +355,6 @@ func findIntermediateArtifact(name, version string) (string, error) {
 				return matches[0], nil
 			}
 		}
-
 		// Fallback: just name prefix.
 		for _, ext := range exts {
 			pattern := filepath.Join(dir, fmt.Sprintf("%s-*.%s", name, ext))

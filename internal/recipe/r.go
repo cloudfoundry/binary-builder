@@ -94,6 +94,7 @@ func (r *RRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, 
 	}
 
 	// Step 5: Install devtools (required for install_version below).
+	// The ruby-builder-final tag uses devtools::install_version (not remotes).
 	devtoolsCmd := `/usr/local/lib/R/bin/R --vanilla -e 'install.packages("devtools", repos="https://cran.r-project.org")'`
 	if err := run.Run("sh", "-c", devtoolsCmd); err != nil {
 		return fmt.Errorf("r: installing devtools: %w", err)
@@ -115,7 +116,7 @@ func (r *RRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, 
 		}
 
 		// Install via devtools::install_version with dependencies=TRUE and type='source',
-		// matching the Ruby builder behaviour.
+		// matching the ruby-builder-final tag behaviour.
 		rCmd := fmt.Sprintf(
 			`/usr/local/lib/R/bin/R --vanilla -e "require('devtools'); devtools::install_version('%s', '%s', repos='https://cran.r-project.org', type='source', dependencies=TRUE)"`,
 			pkg.name, pkgVersion,
