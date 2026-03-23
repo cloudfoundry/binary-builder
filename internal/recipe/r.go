@@ -16,7 +16,7 @@ import (
 	"github.com/cloudfoundry/binary-builder/internal/stack"
 )
 
-// RRecipe builds R from source and installs devtools + 4 R packages
+// RRecipe builds R from source and installs remotes + 4 R packages
 // (forecast, plumber, Rserve, shiny).  Sub-dependency inputs are read
 // from well-known Concourse resource directories alongside the working
 // directory.
@@ -93,11 +93,19 @@ func (r *RRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, 
 		return fmt.Errorf("r: portile cook: %w", err)
 	}
 
-	// Step 5: Install devtools (required for install_version below).
-	// The ruby-builder-final tag uses devtools::install_version (not remotes).
-	devtoolsCmd := `/usr/local/lib/R/bin/R --vanilla -e 'install.packages("devtools", repos="https://cran.r-project.org")'`
-	if err := run.Run("sh", "-c", devtoolsCmd); err != nil {
-		return fmt.Errorf("r: installing devtools: %w", err)
+	// Step 5: Install remotes (required for install_version below).
+	// devtools::install_version was deprecated in devtools 2.5.0 and now requires
+	// the remotes package separately. Use remotes directly instead.
+	// We also explicitly install packages that devtools used to bundle as freebies
+	// (stringr, cli, etc.) to avoid breaking R apps that depend on them implicitly.
+	remotesCmd := `/usr/local/lib/R/bin/R --vanilla -e 'install.packages("remotes", repos="https://cran.r-project.org")'`
+	if err := run.Run("sh", "-c", remotesCmd); err != nil {
+		return fmt.Errorf("r: installing remotes: %w", err)
+	}
+
+	depsCmd := `/usr/local/lib/R/bin/R --vanilla -e 'install.packages(c("cli", "curl", "lifecycle", "R6", "rlang", "withr", "processx", "callr", "stringr"), repos="https://cran.r-project.org")'`
+	if err := run.Run("sh", "-c", depsCmd); err != nil {
+		return fmt.Errorf("r: installing explicit r dependencies: %w", err)
 	}
 
 	// Step 6: Read sub-dependency source inputs and install R packages.
@@ -118,7 +126,7 @@ func (r *RRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, 
 		// Install via devtools::install_version with dependencies=TRUE and type='source',
 		// matching the ruby-builder-final tag behaviour.
 		rCmd := fmt.Sprintf(
-			`/usr/local/lib/R/bin/R --vanilla -e "require('devtools'); devtools::install_version('%s', '%s', repos='https://cran.r-project.org', type='source', dependencies=TRUE)"`,
+			`/usr/local/lib/R/bin/R --vanilla -e "require('remotes'); remotes::install_version('%s', '%s', repos='https://cran.r-project.org', type='source', dependencies=TRUE)"`,
 			pkg.name, pkgVersion,
 		)
 		if err := run.Run("sh", "-c", rCmd); err != nil {
@@ -134,10 +142,12 @@ func (r *RRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, 
 		}
 	}
 
-	// Step 7: Remove devtools after use.
-	removeDevtoolsCmd := `/usr/local/lib/R/bin/R --vanilla -e 'remove.packages("devtools")'`
-	if err := run.Run("sh", "-c", removeDevtoolsCmd); err != nil {
-		return fmt.Errorf("r: removing devtools: %w", err)
+	// Step 7: Remove remotes after use. The explicitly pre-installed packages
+	// (cli, curl, stringr, etc.) are intentionally left in the artifact — they
+	// are R app runtime dependencies that devtools used to bundle as freebies.
+	removeRemotesCmd := `/usr/local/lib/R/bin/R --vanilla -e 'remove.packages("remotes")'`
+	if err := run.Run("sh", "-c", removeRemotesCmd); err != nil {
+		return fmt.Errorf("r: removing remotes: %w", err)
 	}
 
 	// Step 8: Copy gfortran libs into R install.

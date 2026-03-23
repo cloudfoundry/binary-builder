@@ -775,7 +775,7 @@ func TestRRecipeArtifact(t *testing.T) {
 	assert.Equal(t, "noarch", r.Artifact().Arch)
 }
 
-func TestRRecipeInstallsDevtoolsBeforePackages(t *testing.T) {
+func TestRRecipeInstallsRemotesBeforePackages(t *testing.T) {
 	useTempWorkDir(t)
 	writeRSubDepFiles(t)
 
@@ -789,14 +789,18 @@ func TestRRecipeInstallsDevtoolsBeforePackages(t *testing.T) {
 	err := r.Build(context.Background(), s, src, run, &output.OutData{})
 	require.NoError(t, err)
 
-	// Find indices of devtools install and first install_version call.
-	devtoolsIdx := -1
+	// Find indices of remotes install, explicit deps install, and first install_version call.
+	remotesIdx := -1
+	explicitDepsIdx := -1
 	installVersionIdx := -1
 	for i, c := range run.Calls {
 		if c.Name == "sh" {
 			joined := strings.Join(c.Args, " ")
-			if strings.Contains(joined, `install.packages("devtools"`) && devtoolsIdx < 0 {
-				devtoolsIdx = i
+			if strings.Contains(joined, `install.packages("remotes"`) && remotesIdx < 0 {
+				remotesIdx = i
+			}
+			if strings.Contains(joined, `"stringr"`) && explicitDepsIdx < 0 {
+				explicitDepsIdx = i
 			}
 			if strings.Contains(joined, "install_version") && installVersionIdx < 0 {
 				installVersionIdx = i
@@ -804,14 +808,18 @@ func TestRRecipeInstallsDevtoolsBeforePackages(t *testing.T) {
 		}
 	}
 
-	require.True(t, devtoolsIdx >= 0, "devtools install call not found")
+	require.True(t, remotesIdx >= 0, "remotes install call not found")
+	require.True(t, explicitDepsIdx >= 0, "explicit deps install call not found")
 	require.True(t, installVersionIdx >= 0, "install_version call not found")
-	assert.Less(t, devtoolsIdx, installVersionIdx,
-		"devtools must be installed BEFORE any install_version call (devtools at %d, install_version at %d)",
-		devtoolsIdx, installVersionIdx)
+	assert.Less(t, remotesIdx, installVersionIdx,
+		"remotes must be installed BEFORE any install_version call (remotes at %d, install_version at %d)",
+		remotesIdx, installVersionIdx)
+	assert.Less(t, explicitDepsIdx, installVersionIdx,
+		"explicit deps must be installed BEFORE any install_version call (deps at %d, install_version at %d)",
+		explicitDepsIdx, installVersionIdx)
 }
 
-func TestRRecipeRemovesDevtools(t *testing.T) {
+func TestRRecipeRemovesRemotes(t *testing.T) {
 	useTempWorkDir(t)
 	writeRSubDepFiles(t)
 
@@ -825,8 +833,8 @@ func TestRRecipeRemovesDevtools(t *testing.T) {
 	err := r.Build(context.Background(), s, src, run, &output.OutData{})
 	require.NoError(t, err)
 
-	assert.True(t, hasCallMatching(run.Calls, "sh", `remove.packages("devtools")`),
-		"should call remove.packages(\"devtools\") after package installs")
+	assert.True(t, hasCallMatching(run.Calls, "sh", `remove.packages("remotes")`),
+		"should call remove.packages(\"remotes\") after package installs")
 }
 
 func TestRserveVersionFormatting(t *testing.T) {
