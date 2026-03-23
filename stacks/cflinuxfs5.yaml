@@ -54,7 +54,7 @@ apt_packages:
     - libharfbuzz-dev
     - libfribidi-dev
     - default-jre
-    - libgfortran-14-dev
+    - libgfortran-13-dev
     - libfreetype6-dev
     - libpng-dev
     - libtiff-dev
@@ -104,12 +104,12 @@ bootstrap:
 
 compilers:
   gfortran:
-    version: 14
-    bin: /usr/bin/x86_64-linux-gnu-gfortran-14
-    lib_path: /usr/lib/gcc/x86_64-linux-gnu/14
+    version: 13
+    bin: /usr/bin/x86_64-linux-gnu-gfortran-13
+    lib_path: /usr/lib/gcc/x86_64-linux-gnu/13
     packages:
       - gfortran
-      - libgfortran-14-dev
+      - libgfortran-13-dev
   gcc:
     version: 14
     packages:

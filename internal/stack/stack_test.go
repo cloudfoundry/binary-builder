@@ -51,9 +51,9 @@ func TestGfortranVersionCflinuxfs5(t *testing.T) {
 	s, err := stack.Load(stacksDir(t), "cflinuxfs5")
 	require.NoError(t, err)
 
-	assert.Equal(t, 14, s.Compilers.Gfortran.Version)
-	assert.Equal(t, "/usr/bin/x86_64-linux-gnu-gfortran-14", s.Compilers.Gfortran.Bin)
-	assert.Equal(t, "/usr/lib/gcc/x86_64-linux-gnu/14", s.Compilers.Gfortran.LibPath)
+	assert.Equal(t, 13, s.Compilers.Gfortran.Version)
+	assert.Equal(t, "/usr/bin/x86_64-linux-gnu-gfortran-13", s.Compilers.Gfortran.Bin)
+	assert.Equal(t, "/usr/lib/gcc/x86_64-linux-gnu/13", s.Compilers.Gfortran.LibPath)
 }
 
 func TestGCCPPACflinuxfs4(t *testing.T) {
