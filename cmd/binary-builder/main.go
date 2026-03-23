@@ -319,7 +319,6 @@ func buildRegistry() *recipe.Registry {
 	reg.Register(&recipe.PipenvRecipe{Fetcher: f})
 	reg.Register(&recipe.BowerRecipe{Fetcher: f})
 	reg.Register(&recipe.YarnRecipe{Fetcher: f})
-	reg.Register(&recipe.SetuptoolsRecipe{Fetcher: f})
 	reg.Register(&recipe.RubygemsRecipe{Fetcher: f})
 	reg.Register(&recipe.MinicondaRecipe{Fetcher: f})
 	reg.Register(&recipe.DotnetSDKRecipe{})

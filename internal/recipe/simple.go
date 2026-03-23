@@ -3,6 +3,8 @@ package recipe
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"path"
 	"strings"
 
 	"github.com/cloudfoundry/binary-builder/internal/fetch"
@@ -48,24 +50,34 @@ func (y *YarnRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Inpu
 	}).Build(ctx, s, src, r, out)
 }
 
-// SetuptoolsRecipe downloads setuptools, strips top-level dir (handles both tar.gz and zip).
-type SetuptoolsRecipe struct {
+// PyPISourceRecipe downloads a PyPI source tarball and strips its top-level
+// directory. It covers any dep published as a plain sdist on PyPI (e.g.
+// setuptools, flit-core) where the artifact filename is the last path segment
+// of the download URL and no compilation step is required.
+type PyPISourceRecipe struct {
+	DepName string
 	Fetcher fetch.Fetcher
 }
 
-func (s *SetuptoolsRecipe) Name() string { return "setuptools" }
-func (s *SetuptoolsRecipe) Artifact() ArtifactMeta {
+func (p *PyPISourceRecipe) Name() string { return p.DepName }
+func (p *PyPISourceRecipe) Artifact() ArtifactMeta {
 	return ArtifactMeta{OS: "linux", Arch: "noarch", Stack: ""}
 }
-func (s *SetuptoolsRecipe) Build(ctx context.Context, stk *stack.Stack, src *source.Input, r runner.Runner, out *output.OutData) error {
+func (p *PyPISourceRecipe) Build(ctx context.Context, stk *stack.Stack, src *source.Input, r runner.Runner, out *output.OutData) error {
 	return (&RepackRecipe{
-		DepName:          "setuptools",
+		DepName:          p.DepName,
 		Meta:             ArtifactMeta{OS: "linux", Arch: "noarch"},
-		Fetcher:          s.Fetcher,
+		Fetcher:          p.Fetcher,
 		StripTopLevelDir: true,
-		// Setuptools infers the destination filename from the URL's last path segment.
-		DestFilename: func(_, url string) string {
-			parts := strings.Split(url, "/")
+		// PyPI sdist URLs end with the canonical filename (e.g. setuptools-69.0.3.tar.gz).
+		// Use url.Parse + path.Base to strip any query string or fragment before
+		// using the last path segment as the local filename.
+		DestFilename: func(_, rawURL string) string {
+			if u, err := url.Parse(rawURL); err == nil {
+				return path.Base(u.Path)
+			}
+			// Fallback: should not happen for well-formed URLs.
+			parts := strings.Split(rawURL, "/")
 			return parts[len(parts)-1]
 		},
 	}).Build(ctx, stk, src, r, out)

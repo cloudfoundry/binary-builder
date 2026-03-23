@@ -58,7 +58,11 @@ func (p *PassthroughRecipe) Build(ctx context.Context, _ *stack.Stack, src *sour
 	return nil
 }
 
-// NewPassthroughRecipes creates all passthrough recipe instances.
+// NewPassthroughRecipes creates all passthrough and repack-only recipe instances.
+// This includes JVM passthrough deps (openjdk, zulu, …) as well as PyPI sdist
+// deps (setuptools, flit-core, …) — anything that needs no compilation step.
+// Add a new entry here whenever buildpacks-ci adds a dep with source_type: pypi
+// or a similar "download-only" source type.
 func NewPassthroughRecipes(f fetch.Fetcher) []Recipe {
 	return []Recipe{
 		&PassthroughRecipe{
@@ -127,6 +131,9 @@ func NewPassthroughRecipes(f fetch.Fetcher) []Recipe {
 			Meta:               ArtifactMeta{OS: "linux", Arch: "x64", Stack: ""},
 			Fetcher:            f,
 		},
+		// PyPI sdist deps — download and strip top-level dir, no compilation.
+		&PyPISourceRecipe{DepName: "setuptools", Fetcher: f},
+		&PyPISourceRecipe{DepName: "flit-core", Fetcher: f},
 	}
 }
 

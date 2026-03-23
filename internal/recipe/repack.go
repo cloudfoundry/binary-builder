@@ -35,7 +35,7 @@ type RepackRecipe struct {
 	StripVersionPrefix string
 	// DestFilename derives the local destination filename from version and URL.
 	// If nil, the default is "<depname>-<version>.<ext inferred from URL>".
-	// Setuptools uses this to infer the filename directly from the URL's last segment.
+	// PyPI sdist recipes use this to infer the filename from the URL's last path segment.
 	DestFilename func(version, url string) string
 }
 
@@ -64,7 +64,10 @@ func (r *RepackRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.In
 		return nil
 	}
 
-	if strings.HasSuffix(src.URL, ".zip") {
+	// Use dest (already fragment-free) rather than src.URL to detect zip archives.
+	// PyPI download URLs may contain a #sha256=… fragment that would fool a
+	// suffix check on the raw URL.
+	if strings.HasSuffix(dest, ".zip") {
 		return archive.StripTopLevelDirFromZip(dest)
 	}
 	return archive.StripTopLevelDir(dest)

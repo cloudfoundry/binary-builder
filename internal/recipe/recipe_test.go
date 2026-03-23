@@ -313,10 +313,21 @@ func TestPassthroughArtifactMeta(t *testing.T) {
 
 // ── NewPassthroughRecipes ─────────────────────────────────────────────────────
 
-func TestNewPassthroughRecipesReturns10(t *testing.T) {
+// TestNewPassthroughRecipesContents verifies that every expected dep name is
+// present. Prefer extending this list over bumping a raw count.
+func TestNewPassthroughRecipesContents(t *testing.T) {
 	f := newFakeFetcher()
 	recipes := recipe.NewPassthroughRecipes(f)
-	assert.Len(t, recipes, 10)
+	names := make([]string, len(recipes))
+	for i, r := range recipes {
+		names[i] = r.Name()
+	}
+	assert.Subset(t, names, []string{
+		"tomcat", "composer", "appdynamics", "appdynamics-java",
+		"skywalking-agent", "openjdk", "zulu", "sapmachine",
+		"jprofiler-profiler", "your-kit-profiler",
+		"setuptools", "flit-core",
+	})
 }
 
 // ── BowerRecipe ───────────────────────────────────────────────────────────────
@@ -367,34 +378,78 @@ func TestYarnRecipeNameAndArtifact(t *testing.T) {
 	assert.Equal(t, "noarch", r.Artifact().Arch)
 }
 
-// ── SetuptoolsRecipe ──────────────────────────────────────────────────────────
+// ── PyPISourceRecipe ──────────────────────────────────────────────────────────
 
-func TestSetuptoolsRecipeFilenameFromURL(t *testing.T) {
-	f := newFakeFetcher()
+func TestPyPISourceRecipeFilenameFromURL(t *testing.T) {
+	cases := []struct {
+		depName string
+		version string
+		url     string
+		wantDst string
+	}{
+		{
+			depName: "setuptools",
+			version: "69.0.3",
+			url:     "https://example.com/setuptools-69.0.3.tar.gz",
+			wantDst: filepath.Join(os.TempDir(), "setuptools-69.0.3.tar.gz"),
+		},
+		{
+			depName: "flit-core",
+			version: "3.9.0",
+			url:     "https://example.com/flit_core-3.9.0.tar.gz",
+			wantDst: filepath.Join(os.TempDir(), "flit_core-3.9.0.tar.gz"),
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.depName, func(t *testing.T) {
+			f := newFakeFetcher()
+			r := &recipe.PyPISourceRecipe{DepName: tc.depName, Fetcher: f}
+			src := newInput(tc.depName, tc.version, tc.url)
+			_ = r.Build(context.Background(), newStack(t), src, runner.NewFakeRunner(), &output.OutData{})
 
-	src := newInput("setuptools", "69.0.3", "https://example.com/setuptools-69.0.3.tar.gz")
-	r := &recipe.SetuptoolsRecipe{Fetcher: f}
-	_ = r.Build(context.Background(), newStack(t), src, runner.NewFakeRunner(), &output.OutData{})
-
-	require.Len(t, f.DownloadedURLs, 1)
-	assert.Equal(t, filepath.Join(os.TempDir(), "setuptools-69.0.3.tar.gz"), f.DownloadedURLs[0].Dest)
+			require.Len(t, f.DownloadedURLs, 1)
+			assert.Equal(t, tc.wantDst, f.DownloadedURLs[0].Dest)
+		})
+	}
 }
 
-func TestSetuptoolsRecipeZipURL(t *testing.T) {
+func TestPyPISourceRecipeZipURL(t *testing.T) {
 	f := newFakeFetcher()
 
 	src := newInput("setuptools", "69.0.3", "https://example.com/setuptools-69.0.3.zip")
-	r := &recipe.SetuptoolsRecipe{Fetcher: f}
+	r := &recipe.PyPISourceRecipe{DepName: "setuptools", Fetcher: f}
 	_ = r.Build(context.Background(), newStack(t), src, runner.NewFakeRunner(), &output.OutData{})
 
 	require.Len(t, f.DownloadedURLs, 1)
 	assert.Equal(t, filepath.Join(os.TempDir(), "setuptools-69.0.3.zip"), f.DownloadedURLs[0].Dest)
 }
 
-func TestSetuptoolsRecipeNameAndArtifact(t *testing.T) {
-	r := &recipe.SetuptoolsRecipe{}
-	assert.Equal(t, "setuptools", r.Name())
-	assert.Equal(t, "noarch", r.Artifact().Arch)
+func TestPyPISourceRecipeNameAndArtifact(t *testing.T) {
+	cases := []struct{ depName string }{
+		{"setuptools"},
+		{"flit-core"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.depName, func(t *testing.T) {
+			r := &recipe.PyPISourceRecipe{DepName: tc.depName}
+			assert.Equal(t, tc.depName, r.Name())
+			assert.Equal(t, "noarch", r.Artifact().Arch)
+			assert.Equal(t, "linux", r.Artifact().OS)
+		})
+	}
+}
+
+func TestPyPISourceRecipeStripsURLFragment(t *testing.T) {
+	// PyPI JSON API URLs sometimes include a #sha256=… fragment; the local
+	// filename must not contain the fragment.
+	f := newFakeFetcher()
+	r := &recipe.PyPISourceRecipe{DepName: "flit-core", Fetcher: f}
+	src := newInput("flit-core", "3.9.0", "https://files.pythonhosted.org/packages/flit_core-3.9.0.tar.gz#sha256=abc123")
+	_ = r.Build(context.Background(), newStack(t), src, runner.NewFakeRunner(), &output.OutData{})
+
+	require.Len(t, f.DownloadedURLs, 1)
+	assert.Equal(t, filepath.Join(os.TempDir(), "flit_core-3.9.0.tar.gz"), f.DownloadedURLs[0].Dest,
+		"fragment must be stripped from destination filename")
 }
 
 // ── RubygemsRecipe ────────────────────────────────────────────────────────────
