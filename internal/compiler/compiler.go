@@ -79,18 +79,26 @@ func (g *Gfortran) Setup(ctx context.Context) error {
 // CopyLibs copies the stack-specific gfortran libraries into the target directory.
 // targetLib receives .a and .so files; targetBin receives the gfortran binary and f951.
 //
-// On cflinuxfs4: copies from /usr/lib/gcc/x86_64-linux-gnu/11/
-// On cflinuxfs5: copies from /usr/lib/gcc/x86_64-linux-gnu/14/
+// On cflinuxfs4 (jammy): executables and libs share the same dir (lib_path).
+// On cflinuxfs5 (noble): GCC moved executables to /usr/libexec/gcc/…; libs remain
+// in /usr/lib/gcc/…. libexec_path in the stack YAML points to the executables dir.
 func (g *Gfortran) CopyLibs(_ context.Context, targetLib, targetBin string) error {
 	libPath := g.Config.LibPath
+
+	// execPath is where GCC executables (f951, cc1, etc.) live.
+	// Falls back to libPath when libexec_path is not set (jammy/cflinuxfs4).
+	execPath := g.Config.LibexecPath
+	if execPath == "" {
+		execPath = libPath
+	}
 
 	// Copy gfortran binary.
 	if err := g.Runner.Run("cp", "-L", g.Config.Bin, fmt.Sprintf("%s/gfortran", targetBin)); err != nil {
 		return fmt.Errorf("copying gfortran binary: %w", err)
 	}
 
-	// Copy f951 compiler frontend.
-	if err := g.Runner.Run("cp", "-L", fmt.Sprintf("%s/f951", libPath), fmt.Sprintf("%s/f951", targetBin)); err != nil {
+	// Copy f951 compiler frontend from the executables directory.
+	if err := g.Runner.Run("cp", "-L", fmt.Sprintf("%s/f951", execPath), fmt.Sprintf("%s/f951", targetBin)); err != nil {
 		return fmt.Errorf("copying f951: %w", err)
 	}
 

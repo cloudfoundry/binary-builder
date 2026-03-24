@@ -45,6 +45,8 @@ func TestGfortranVersionCflinuxfs4(t *testing.T) {
 	assert.Equal(t, 11, s.Compilers.Gfortran.Version)
 	assert.Equal(t, "/usr/bin/x86_64-linux-gnu-gfortran-11", s.Compilers.Gfortran.Bin)
 	assert.Equal(t, "/usr/lib/gcc/x86_64-linux-gnu/11", s.Compilers.Gfortran.LibPath)
+	// cflinuxfs4 (jammy): executables and libs share the same dir; libexec_path omitted.
+	assert.Equal(t, "", s.Compilers.Gfortran.LibexecPath)
 }
 
 func TestGfortranVersionCflinuxfs5(t *testing.T) {
@@ -54,6 +56,8 @@ func TestGfortranVersionCflinuxfs5(t *testing.T) {
 	assert.Equal(t, 13, s.Compilers.Gfortran.Version)
 	assert.Equal(t, "/usr/bin/x86_64-linux-gnu-gfortran-13", s.Compilers.Gfortran.Bin)
 	assert.Equal(t, "/usr/lib/gcc/x86_64-linux-gnu/13", s.Compilers.Gfortran.LibPath)
+	// cflinuxfs5 (noble): GCC executables moved to /usr/libexec/gcc/…
+	assert.Equal(t, "/usr/libexec/gcc/x86_64-linux-gnu/13", s.Compilers.Gfortran.LibexecPath)
 }
 
 func TestGCCPPACflinuxfs4(t *testing.T) {

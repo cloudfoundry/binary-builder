@@ -13,10 +13,16 @@ import (
 
 // GfortranConfig holds gfortran compiler settings for a specific stack.
 type GfortranConfig struct {
-	Version  int      `yaml:"version"`
-	Bin      string   `yaml:"bin"`
-	LibPath  string   `yaml:"lib_path"`
-	Packages []string `yaml:"packages"`
+	Version int    `yaml:"version"`
+	Bin     string `yaml:"bin"`
+	LibPath string `yaml:"lib_path"`
+	// LibexecPath is the directory where GCC executables (e.g. f951) live.
+	// On Ubuntu 22.04 (jammy) executables share the same directory as the libs
+	// (LibPath), so LibexecPath can be left empty and LibPath is used as fallback.
+	// On Ubuntu 24.04 (noble) GCC moved executables to /usr/libexec/gcc/…
+	// while libs remain in /usr/lib/gcc/…, so LibexecPath must be set explicitly.
+	LibexecPath string   `yaml:"libexec_path"`
+	Packages    []string `yaml:"packages"`
 }
 
 // GCCConfig holds GCC/g++ compiler settings for a specific stack.

@@ -107,6 +107,7 @@ compilers:
     version: 13
     bin: /usr/bin/x86_64-linux-gnu-gfortran-13
     lib_path: /usr/lib/gcc/x86_64-linux-gnu/13
+    libexec_path: /usr/libexec/gcc/x86_64-linux-gnu/13
     packages:
       - gfortran
       - libgfortran-13-dev

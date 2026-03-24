@@ -156,10 +156,11 @@ func TestGfortranSetupCflinuxfs5(t *testing.T) {
 	a := apt.New(f)
 
 	config := stack.GfortranConfig{
-		Version:  14,
-		Bin:      "/usr/bin/x86_64-linux-gnu-gfortran-14",
-		LibPath:  "/usr/lib/gcc/x86_64-linux-gnu/14",
-		Packages: []string{"gfortran", "libgfortran-14-dev"},
+		Version:     13,
+		Bin:         "/usr/bin/x86_64-linux-gnu-gfortran-13",
+		LibPath:     "/usr/lib/gcc/x86_64-linux-gnu/13",
+		LibexecPath: "/usr/libexec/gcc/x86_64-linux-gnu/13",
+		Packages:    []string{"gfortran", "libgfortran-13-dev"},
 	}
 
 	gf := compiler.NewGfortran(config, a, f)
@@ -167,7 +168,7 @@ func TestGfortranSetupCflinuxfs5(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Len(t, f.Calls, 1)
-	assert.Contains(t, f.Calls[0].Args, "libgfortran-14-dev")
+	assert.Contains(t, f.Calls[0].Args, "libgfortran-13-dev")
 }
 
 func TestGfortranCopyLibsCflinuxfs4(t *testing.T) {
@@ -205,16 +206,17 @@ func TestGfortranCopyLibsCflinuxfs5(t *testing.T) {
 	a := apt.New(f)
 
 	config := stack.GfortranConfig{
-		Version: 14,
-		Bin:     "/usr/bin/x86_64-linux-gnu-gfortran-14",
-		LibPath: "/usr/lib/gcc/x86_64-linux-gnu/14",
+		Version:     13,
+		Bin:         "/usr/bin/x86_64-linux-gnu-gfortran-13",
+		LibPath:     "/usr/lib/gcc/x86_64-linux-gnu/13",
+		LibexecPath: "/usr/libexec/gcc/x86_64-linux-gnu/13",
 	}
 
 	gf := compiler.NewGfortran(config, a, f)
 	err := gf.CopyLibs(context.Background(), "/target/lib", "/target/bin")
 	require.NoError(t, err)
 
-	// Verify copies from version 14 paths.
+	// Verify copies from version 13 paths.
 	var cpSources []string
 	for _, c := range f.Calls {
 		if c.Name == "cp" {
@@ -222,13 +224,16 @@ func TestGfortranCopyLibsCflinuxfs5(t *testing.T) {
 		}
 	}
 
-	assert.Contains(t, cpSources, "/usr/bin/x86_64-linux-gnu-gfortran-14")
-	assert.Contains(t, cpSources, "/usr/lib/gcc/x86_64-linux-gnu/14/f951")
-	assert.Contains(t, cpSources, "/usr/lib/gcc/x86_64-linux-gnu/14/libcaf_single.a")
-	assert.Contains(t, cpSources, "/usr/lib/gcc/x86_64-linux-gnu/14/libgfortran.a")
-	assert.Contains(t, cpSources, "/usr/lib/gcc/x86_64-linux-gnu/14/libgfortran.so")
+	assert.Contains(t, cpSources, "/usr/bin/x86_64-linux-gnu-gfortran-13")
+	// f951 comes from libexec_path on cflinuxfs5 (noble), not lib_path.
+	assert.Contains(t, cpSources, "/usr/libexec/gcc/x86_64-linux-gnu/13/f951")
+	assert.NotContains(t, cpSources, "/usr/lib/gcc/x86_64-linux-gnu/13/f951")
+	// Libs still come from lib_path.
+	assert.Contains(t, cpSources, "/usr/lib/gcc/x86_64-linux-gnu/13/libcaf_single.a")
+	assert.Contains(t, cpSources, "/usr/lib/gcc/x86_64-linux-gnu/13/libgfortran.a")
+	assert.Contains(t, cpSources, "/usr/lib/gcc/x86_64-linux-gnu/13/libgfortran.so")
 
-	// Verify NO version 11 paths.
+	// Verify NO version 11 or 14 paths.
 	for _, src := range cpSources {
 		assert.NotContains(t, src, "/11/")
 	}
