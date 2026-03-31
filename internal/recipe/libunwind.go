@@ -3,6 +3,8 @@ package recipe
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/cloudfoundry/binary-builder/internal/autoconf"
@@ -13,10 +15,13 @@ import (
 	"github.com/cloudfoundry/binary-builder/internal/stack"
 )
 
-// LibunwindRecipe builds libunwind from a pre-downloaded source tarball.
-// The Concourse github-releases depwatcher has already placed the tarball in source/.
+// LibunwindRecipe builds libunwind from source.
+// The Concourse github_releases depwatcher only emits metadata in source/data.json;
+// it does not pre-download the tarball. We fetch it ourselves via Fetcher.
 // Only the include/ and lib/ directories are packed into the artifact.
-type LibunwindRecipe struct{}
+type LibunwindRecipe struct {
+	Fetcher fetch.Fetcher
+}
 
 func (l *LibunwindRecipe) Name() string { return "libunwind" }
 func (l *LibunwindRecipe) Artifact() ArtifactMeta {
@@ -24,22 +29,23 @@ func (l *LibunwindRecipe) Artifact() ArtifactMeta {
 }
 
 func (l *LibunwindRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, run runner.Runner, out *output.OutData) error {
-	return newLibunwindAutoconf().Build(ctx, s, src, run, out)
+	return newLibunwindAutoconf(l.Fetcher).Build(ctx, s, src, run, out)
 }
 
 // newLibunwindAutoconf constructs the AutoconfRecipe for libunwind.
-func newLibunwindAutoconf() *autoconf.Recipe {
+func newLibunwindAutoconf(fetcher fetch.Fetcher) *autoconf.Recipe {
 	return &autoconf.Recipe{
 		DepName: "libunwind",
-		// No Fetcher: SourceProvider reads from source/ instead.
+		Fetcher: fetcher,
 		Hooks: autoconf.Hooks{
 			AptPackages: func(s *stack.Stack) []string {
 				return s.AptPackages["libunwind_build"]
 			},
 
-			// SourceProvider reads the pre-downloaded tarball from source/ and
-			// extracts it to /tmp, returning the extracted directory path.
-			SourceProvider: func(ctx context.Context, src *source.Input, _ fetch.Fetcher, r runner.Runner) (string, error) {
+			// SourceProvider downloads the tarball via Fetcher (the github_releases
+			// depwatcher only places data.json in source/, not the tarball itself),
+			// extracts it to /tmp, and returns the extracted directory path.
+			SourceProvider: func(ctx context.Context, src *source.Input, f fetch.Fetcher, r runner.Runner) (string, error) {
 				parts := strings.Split(src.URL, "/")
 				filename := parts[len(parts)-1]
 				tag := strings.TrimSuffix(strings.TrimSuffix(filename, ".tar.gz"), ".tgz")
@@ -53,7 +59,11 @@ func newLibunwindAutoconf() *autoconf.Recipe {
 					dirName = "libunwind-" + strings.TrimPrefix(tag, "v")
 				}
 
-				srcTarball := fmt.Sprintf("source/%s", filename)
+				srcTarball := filepath.Join(os.TempDir(), filename)
+				if err := f.Download(ctx, src.URL, srcTarball, src.PrimaryChecksum()); err != nil {
+					return "", fmt.Errorf("downloading libunwind source: %w", err)
+				}
+				defer os.Remove(srcTarball)
 				if err := r.Run("tar", "xzf", srcTarball, "-C", "/tmp"); err != nil {
 					return "", fmt.Errorf("extracting source: %w", err)
 				}

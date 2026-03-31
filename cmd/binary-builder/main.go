@@ -313,7 +313,7 @@ func buildRegistry() *recipe.Registry {
 	reg.Register(&recipe.HTTPDRecipe{Fetcher: f})
 	reg.Register(&recipe.JRubyRecipe{Fetcher: f})
 	reg.Register(&recipe.RRecipe{Fetcher: f})
-	reg.Register(&recipe.LibunwindRecipe{})
+	reg.Register(&recipe.LibunwindRecipe{Fetcher: f})
 	reg.Register(&recipe.LibgdiplusRecipe{})
 	reg.Register(&recipe.DepRecipe{Fetcher: f})
 	reg.Register(&recipe.GlideRecipe{Fetcher: f})

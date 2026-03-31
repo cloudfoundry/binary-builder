@@ -507,7 +507,8 @@ func TestLibunwindRecipeArtifact(t *testing.T) {
 }
 
 func TestLibunwindRecipeBuild(t *testing.T) {
-	r := &recipe.LibunwindRecipe{}
+	f := newFakeFetcher()
+	r := &recipe.LibunwindRecipe{Fetcher: f}
 	run := runner.NewFakeRunner()
 	s := newCompiledStack(t)
 	src := &source.Input{
@@ -520,8 +521,13 @@ func TestLibunwindRecipeBuild(t *testing.T) {
 	err := r.Build(context.Background(), s, src, run, &output.OutData{})
 	require.NoError(t, err)
 
-	// Should extract from source/ (pre-downloaded by Concourse).
-	assert.True(t, hasCallMatching(run.Calls, "tar", "source/libunwind-1.6.2.tar.gz"), "should extract pre-downloaded source tarball")
+	// Should download via Fetcher (github_releases does NOT pre-download into source/).
+	require.Len(t, f.DownloadedURLs, 1)
+	assert.Equal(t, src.URL, f.DownloadedURLs[0].URL)
+	assert.Equal(t, os.TempDir()+"/libunwind-1.6.2.tar.gz", f.DownloadedURLs[0].Dest)
+
+	// Should extract the downloaded tarball.
+	assert.True(t, hasCallMatching(run.Calls, "tar", "xzf"), "should extract source tarball")
 
 	// Should run configure, make, make install.
 	assert.True(t, hasCallMatching(run.Calls, "./configure", "--prefix="), "should configure with prefix")

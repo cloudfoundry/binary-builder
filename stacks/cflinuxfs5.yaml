@@ -70,7 +70,10 @@ apt_packages:
   httpd_build:
     - libldap2-dev
     - libjansson-dev
-    # libcjose-dev omitted — needs verification on Ubuntu 24.04
+    - libhiredis-dev
+  httpd_mod_auth_build:
+    - libjansson-dev
+    - libcjose-dev
     - libhiredis-dev
   libgdiplus_build:
     - automake
