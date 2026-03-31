@@ -537,8 +537,8 @@ func TestPipRecipeCallSequence(t *testing.T) {
 	names := callNames(fakeRunner.Calls)
 	assert.Contains(t, names, "apt-get")
 
-	// Verify pip3 was invoked.
-	assert.True(t, anyCallContains(fakeRunner.Calls, "pip3"), "pip3 should be called")
+	// Verify pip3 was invoked (BundleRecipe uses the full path /usr/bin/pip3).
+	assert.True(t, anyCallContains(fakeRunner.Calls, "/usr/bin/pip3"), "pip3 should be called")
 	// Verify tar was called to bundle.
 	assert.True(t, anyCallContains(fakeRunner.Calls, "tar"), "tar should be called")
 }
@@ -586,7 +586,7 @@ func TestPipenvRecipeCallSequence(t *testing.T) {
 	err := r.Build(context.Background(), newStack(t), src, fakeRunner, &output.OutData{})
 	require.NoError(t, err)
 
-	assert.True(t, anyCallContains(fakeRunner.Calls, "pip3"), "pip3 should be called")
+	assert.True(t, anyCallContains(fakeRunner.Calls, "/usr/bin/pip3"), "pip3 should be called")
 	assert.True(t, anyCallContains(fakeRunner.Calls, "tar"), "tar should be called")
 }
 

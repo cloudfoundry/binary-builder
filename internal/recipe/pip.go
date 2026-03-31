@@ -70,7 +70,10 @@ func (p *PipenvRecipe) Build(ctx context.Context, s *stack.Stack, src *source.In
 		MainPackage: func(version string) string {
 			return fmt.Sprintf("pipenv==%s", version)
 		},
-		DownloadArgs: []string{"--no-cache-dir", "--no-binary", ":all:"},
+		// Do NOT pass --no-binary :all: for the main pipenv package: recent pipenv
+		// sdists declare name="unknown" in their metadata, which pip 22.x (cflinuxfs4)
+		// rejects. The source tarball is fetched explicitly in ExtraSteps anyway.
+		DownloadArgs: []string{"--no-cache-dir"},
 		// pipenv: also download the source tarball into tmpDir for bundling.
 		ExtraSteps: func(ctx context.Context, tmpDir string, src *source.Input, f fetch.Fetcher, r runner.Runner) error {
 			pipenvTar := fmt.Sprintf("pipenv-%s.tar.gz", src.Version)
@@ -92,10 +95,11 @@ func (p *PipenvRecipe) Build(ctx context.Context, s *stack.Stack, src *source.In
 	}).Build(ctx, s, src, r, out)
 }
 
-// setupPythonAndPip installs the Python interpreter and pip via apt, then
-// upgrades pip and setuptools. The packages to install are read from
-// s.AptPackages["pip_build"] (stacks/*.yaml) so they can be adjusted per
-// stack without modifying Go source.
+// setupPythonAndPip installs the Python interpreter and pip via apt.
+// The packages to install are read from s.AptPackages["pip_build"]
+// (stacks/*.yaml) so they can be adjusted per stack without modifying Go source.
+// We rely on the apt-installed versions of pip and setuptools directly — attempting
+// to upgrade them via pip3 fails on Ubuntu 24.04 (PEP 668 / no RECORD file).
 func setupPythonAndPip(ctx context.Context, s *stack.Stack, r runner.Runner) error {
 	if err := r.RunWithEnv(
 		map[string]string{"DEBIAN_FRONTEND": "noninteractive"},
@@ -110,5 +114,5 @@ func setupPythonAndPip(ctx context.Context, s *stack.Stack, r runner.Runner) err
 	); err != nil {
 		return err
 	}
-	return r.Run("pip3", "install", "--upgrade", "pip", "setuptools")
+	return nil
 }
