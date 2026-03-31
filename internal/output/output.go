@@ -40,6 +40,14 @@ type OutData struct {
 	// the artifact filename uses the full version (e.g. "9.4.14.0-ruby-3.1").
 	// If empty, Version is used for both.
 	ArtifactVersion string `json:"-"`
+
+	// ArtifactFilename is the actual filename on disk produced by finalizeArtifact.
+	// It is NOT serialized to JSON. It differs from filepath.Base(URL) for deps
+	// whose versions contain '+' (e.g. openjdk 8.0.482+10): the URL encodes '+' as
+	// '%2B' (required for S3), but the local filename uses the literal '+'.
+	// build.sh uses artifact_path to locate the file — so this must be the real
+	// disk name, not the URL-derived one.
+	ArtifactFilename string `json:"-"`
 }
 
 // OutDataSource holds the source checksums.

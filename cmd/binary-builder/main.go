@@ -220,8 +220,16 @@ type buildSummaryOutput struct {
 }
 
 func buildSummary(outData *output.OutData) buildSummaryOutput {
+	// ArtifactFilename is the actual disk filename (e.g. "openjdk_8.0.482+10_...tgz").
+	// For URL-passthrough deps (e.g. miniconda) ArtifactFilename is empty, so we
+	// fall back to filepath.Base(URL) — those deps produce no file and build.sh
+	// skips the move anyway.
+	artifactPath := outData.ArtifactFilename
+	if artifactPath == "" {
+		artifactPath = filepath.Base(outData.URL)
+	}
 	return buildSummaryOutput{
-		ArtifactPath:    filepath.Base(outData.URL),
+		ArtifactPath:    artifactPath,
 		Version:         outData.Version,
 		SHA256:          outData.SHA256,
 		URL:             outData.URL,
@@ -282,6 +290,7 @@ func finalizeArtifact(src *source.Input, rec recipe.Recipe, s *stack.Stack, outD
 
 	outData.SHA256 = sha256hex
 	outData.URL = a.S3URL(finalFilename)
+	outData.ArtifactFilename = finalFilename
 
 	fmt.Fprintf(os.Stderr, "[binary-builder] artifact: %s\n", finalFilename)
 	return nil
