@@ -76,8 +76,11 @@ func (b *BundleRecipe) Build(ctx context.Context, s *stack.Stack, src *source.In
 	}
 
 	// Download each extra dependency.
+	// Do NOT pass --no-binary :all: here: many pure-Python packages publish sdists
+	// with name="unknown" in metadata, which pip 22.x (cflinuxfs4) rejects. Wheels
+	// are fine for these deps since they are pure Python.
 	for _, dep := range b.ExtraDeps {
-		if err := r.RunInDir(tmpDir, "/usr/bin/pip3", "download", "--no-binary", ":all:", dep); err != nil {
+		if err := r.RunInDir(tmpDir, "/usr/bin/pip3", "download", dep); err != nil {
 			return fmt.Errorf("%s: pip3 download %s: %w", name, dep, err)
 		}
 	}
