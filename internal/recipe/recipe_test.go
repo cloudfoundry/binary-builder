@@ -394,10 +394,12 @@ func TestPyPISourceRecipeFilenameFromURL(t *testing.T) {
 			wantDst: filepath.Join(os.TempDir(), "setuptools-69.0.3.tar.gz"),
 		},
 		{
+			// PyPI normalises "flit-core" → "flit_core" in filenames, but we use
+			// the dep name (hyphen) so findIntermediateArtifact can locate the file.
 			depName: "flit-core",
 			version: "3.9.0",
 			url:     "https://example.com/flit_core-3.9.0.tar.gz",
-			wantDst: filepath.Join(os.TempDir(), "flit_core-3.9.0.tar.gz"),
+			wantDst: filepath.Join(os.TempDir(), "flit-core-3.9.0.tar.gz"),
 		},
 	}
 	for _, tc := range cases {
@@ -441,15 +443,17 @@ func TestPyPISourceRecipeNameAndArtifact(t *testing.T) {
 
 func TestPyPISourceRecipeStripsURLFragment(t *testing.T) {
 	// PyPI JSON API URLs sometimes include a #sha256=… fragment; the local
-	// filename must not contain the fragment.
+	// filename must not contain the fragment. Since we now use the dep name
+	// (not the URL basename) as the filename prefix, the fragment is irrelevant
+	// to the destination name — but we still verify the download succeeds cleanly.
 	f := newFakeFetcher()
 	r := &recipe.PyPISourceRecipe{DepName: "flit-core", Fetcher: f}
 	src := newInput("flit-core", "3.9.0", "https://files.pythonhosted.org/packages/flit_core-3.9.0.tar.gz#sha256=abc123")
 	_ = r.Build(context.Background(), newStack(t), src, runner.NewFakeRunner(), &output.OutData{})
 
 	require.Len(t, f.DownloadedURLs, 1)
-	assert.Equal(t, filepath.Join(os.TempDir(), "flit_core-3.9.0.tar.gz"), f.DownloadedURLs[0].Dest,
-		"fragment must be stripped from destination filename")
+	assert.Equal(t, filepath.Join(os.TempDir(), "flit-core-3.9.0.tar.gz"), f.DownloadedURLs[0].Dest,
+		"destination filename must use dep name (not raw URL basename) and contain no fragment")
 }
 
 // ── RubygemsRecipe ────────────────────────────────────────────────────────────

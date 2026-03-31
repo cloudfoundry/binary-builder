@@ -75,11 +75,17 @@ func (r *RepackRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.In
 
 // inferExt returns the file extension for a download URL, recognising .tar.gz
 // as a two-part extension and falling back to the last path segment's suffix.
-func inferExt(url string) string {
-	if strings.HasSuffix(url, ".tar.gz") {
+// Any URL fragment (e.g. #sha256=…) is stripped before inspection.
+func inferExt(rawURL string) string {
+	// Strip fragment (e.g. "#sha256=abc123") before inspecting the path.
+	u := rawURL
+	if i := strings.Index(u, "#"); i >= 0 {
+		u = u[:i]
+	}
+	if strings.HasSuffix(u, ".tar.gz") {
 		return ".tar.gz"
 	}
-	parts := strings.Split(url, "/")
+	parts := strings.Split(u, "/")
 	last := parts[len(parts)-1]
 	idx := strings.LastIndex(last, ".")
 	if idx < 0 {

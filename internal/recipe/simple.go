@@ -3,9 +3,6 @@ package recipe
 import (
 	"context"
 	"fmt"
-	"net/url"
-	"path"
-	"strings"
 
 	"github.com/cloudfoundry/binary-builder/internal/fetch"
 	"github.com/cloudfoundry/binary-builder/internal/output"
@@ -52,8 +49,12 @@ func (y *YarnRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Inpu
 
 // PyPISourceRecipe downloads a PyPI source tarball and strips its top-level
 // directory. It covers any dep published as a plain sdist on PyPI (e.g.
-// setuptools, flit-core) where the artifact filename is the last path segment
-// of the download URL and no compilation step is required.
+// setuptools, flit-core) where no compilation step is required.
+//
+// We intentionally do NOT use the raw PyPI filename (e.g. flit_core-3.12.0.tar.gz)
+// as the destination, because PyPI normalises package names with underscores while
+// our dep names use hyphens (e.g. "flit-core"). Using the dep name directly ensures
+// findIntermediateArtifact can locate the file by its dep-name prefix.
 type PyPISourceRecipe struct {
 	DepName string
 	Fetcher fetch.Fetcher
@@ -69,17 +70,9 @@ func (p *PyPISourceRecipe) Build(ctx context.Context, stk *stack.Stack, src *sou
 		Meta:             ArtifactMeta{OS: "linux", Arch: "noarch"},
 		Fetcher:          p.Fetcher,
 		StripTopLevelDir: true,
-		// PyPI sdist URLs end with the canonical filename (e.g. setuptools-69.0.3.tar.gz).
-		// Use url.Parse + path.Base to strip any query string or fragment before
-		// using the last path segment as the local filename.
-		DestFilename: func(_, rawURL string) string {
-			if u, err := url.Parse(rawURL); err == nil {
-				return path.Base(u.Path)
-			}
-			// Fallback: should not happen for well-formed URLs.
-			parts := strings.Split(rawURL, "/")
-			return parts[len(parts)-1]
-		},
+		// No DestFilename override: RepackRecipe's default produces
+		// "<depname>-<version><ext>" (e.g. flit-core-3.12.0.tar.gz),
+		// which findIntermediateArtifact can locate by dep-name prefix.
 	}).Build(ctx, stk, src, r, out)
 }
 
