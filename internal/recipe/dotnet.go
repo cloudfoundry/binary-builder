@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/cloudfoundry/binary-builder/internal/fetch"
 	"github.com/cloudfoundry/binary-builder/internal/output"
 	"github.com/cloudfoundry/binary-builder/internal/runner"
 	"github.com/cloudfoundry/binary-builder/internal/source"
@@ -14,7 +15,9 @@ import (
 )
 
 // DotnetSDKRecipe builds dotnet-sdk: download, prune ./shared/*, inject RuntimeVersion.txt, xz compress.
-type DotnetSDKRecipe struct{}
+type DotnetSDKRecipe struct {
+	Fetcher fetch.Fetcher
+}
 
 func (d *DotnetSDKRecipe) Name() string { return "dotnet-sdk" }
 func (d *DotnetSDKRecipe) Artifact() ArtifactMeta {
@@ -22,11 +25,13 @@ func (d *DotnetSDKRecipe) Artifact() ArtifactMeta {
 }
 
 func (d *DotnetSDKRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, r runner.Runner, _ *output.OutData) error {
-	return pruneDotnetFiles(r, src, []string{"./shared/*"}, true)
+	return pruneDotnetFiles(ctx, d.Fetcher, r, src, []string{"./shared/*"}, true)
 }
 
 // DotnetRuntimeRecipe builds dotnet-runtime: download, prune ./dotnet, xz compress.
-type DotnetRuntimeRecipe struct{}
+type DotnetRuntimeRecipe struct {
+	Fetcher fetch.Fetcher
+}
 
 func (d *DotnetRuntimeRecipe) Name() string { return "dotnet-runtime" }
 func (d *DotnetRuntimeRecipe) Artifact() ArtifactMeta {
@@ -34,11 +39,13 @@ func (d *DotnetRuntimeRecipe) Artifact() ArtifactMeta {
 }
 
 func (d *DotnetRuntimeRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, r runner.Runner, _ *output.OutData) error {
-	return pruneDotnetFiles(r, src, []string{"./dotnet"}, false)
+	return pruneDotnetFiles(ctx, d.Fetcher, r, src, []string{"./dotnet"}, false)
 }
 
 // DotnetAspnetcoreRecipe builds dotnet-aspnetcore: download, prune ./dotnet + ./shared/Microsoft.NETCore.App, xz compress.
-type DotnetAspnetcoreRecipe struct{}
+type DotnetAspnetcoreRecipe struct {
+	Fetcher fetch.Fetcher
+}
 
 func (d *DotnetAspnetcoreRecipe) Name() string { return "dotnet-aspnetcore" }
 func (d *DotnetAspnetcoreRecipe) Artifact() ArtifactMeta {
@@ -46,20 +53,22 @@ func (d *DotnetAspnetcoreRecipe) Artifact() ArtifactMeta {
 }
 
 func (d *DotnetAspnetcoreRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, r runner.Runner, _ *output.OutData) error {
-	return pruneDotnetFiles(r, src, []string{"./dotnet", "./shared/Microsoft.NETCore.App"}, false)
+	return pruneDotnetFiles(ctx, d.Fetcher, r, src, []string{"./dotnet", "./shared/Microsoft.NETCore.App"}, false)
 }
 
-// pruneDotnetFiles extracts a dotnet tarball excluding specified paths,
-// optionally writes RuntimeVersion.txt, and re-compresses with xz.
+// pruneDotnetFiles downloads the dotnet tarball from src.URL, extracts it
+// excluding specified paths, optionally writes RuntimeVersion.txt, and
+// re-compresses the result with xz.
 //
-// The dotnet source tarball is pre-downloaded by Concourse into source/*.tar.gz.
-// We use filepath.Glob to resolve the actual path before passing it to tar,
-// since the runner does not invoke a shell (no glob expansion).
+// Unlike libunwind (where the Concourse github-releases resource pre-downloads
+// the file into source/), the depwatcher dotnet resource only emits metadata
+// in data.json — no tarball is placed on disk. We therefore download it
+// ourselves using the Fetcher, exactly like every other recipe.
 //
 // The output artifact is written to the CWD using dash-separated naming
 // (e.g. dotnet-runtime-8.0.21-linux-x64.tar.xz) so that findIntermediateArtifact
 // can locate it via the standard glob patterns.
-func pruneDotnetFiles(r runner.Runner, src *source.Input, excludes []string, writeRuntime bool) error {
+func pruneDotnetFiles(ctx context.Context, fetcher fetch.Fetcher, r runner.Runner, src *source.Input, excludes []string, writeRuntime bool) error {
 	adjustedFile := filepath.Join(mustCwd(), fmt.Sprintf("%s-%s-linux-x64.tar.xz", src.Name, src.Version))
 	tmpDir := fmt.Sprintf("/tmp/dotnet-prune-%s-%s", src.Name, src.Version)
 
@@ -67,13 +76,14 @@ func pruneDotnetFiles(r runner.Runner, src *source.Input, excludes []string, wri
 		return err
 	}
 
-	// Resolve source/*.tar.gz via glob — the runner does not use a shell so
-	// glob patterns are NOT expanded by the OS.
-	matches, err := filepath.Glob("source/*.tar.gz")
-	if err != nil || len(matches) == 0 {
-		return fmt.Errorf("dotnet: no source tarball found matching source/*.tar.gz")
+	// Download the tarball from the URL provided in data.json.
+	// The depwatcher dotnet resource only emits metadata (URL + SHA512); it
+	// does not place a file in source/ the way the github-releases resource does.
+	sourceTarball := filepath.Join(os.TempDir(), filepath.Base(src.URL))
+	if err := fetcher.Download(ctx, src.URL, sourceTarball, src.PrimaryChecksum()); err != nil {
+		return fmt.Errorf("downloading dotnet tarball: %w", err)
 	}
-	sourceTarball := matches[0]
+	defer os.Remove(sourceTarball)
 
 	// Build exclude args.
 	extractArgs := []string{"-xf", sourceTarball, "-C", tmpDir}

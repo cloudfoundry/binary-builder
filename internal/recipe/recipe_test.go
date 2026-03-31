@@ -721,34 +721,23 @@ func TestPipRecipeUsesStackPipBuildPackages(t *testing.T) {
 
 // ── DotnetSDKRecipe ───────────────────────────────────────────────────────────
 
-// writeFakeDotnetSource creates a source/ directory with a minimal .tar.gz file
-// so that filepath.Glob("source/*.tar.gz") in pruneDotnetFiles resolves correctly.
-// Returns the resolved path (e.g. "source/dotnet-sdk-8.0.101.tar.gz").
-func writeFakeDotnetSource(t *testing.T, filename string) string {
-	t.Helper()
-	if err := os.MkdirAll("source", 0755); err != nil {
-		t.Fatalf("writeFakeDotnetSource: mkdir source: %v", err)
-	}
-	srcPath := filepath.Join("source", filename)
-	if err := os.WriteFile(srcPath, []byte("fake-dotnet-tarball"), 0644); err != nil {
-		t.Fatalf("writeFakeDotnetSource: write %s: %v", srcPath, err)
-	}
-	return srcPath
-}
-
 func TestDotnetSDKRecipeCallSequence(t *testing.T) {
 	useTempWorkDir(t)
-	srcPath := writeFakeDotnetSource(t, "dotnet-sdk-8.0.101.tar.gz")
 
+	f := newFakeFetcher()
 	fakeRunner := runner.NewFakeRunner()
-	// Provide output for the tar tf command using the resolved path.
-	fakeRunner.OutputMap["tar tf "+srcPath+" ./shared/Microsoft.NETCore.App/"] =
+	dotnetURL := "https://example.com/dotnet-sdk-8.0.101-linux-x64.tar.gz"
+	fakeRunner.OutputMap["tar tf "+filepath.Join(os.TempDir(), "dotnet-sdk-8.0.101-linux-x64.tar.gz")+" ./shared/Microsoft.NETCore.App/"] =
 		"./shared/Microsoft.NETCore.App/\n./shared/Microsoft.NETCore.App/8.0.1/\n"
 
-	r := &recipe.DotnetSDKRecipe{}
-	src := newInput("dotnet-sdk", "8.0.101", "https://example.com/dotnet-sdk.tar.gz")
+	r := &recipe.DotnetSDKRecipe{Fetcher: f}
+	src := newInput("dotnet-sdk", "8.0.101", dotnetURL)
 	err := r.Build(context.Background(), newStack(t), src, fakeRunner, &output.OutData{})
 	require.NoError(t, err)
+
+	// Should have downloaded via Fetcher.
+	require.Len(t, f.DownloadedURLs, 1)
+	assert.Equal(t, dotnetURL, f.DownloadedURLs[0].URL)
 
 	// mkdir, tar extract, tar tf (runtime version), tar compress.
 	// RuntimeVersion.txt is written via os.WriteFile (no "sh" call).
@@ -760,13 +749,14 @@ func TestDotnetSDKRecipeCallSequence(t *testing.T) {
 
 func TestDotnetSDKRecipeExcludesSharedDir(t *testing.T) {
 	useTempWorkDir(t)
-	srcPath := writeFakeDotnetSource(t, "dotnet-sdk-8.0.101.tar.gz")
 
+	f := newFakeFetcher()
 	fakeRunner := runner.NewFakeRunner()
-	fakeRunner.OutputMap["tar tf "+srcPath+" ./shared/Microsoft.NETCore.App/"] = ""
+	dotnetURL := "https://example.com/dotnet-sdk-8.0.101-linux-x64.tar.gz"
+	fakeRunner.OutputMap["tar tf "+filepath.Join(os.TempDir(), "dotnet-sdk-8.0.101-linux-x64.tar.gz")+" ./shared/Microsoft.NETCore.App/"] = ""
 
-	r := &recipe.DotnetSDKRecipe{}
-	src := newInput("dotnet-sdk", "8.0.101", "https://example.com/dotnet-sdk.tar.gz")
+	r := &recipe.DotnetSDKRecipe{Fetcher: f}
+	src := newInput("dotnet-sdk", "8.0.101", dotnetURL)
 	_ = r.Build(context.Background(), newStack(t), src, fakeRunner, &output.OutData{})
 
 	// Verify --exclude=./shared/* appears in the tar extract call.
@@ -776,19 +766,34 @@ func TestDotnetSDKRecipeExcludesSharedDir(t *testing.T) {
 
 func TestDotnetSDKRecipeUsesXZCompression(t *testing.T) {
 	useTempWorkDir(t)
-	srcPath := writeFakeDotnetSource(t, "dotnet-sdk-8.0.101.tar.gz")
 
+	f := newFakeFetcher()
 	fakeRunner := runner.NewFakeRunner()
-	fakeRunner.OutputMap["tar tf "+srcPath+" ./shared/Microsoft.NETCore.App/"] =
+	dotnetURL := "https://example.com/dotnet-sdk-8.0.101-linux-x64.tar.gz"
+	fakeRunner.OutputMap["tar tf "+filepath.Join(os.TempDir(), "dotnet-sdk-8.0.101-linux-x64.tar.gz")+" ./shared/Microsoft.NETCore.App/"] =
 		"./shared/Microsoft.NETCore.App/\n./shared/Microsoft.NETCore.App/8.0.1/\n"
 
-	r := &recipe.DotnetSDKRecipe{}
-	src := newInput("dotnet-sdk", "8.0.101", "https://example.com/dotnet-sdk.tar.gz")
+	r := &recipe.DotnetSDKRecipe{Fetcher: f}
+	src := newInput("dotnet-sdk", "8.0.101", dotnetURL)
 	_ = r.Build(context.Background(), newStack(t), src, fakeRunner, &output.OutData{})
 
 	// Re-compression must use -Jcf (xz), not -czf (gzip).
 	assert.True(t, anyArgsContain(fakeRunner.Calls, "-Jcf"),
 		"dotnet-sdk must use xz compression (-Jcf)")
+}
+
+func TestDotnetSDKRecipeFetchError(t *testing.T) {
+	useTempWorkDir(t)
+
+	f := newFakeFetcher()
+	dotnetURL := "https://example.com/dotnet-sdk-8.0.101-linux-x64.tar.gz"
+	f.ErrMap[dotnetURL] = errors.New("connection refused")
+
+	r := &recipe.DotnetSDKRecipe{Fetcher: f}
+	src := newInput("dotnet-sdk", "8.0.101", dotnetURL)
+	err := r.Build(context.Background(), newStack(t), src, runner.NewFakeRunner(), &output.OutData{})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "connection refused")
 }
 
 func TestDotnetSDKRecipeNameAndArtifact(t *testing.T) {
@@ -801,23 +806,30 @@ func TestDotnetSDKRecipeNameAndArtifact(t *testing.T) {
 
 func TestDotnetRuntimeRecipeExcludesDotnet(t *testing.T) {
 	useTempWorkDir(t)
-	writeFakeDotnetSource(t, "dotnet-runtime-8.0.1.tar.gz")
+
+	f := newFakeFetcher()
 	fakeRunner := runner.NewFakeRunner()
 
-	r := &recipe.DotnetRuntimeRecipe{}
-	src := newInput("dotnet-runtime", "8.0.1", "https://example.com/dotnet-runtime.tar.gz")
+	r := &recipe.DotnetRuntimeRecipe{Fetcher: f}
+	src := newInput("dotnet-runtime", "8.0.1", "https://example.com/dotnet-runtime-8.0.1-linux-x64.tar.gz")
 	err := r.Build(context.Background(), newStack(t), src, fakeRunner, &output.OutData{})
 	require.NoError(t, err)
+
+	// Should have downloaded via Fetcher.
+	require.Len(t, f.DownloadedURLs, 1)
 
 	assert.True(t, anyArgsContain(fakeRunner.Calls, "--exclude=./dotnet"),
 		"dotnet-runtime must exclude ./dotnet")
 }
 
 func TestDotnetRuntimeRecipeNoRuntimeVersionTxt(t *testing.T) {
+	useTempWorkDir(t)
+
+	f := newFakeFetcher()
 	fakeRunner := runner.NewFakeRunner()
 
-	r := &recipe.DotnetRuntimeRecipe{}
-	src := newInput("dotnet-runtime", "8.0.1", "https://example.com/dotnet-runtime.tar.gz")
+	r := &recipe.DotnetRuntimeRecipe{Fetcher: f}
+	src := newInput("dotnet-runtime", "8.0.1", "https://example.com/dotnet-runtime-8.0.1-linux-x64.tar.gz")
 	_ = r.Build(context.Background(), newStack(t), src, fakeRunner, &output.OutData{})
 
 	// No "sh" call: RuntimeVersion.txt must NOT be written for dotnet-runtime.
@@ -835,13 +847,17 @@ func TestDotnetRuntimeRecipeNameAndArtifact(t *testing.T) {
 
 func TestDotnetAspnetcoreRecipeExcludesBoth(t *testing.T) {
 	useTempWorkDir(t)
-	writeFakeDotnetSource(t, "dotnet-aspnetcore-8.0.1.tar.gz")
+
+	f := newFakeFetcher()
 	fakeRunner := runner.NewFakeRunner()
 
-	r := &recipe.DotnetAspnetcoreRecipe{}
-	src := newInput("dotnet-aspnetcore", "8.0.1", "https://example.com/dotnet-aspnetcore.tar.gz")
+	r := &recipe.DotnetAspnetcoreRecipe{Fetcher: f}
+	src := newInput("dotnet-aspnetcore", "8.0.1", "https://example.com/dotnet-aspnetcore-8.0.1-linux-x64.tar.gz")
 	err := r.Build(context.Background(), newStack(t), src, fakeRunner, &output.OutData{})
 	require.NoError(t, err)
+
+	// Should have downloaded via Fetcher.
+	require.Len(t, f.DownloadedURLs, 1)
 
 	assert.True(t, anyArgsContain(fakeRunner.Calls, "--exclude=./dotnet"),
 		"dotnet-aspnetcore must exclude ./dotnet")
@@ -850,10 +866,13 @@ func TestDotnetAspnetcoreRecipeExcludesBoth(t *testing.T) {
 }
 
 func TestDotnetAspnetcoreRecipeNoRuntimeVersionTxt(t *testing.T) {
+	useTempWorkDir(t)
+
+	f := newFakeFetcher()
 	fakeRunner := runner.NewFakeRunner()
 
-	r := &recipe.DotnetAspnetcoreRecipe{}
-	src := newInput("dotnet-aspnetcore", "8.0.1", "https://example.com/dotnet-aspnetcore.tar.gz")
+	r := &recipe.DotnetAspnetcoreRecipe{Fetcher: f}
+	src := newInput("dotnet-aspnetcore", "8.0.1", "https://example.com/dotnet-aspnetcore-8.0.1-linux-x64.tar.gz")
 	_ = r.Build(context.Background(), newStack(t), src, fakeRunner, &output.OutData{})
 
 	assert.False(t, anyCallContains(fakeRunner.Calls, "sh"),

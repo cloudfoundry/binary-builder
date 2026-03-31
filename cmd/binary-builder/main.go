@@ -330,9 +330,9 @@ func buildRegistry() *recipe.Registry {
 	reg.Register(&recipe.YarnRecipe{Fetcher: f})
 	reg.Register(&recipe.RubygemsRecipe{Fetcher: f})
 	reg.Register(&recipe.MinicondaRecipe{Fetcher: f})
-	reg.Register(&recipe.DotnetSDKRecipe{})
-	reg.Register(&recipe.DotnetRuntimeRecipe{})
-	reg.Register(&recipe.DotnetAspnetcoreRecipe{})
+	reg.Register(&recipe.DotnetSDKRecipe{Fetcher: f})
+	reg.Register(&recipe.DotnetRuntimeRecipe{Fetcher: f})
+	reg.Register(&recipe.DotnetAspnetcoreRecipe{Fetcher: f})
 
 	// Passthrough recipes.
 	for _, r := range recipe.NewPassthroughRecipes(f) {
