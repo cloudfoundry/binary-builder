@@ -474,6 +474,7 @@ func TestRubygemsRecipeNameAndArtifact(t *testing.T) {
 	r := &recipe.RubygemsRecipe{}
 	assert.Equal(t, "rubygems", r.Name())
 	assert.Equal(t, "noarch", r.Artifact().Arch)
+	assert.Equal(t, "any-stack", r.Artifact().Stack)
 }
 
 // ── MinicondaRecipe ───────────────────────────────────────────────────────────
