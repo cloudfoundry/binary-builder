@@ -90,7 +90,7 @@ type RubygemsRecipe struct {
 
 func (rg *RubygemsRecipe) Name() string { return "rubygems" }
 func (rg *RubygemsRecipe) Artifact() ArtifactMeta {
-	return ArtifactMeta{OS: "linux", Arch: "noarch", Stack: ""}
+	return ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"}
 }
 func (rg *RubygemsRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, r runner.Runner, out *output.OutData) error {
 	return (&RepackRecipe{
