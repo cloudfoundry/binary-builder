@@ -223,6 +223,7 @@ func (p *PHPRecipe) setupTar(ec php.ExtensionContext, run runner.Runner) error {
 		fmt.Sprintf("cp -a %s/libaspell.so* %s/lib", libDir, phpPath),
 		fmt.Sprintf("cp -a %s/libpspell.so* %s/lib", libDir, phpPath),
 		fmt.Sprintf("cp -a %s/libmemcached.so* %s/lib/", libDir, phpPath),
+		fmt.Sprintf("cp -a %s/libhashkit.so* %s/lib/", libDir, phpPath),
 		fmt.Sprintf("cp -a %s/libuv.so* %s/lib", libDir, phpPath),
 		fmt.Sprintf("cp -a %s/libargon2.so* %s/lib", libDir, phpPath),
 		fmt.Sprintf("cp -a /usr/lib/librdkafka.so* %s/lib/", phpPath),
