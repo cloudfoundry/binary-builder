@@ -26,11 +26,17 @@ func (a *APT) Update(_ context.Context) error {
 	)
 }
 
-// Install runs apt-get install -y for the given packages.
-// Does nothing if no packages are provided.
-func (a *APT) Install(_ context.Context, packages ...string) error {
+// Install runs apt-get update followed by apt-get install -y for the given
+// packages. The update ensures the package index is fresh so that superseded
+// package versions (e.g. a .4 → .5 point release on the Ubuntu mirrors) do
+// not produce 404 errors. Does nothing if no packages are provided.
+func (a *APT) Install(ctx context.Context, packages ...string) error {
 	if len(packages) == 0 {
 		return nil
+	}
+
+	if err := a.Update(ctx); err != nil {
+		return fmt.Errorf("apt-get update: %w", err)
 	}
 
 	args := append([]string{"install", "-y"}, packages...)
