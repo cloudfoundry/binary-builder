@@ -264,6 +264,24 @@ func (p *PHPRecipe) setupTar(ec php.ExtensionContext, run runner.Runner) error {
 		}
 	}
 
+	// Fix any absolute symlinks in lib/ produced by `cp -a` from build hosts
+	// where system library symlinks are absolute (e.g. libgpg-error.so →
+	// /lib/x86_64-linux-gnu/libgpg-error.so.0 on cflinuxfs4). libbuildpack
+	// rejects absolute symlinks as a security measure, causing staging to fail
+	// with "cannot link to an absolute path when extracting archives".
+	fixSymlinks := fmt.Sprintf(
+		`find "%s/lib" -maxdepth 1 -type l | while IFS= read -r link; do
+			target=$(readlink "$link")
+			if [ "${target#/}" != "$target" ]; then
+				ln -sf "$(basename "$target")" "$link"
+			fi
+		done`,
+		phpPath,
+	)
+	if err := run.Run("sh", "-c", fixSymlinks); err != nil {
+		return fmt.Errorf("setup_tar: fix absolute symlinks: %w", err)
+	}
+
 	// Cleanup.
 	cleanup := fmt.Sprintf(
 		`rm -f "%s/etc/php-fpm.conf.default" && rm -f "%s/bin/php-cgi" && find "%s/lib/php/extensions" -name "*.a" -type f -delete`,
