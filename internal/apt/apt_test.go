@@ -17,10 +17,14 @@ func TestInstallPackages(t *testing.T) {
 	err := a.Install(context.Background(), "pkg1", "pkg2")
 	require.NoError(t, err)
 
-	require.Len(t, f.Calls, 1)
+	// Install always runs apt-get update first, then apt-get install.
+	require.Len(t, f.Calls, 2)
 	assert.Equal(t, "apt-get", f.Calls[0].Name)
-	assert.Equal(t, []string{"install", "-y", "pkg1", "pkg2"}, f.Calls[0].Args)
+	assert.Equal(t, []string{"update"}, f.Calls[0].Args)
 	assert.Equal(t, "noninteractive", f.Calls[0].Env["DEBIAN_FRONTEND"])
+	assert.Equal(t, "apt-get", f.Calls[1].Name)
+	assert.Equal(t, []string{"install", "-y", "pkg1", "pkg2"}, f.Calls[1].Args)
+	assert.Equal(t, "noninteractive", f.Calls[1].Env["DEBIAN_FRONTEND"])
 }
 
 func TestInstallNoPackages(t *testing.T) {

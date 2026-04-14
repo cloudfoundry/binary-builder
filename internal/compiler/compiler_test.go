@@ -27,18 +27,30 @@ func TestGCCSetupCflinuxfs4(t *testing.T) {
 	err := gcc.Setup(context.Background())
 	require.NoError(t, err)
 
-	// Expect: install software-properties-common (from ToolPackages), add-apt-repository, apt-get update,
-	//         install gcc-12 g++-12, update-alternatives
+	// Expect: update+install software-properties-common (from ToolPackages), add-apt-repository,
+	//         apt-get update (from AddPPA), update+install gcc-12 g++-12, update-alternatives
 	var callNames []string
 	for _, c := range f.Calls {
 		callNames = append(callNames, c.Name)
 	}
 
-	// Should see software-properties-common installed first (from ToolPackages).
-	require.NotEmpty(t, f.Calls)
-	firstAptInstall := f.Calls[0]
-	assert.Equal(t, "apt-get", firstAptInstall.Name)
-	assert.Contains(t, firstAptInstall.Args, "software-properties-common")
+	// software-properties-common must be installed before add-apt-repository is called.
+	var toolInstallIdx, addPPAIdx = -1, -1
+	for i, c := range f.Calls {
+		if c.Name == "add-apt-repository" && addPPAIdx < 0 {
+			addPPAIdx = i
+		}
+		if c.Name == "apt-get" && toolInstallIdx < 0 {
+			for _, arg := range c.Args {
+				if arg == "software-properties-common" {
+					toolInstallIdx = i
+				}
+			}
+		}
+	}
+	require.True(t, toolInstallIdx >= 0, "software-properties-common not installed")
+	require.True(t, addPPAIdx >= 0, "add-apt-repository not called")
+	assert.Less(t, toolInstallIdx, addPPAIdx, "tool packages must be installed before add-apt-repository")
 
 	// Should see add-apt-repository (PPA is non-empty).
 	assert.Contains(t, callNames, "add-apt-repository")
@@ -83,11 +95,24 @@ func TestGCCSetupCflinuxfs5(t *testing.T) {
 	err := gcc.Setup(context.Background())
 	require.NoError(t, err)
 
-	// ToolPackages should be installed even when PPA is empty.
+	// ToolPackages should be installed before the GCC packages, even when PPA is empty.
 	require.NotEmpty(t, f.Calls)
-	firstAptInstall := f.Calls[0]
-	assert.Equal(t, "apt-get", firstAptInstall.Name)
-	assert.Contains(t, firstAptInstall.Args, "software-properties-common")
+	var toolInstallIdx2, gccInstallIdx = -1, -1
+	for i, c := range f.Calls {
+		if c.Name == "apt-get" {
+			for _, arg := range c.Args {
+				if arg == "software-properties-common" && toolInstallIdx2 < 0 {
+					toolInstallIdx2 = i
+				}
+				if arg == "gcc-14" && gccInstallIdx < 0 {
+					gccInstallIdx = i
+				}
+			}
+		}
+	}
+	require.True(t, toolInstallIdx2 >= 0, "software-properties-common not installed")
+	require.True(t, gccInstallIdx >= 0, "gcc-14 not installed")
+	assert.Less(t, toolInstallIdx2, gccInstallIdx, "tool packages must be installed before gcc packages")
 
 	// Should NOT see add-apt-repository (PPA is empty).
 	for _, c := range f.Calls {
@@ -144,11 +169,13 @@ func TestGfortranSetupCflinuxfs4(t *testing.T) {
 	err := gf.Setup(context.Background())
 	require.NoError(t, err)
 
-	// Should install gfortran packages.
-	require.Len(t, f.Calls, 1)
+	// Should install gfortran packages (update + install = 2 calls).
+	require.Len(t, f.Calls, 2)
 	assert.Equal(t, "apt-get", f.Calls[0].Name)
-	assert.Contains(t, f.Calls[0].Args, "gfortran")
-	assert.Contains(t, f.Calls[0].Args, "libgfortran-12-dev")
+	assert.Equal(t, []string{"update"}, f.Calls[0].Args)
+	assert.Equal(t, "apt-get", f.Calls[1].Name)
+	assert.Contains(t, f.Calls[1].Args, "gfortran")
+	assert.Contains(t, f.Calls[1].Args, "libgfortran-12-dev")
 }
 
 func TestGfortranSetupCflinuxfs5(t *testing.T) {
@@ -167,8 +194,9 @@ func TestGfortranSetupCflinuxfs5(t *testing.T) {
 	err := gf.Setup(context.Background())
 	require.NoError(t, err)
 
-	require.Len(t, f.Calls, 1)
-	assert.Contains(t, f.Calls[0].Args, "libgfortran-13-dev")
+	require.Len(t, f.Calls, 2)
+	assert.Equal(t, []string{"update"}, f.Calls[0].Args)
+	assert.Contains(t, f.Calls[1].Args, "libgfortran-13-dev")
 }
 
 func TestGfortranCopyLibsCflinuxfs4(t *testing.T) {
