@@ -66,6 +66,12 @@ func (p *PassthroughRecipe) Build(ctx context.Context, _ *stack.Stack, src *sour
 func NewPassthroughRecipes(f fetch.Fetcher) []Recipe {
 	return []Recipe{
 		&PassthroughRecipe{
+			DepName:            "java-cfenv",
+			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("java-cfenv-boot-%s.jar", v) },
+			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
+			Fetcher:            f,
+		},
+		&PassthroughRecipe{
 			DepName:            "tomcat",
 			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("apache-tomcat-%s.tar.gz", v) },
 			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
