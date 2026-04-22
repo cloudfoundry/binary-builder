@@ -36,15 +36,6 @@ extensions:
       md5: 3e9df94b06f8a026e33b3a8a3f02921b
       klass: PeclRecipe
   additions:
-    - name: apcu
-      version: 5.1.24
-      md5: 65494e2af7c92bdef075030b9d9e2da4
-      klass: PeclRecipe
-    # yaf 3.3.6 calls php_pcre_match_impl with wrong arg count on PHP 8.4; replaced by 3.3.7
-    - name: yaf
-      version: 3.3.7
-      md5: 8c97aa7e81c5592c7bddae1b8a0cff50
-      klass: PeclRecipe
     - name: ioncube
       version: 15.5.0
       md5: nil
