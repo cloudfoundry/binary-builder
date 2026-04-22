@@ -134,6 +134,7 @@ func NewPassthroughRecipes(f fetch.Fetcher) []Recipe {
 		// PyPI sdist deps — download and strip top-level dir, no compilation.
 		&PyPISourceRecipe{DepName: "setuptools", Fetcher: f},
 		&PyPISourceRecipe{DepName: "flit-core", Fetcher: f},
+		&PyPISourceRecipe{DepName: "poetry-core", Fetcher: f},
 	}
 }
 
