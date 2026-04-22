@@ -126,9 +126,12 @@ type patchCategory struct {
 // then applies the patch file for the specific minor version if one exists
 // (e.g. "8"+"2" → php82-extensions-patch.yml).
 //
-// Merge rules:
-//   - For each addition: if name already exists → replace; otherwise → append.
-//   - For each exclusion: remove by name.
+// Merge rules (applied by applyPatch):
+//   - Exclusions run first. If an exclusion has a matching addition, the addition
+//     replaces the entry in-place (preserving list position). Otherwise the entry
+//     is removed.
+//   - Remaining additions (no matching exclusion) override by name if present,
+//     or are appended.
 func Load(phpMajor, phpMinor string) (*ExtensionSet, error) {
 	baseData, ok := embeddedBases[phpMajor]
 	if !ok {
@@ -157,24 +160,47 @@ func Load(phpMajor, phpMinor string) (*ExtensionSet, error) {
 	return &set, nil
 }
 
-// applyPatch applies additions (override by name or append) and exclusions
-// (remove by name) from a patch category to a slice of extensions.
+// applyPatch applies exclusions (remove by name) and then additions
+// (override by name or append) from a patch category to a slice of extensions.
+//
+// When an exclusion removes an entry that has a matching addition (same name),
+// the addition is inserted at the original position so that build-order
+// dependencies (e.g. memcached depending on igbinary) are preserved.
+// Additions with no matching exclusion are appended at the end.
 func applyPatch(list *[]Extension, cat *patchCategory) {
 	if cat == nil {
 		return
 	}
 
+	// Build a lookup of additions by name for O(1) access.
+	addByName := make(map[string]Extension, len(cat.Additions))
 	for _, add := range cat.Additions {
+		addByName[add.Name] = add
+	}
+
+	// Apply exclusions. When the excluded name has a corresponding addition,
+	// replace in-place to preserve position; otherwise remove.
+	replaced := make(map[string]bool)
+	for _, excl := range cat.Exclusions {
+		if idx := indexByName(*list, excl.Name); idx >= 0 {
+			if add, ok := addByName[excl.Name]; ok {
+				(*list)[idx] = add
+				replaced[excl.Name] = true
+			} else {
+				*list = append((*list)[:idx], (*list)[idx+1:]...)
+			}
+		}
+	}
+
+	// Apply remaining additions (those not already placed by the exclusion loop).
+	for _, add := range cat.Additions {
+		if replaced[add.Name] {
+			continue
+		}
 		if idx := indexByName(*list, add.Name); idx >= 0 {
 			(*list)[idx] = add
 		} else {
 			*list = append(*list, add)
-		}
-	}
-
-	for _, excl := range cat.Exclusions {
-		if idx := indexByName(*list, excl.Name); idx >= 0 {
-			*list = append((*list)[:idx], (*list)[idx+1:]...)
 		}
 	}
 }
