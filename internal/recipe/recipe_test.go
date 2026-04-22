@@ -241,6 +241,7 @@ func TestPassthroughSourceFilenames(t *testing.T) {
 		version  string
 		wantFile string
 	}{
+		{"java-cfenv", "3.5.0", "java-cfenv-3.5.0.jar"},
 		{"tomcat", "9.0.85", "apache-tomcat-9.0.85.tar.gz"},
 		{"composer", "2.7.1", "composer.phar"},
 		{"appdynamics", "23.11.0.35198", "appdynamics-php-agent-linux_x64-23.11.0.35198.tar.bz2"},
@@ -293,7 +294,7 @@ func TestPassthroughArtifactMeta(t *testing.T) {
 		recipeMap[rec.Name()] = rec
 	}
 
-	anyStack := []string{"tomcat", "composer", "appdynamics", "appdynamics-java", "skywalking-agent"}
+	anyStack := []string{"java-cfenv", "tomcat", "composer", "appdynamics", "appdynamics-java", "skywalking-agent"}
 	for _, name := range anyStack {
 		t.Run(name+"_any-stack", func(t *testing.T) {
 			rec := recipeMap[name]
@@ -323,6 +324,7 @@ func TestNewPassthroughRecipesContents(t *testing.T) {
 		names[i] = r.Name()
 	}
 	assert.Subset(t, names, []string{
+		"java-cfenv",
 		"tomcat", "composer", "appdynamics", "appdynamics-java",
 		"skywalking-agent", "openjdk", "zulu", "sapmachine",
 		"jprofiler-profiler", "your-kit-profiler",

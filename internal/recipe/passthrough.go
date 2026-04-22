@@ -67,7 +67,7 @@ func NewPassthroughRecipes(f fetch.Fetcher) []Recipe {
 	return []Recipe{
 		&PassthroughRecipe{
 			DepName:            "java-cfenv",
-			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("java-cfenv-boot-%s.jar", v) },
+			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("java-cfenv-%s.jar", v) },
 			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
 			Fetcher:            f,
 		},
