@@ -346,7 +346,7 @@ func buildRegistry() *recipe.Registry {
 // artifact file produced by a recipe. Extensions are tried in priority order.
 func findIntermediateArtifact(name, version string) (string, error) {
 	// Extensions in priority order (matches ArtifactOutput.ext in the old Ruby code).
-	exts := []string{"tgz", "tar.gz", "zip", "tar.xz", "tar.bz2", "sh", "phar", "txt"}
+	exts := []string{"tgz", "tar.gz", "zip", "tar.xz", "tar.bz2", "sh", "phar", "jar", "txt"}
 
 	// Recipes that cannot write to CWD (e.g. pip, pipenv) write to os.TempDir.
 	searchDirs := []string{".", os.TempDir()}

@@ -81,6 +81,7 @@ func ExtFromPath(path string) string {
 		{".tar.bz2", "tar.bz2"},
 		{".zip", "zip"},
 		{".phar", "phar"},
+		{".jar", "jar"},
 		{".sh", "sh"},
 		{".txt", "txt"},
 	}
