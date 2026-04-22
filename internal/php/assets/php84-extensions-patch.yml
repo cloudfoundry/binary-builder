@@ -1,14 +1,6 @@
 ---
 extensions:
   exclusions:
-    - name: apcu
-      version: 5.1.23
-      md5: c6ed350a587cf2b376c1efeb31f68907
-      klass: PeclRecipe
-    - name: yaf
-      version: 3.3.5
-      md5: 128ecf6c84dd71d59c12d826cc51f0c4
-      klass: PeclRecipe
     - name: mongodb
       version: 1.18.1
       md5: 8939b5f966fa3ba6bb8e25206b9dae0f
