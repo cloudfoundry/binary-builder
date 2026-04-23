@@ -1,14 +1,6 @@
 ---
 extensions:
   exclusions:
-    - name: apcu
-      version: 5.1.23
-      md5: c6ed350a587cf2b376c1efeb31f68907
-      klass: PeclRecipe
-    - name: yaf
-      version: 3.3.5
-      md5: 128ecf6c84dd71d59c12d826cc51f0c4
-      klass: PeclRecipe
     - name: mongodb
       version: 1.18.1
       md5: 8939b5f966fa3ba6bb8e25206b9dae0f
@@ -94,14 +86,6 @@ extensions:
       md5: c48f5de2f96ffebe2e18eaefff4917f9
       klass: PeclRecipe
   additions:
-    - name: apcu
-      version: 5.1.24
-      md5: 65494e2af7c92bdef075030b9d9e2da4
-      klass: PeclRecipe
-    - name: yaf
-      version: 3.3.7
-      md5: 8c97aa7e81c5592c7bddae1b8a0cff50
-      klass: PeclRecipe
     - name: ioncube
       version: 15.5.0
       md5: nil
