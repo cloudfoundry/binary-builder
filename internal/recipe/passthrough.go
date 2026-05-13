@@ -78,6 +78,18 @@ func NewPassthroughRecipes(f fetch.Fetcher) []Recipe {
 			Fetcher:            f,
 		},
 		&PassthroughRecipe{
+			DepName:            "azure-application-insights",
+			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("applicationinsights-agent-%s.jar", v) },
+			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
+			Fetcher:            f,
+		},
+		&PassthroughRecipe{
+			DepName:            "splunk-otel-javaagent",
+			SourceFilenameFunc: func(v string) string { return "splunk-otel-javaagent.jar" },
+			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
+			Fetcher:            f,
+		},
+		&PassthroughRecipe{
 			DepName:            "tomcat",
 			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("apache-tomcat-%s.tar.gz", v) },
 			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
