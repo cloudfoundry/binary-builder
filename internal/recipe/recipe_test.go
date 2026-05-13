@@ -241,7 +241,9 @@ func TestPassthroughSourceFilenames(t *testing.T) {
 		version  string
 		wantFile string
 	}{
-	    {"open-telemetry-javaagent", "2.27.0", "opentelemetry-javaagent.jar"},
+	    	{"open-telemetry-javaagent", "2.27.0", "opentelemetry-javaagent.jar"},
+	    	{"splunk-otel-javaagent", "2.22.0", "splunk-otel-javaagent.jar"},
+	    	{"azure-application-insights", "3.6.2", "applicationinsights-agent-3.6.2.jar"},
 		{"java-cfenv", "3.5.0", "java-cfenv-3.5.0.jar"},
 		{"tomcat", "9.0.85", "apache-tomcat-9.0.85.tar.gz"},
 		{"composer", "2.7.1", "composer.phar"},
@@ -295,7 +297,7 @@ func TestPassthroughArtifactMeta(t *testing.T) {
 		recipeMap[rec.Name()] = rec
 	}
 
-	anyStack := []string{"open-telemetry-javaagent", "java-cfenv", "tomcat", "composer", "appdynamics", "appdynamics-java", "skywalking-agent"}
+	anyStack := []string{"azure-application-insights", "splunk-otel-javaagent", "open-telemetry-javaagent", "java-cfenv", "tomcat", "composer", "appdynamics", "appdynamics-java", "skywalking-agent"}
 	for _, name := range anyStack {
 		t.Run(name+"_any-stack", func(t *testing.T) {
 			rec := recipeMap[name]
@@ -325,7 +327,7 @@ func TestNewPassthroughRecipesContents(t *testing.T) {
 		names[i] = r.Name()
 	}
 	assert.Subset(t, names, []string{
-		"open-telemetry-javaagent", "java-cfenv",
+		"azure-application-insights", "splunk-otel-javaagent", "open-telemetry-javaagent", "java-cfenv",
 		"tomcat", "composer", "appdynamics", "appdynamics-java",
 		"skywalking-agent", "openjdk", "zulu", "sapmachine",
 		"jprofiler-profiler", "your-kit-profiler",
