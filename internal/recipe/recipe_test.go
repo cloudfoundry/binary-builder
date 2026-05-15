@@ -255,6 +255,10 @@ func TestPassthroughSourceFilenames(t *testing.T) {
 		{"sapmachine", "21.0.2", "sapmachine-jre-21.0.2_linux-x64_bin.tar.gz"},
 		{"jprofiler-profiler", "13.0.14", "jprofiler_linux_13_0_14.tar.gz"},
 		{"your-kit-profiler", "2023.11.462", "YourKit-JavaProfiler-2023.11.462.zip"},
+		{"elastic-apm-agent", "1.51.0", "elastic-apm-agent-1.51.0.jar"},
+		{"postgresql-jdbc", "42.7.3", "postgresql-42.7.3.jar"},
+		{"mariadb-jdbc", "3.3.3", "mariadb-java-client-3.3.3.jar"},
+		{"jacoco", "0.8.11", "jacoco-0.8.11.zip"},
 	}
 
 	recipeMap := make(map[string]recipe.Recipe)
@@ -297,7 +301,7 @@ func TestPassthroughArtifactMeta(t *testing.T) {
 		recipeMap[rec.Name()] = rec
 	}
 
-	anyStack := []string{"azure-application-insights", "splunk-otel-javaagent", "open-telemetry-javaagent", "java-cfenv", "tomcat", "composer", "appdynamics", "appdynamics-java", "skywalking-agent"}
+	anyStack := []string{"azure-application-insights", "splunk-otel-javaagent", "open-telemetry-javaagent", "java-cfenv", "tomcat", "composer", "appdynamics", "appdynamics-java", "skywalking-agent", "elastic-apm-agent", "postgresql-jdbc", "mariadb-jdbc", "jacoco"}
 	for _, name := range anyStack {
 		t.Run(name+"_any-stack", func(t *testing.T) {
 			rec := recipeMap[name]
@@ -331,6 +335,7 @@ func TestNewPassthroughRecipesContents(t *testing.T) {
 		"tomcat", "composer", "appdynamics", "appdynamics-java",
 		"skywalking-agent", "openjdk", "zulu", "sapmachine",
 		"jprofiler-profiler", "your-kit-profiler",
+		"elastic-apm-agent", "postgresql-jdbc", "mariadb-jdbc", "jacoco",
 		"setuptools", "flit-core",
 	})
 }
