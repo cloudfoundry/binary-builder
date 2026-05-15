@@ -155,6 +155,30 @@ func NewPassthroughRecipes(f fetch.Fetcher) []Recipe {
 			Meta:               ArtifactMeta{OS: "linux", Arch: "x64", Stack: ""},
 			Fetcher:            f,
 		},
+		&PassthroughRecipe{
+			DepName:            "elastic-apm-agent",
+			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("elastic-apm-agent-%s.jar", v) },
+			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
+			Fetcher:            f,
+		},
+		&PassthroughRecipe{
+			DepName:            "postgresql-jdbc",
+			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("postgresql-%s.jar", v) },
+			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
+			Fetcher:            f,
+		},
+		&PassthroughRecipe{
+			DepName:            "mariadb-jdbc",
+			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("mariadb-java-client-%s.jar", v) },
+			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
+			Fetcher:            f,
+		},
+		&PassthroughRecipe{
+			DepName:            "jacoco",
+			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("jacoco-%s.zip", v) },
+			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
+			Fetcher:            f,
+		},
 		// PyPI sdist deps — download and strip top-level dir, no compilation.
 		&PyPISourceRecipe{DepName: "setuptools", Fetcher: f},
 		&PyPISourceRecipe{DepName: "flit-core", Fetcher: f},
