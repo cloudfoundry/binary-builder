@@ -241,9 +241,9 @@ func TestPassthroughSourceFilenames(t *testing.T) {
 		version  string
 		wantFile string
 	}{
-	    	{"open-telemetry-javaagent", "2.27.0", "opentelemetry-javaagent.jar"},
-	    	{"splunk-otel-javaagent", "2.22.0", "splunk-otel-javaagent.jar"},
-	    	{"azure-application-insights", "3.6.2", "applicationinsights-agent-3.6.2.jar"},
+		{"open-telemetry-javaagent", "2.27.0", "opentelemetry-javaagent.jar"},
+		{"splunk-otel-javaagent", "2.22.0", "splunk-otel-javaagent.jar"},
+		{"azure-application-insights", "3.6.2", "applicationinsights-agent-3.6.2.jar"},
 		{"java-cfenv", "3.5.0", "java-cfenv-3.5.0.jar"},
 		{"tomcat", "9.0.85", "apache-tomcat-9.0.85.tar.gz"},
 		{"composer", "2.7.1", "composer.phar"},
@@ -259,6 +259,11 @@ func TestPassthroughSourceFilenames(t *testing.T) {
 		{"postgresql-jdbc", "42.7.3", "postgresql-42.7.3.jar"},
 		{"mariadb-jdbc", "3.3.3", "mariadb-java-client-3.3.3.jar"},
 		{"jacoco", "0.8.11", "jacoco-0.8.11.zip"},
+		{"newrelic", "8.15.0", "newrelic-java-8.15.0.zip"},
+		{"google-stackdriver-profiler", "0.4.0", "profiler_java_agent.tar.gz"},
+		{"groovy", "4.0.29", "apache-groovy-binary-4.0.29.zip"},
+		{"cf-metrics-exporter", "0.7.1", "cf-metrics-exporter-0.7.1.jar"},
+		{"spring-boot-cli", "2.7.18", "spring-boot-cli-2.7.18-bin.tar.gz"},
 	}
 
 	recipeMap := make(map[string]recipe.Recipe)
@@ -301,7 +306,7 @@ func TestPassthroughArtifactMeta(t *testing.T) {
 		recipeMap[rec.Name()] = rec
 	}
 
-	anyStack := []string{"azure-application-insights", "splunk-otel-javaagent", "open-telemetry-javaagent", "java-cfenv", "tomcat", "composer", "appdynamics", "appdynamics-java", "skywalking-agent", "elastic-apm-agent", "postgresql-jdbc", "mariadb-jdbc", "jacoco"}
+	anyStack := []string{"azure-application-insights", "splunk-otel-javaagent", "newrelic", "google-stackdriver-profiler", "groovy", "cf-metrics-exporter", "spring-boot-cli", "open-telemetry-javaagent", "java-cfenv", "tomcat", "composer", "appdynamics", "appdynamics-java", "skywalking-agent", "elastic-apm-agent", "postgresql-jdbc", "mariadb-jdbc", "jacoco"}
 	for _, name := range anyStack {
 		t.Run(name+"_any-stack", func(t *testing.T) {
 			rec := recipeMap[name]
@@ -336,6 +341,7 @@ func TestNewPassthroughRecipesContents(t *testing.T) {
 		"skywalking-agent", "openjdk", "zulu", "sapmachine",
 		"jprofiler-profiler", "your-kit-profiler",
 		"elastic-apm-agent", "postgresql-jdbc", "mariadb-jdbc", "jacoco",
+		"newrelic", "google-stackdriver-profiler", "groovy", "cf-metrics-exporter", "spring-boot-cli",
 		"setuptools", "flit-core",
 	})
 }
