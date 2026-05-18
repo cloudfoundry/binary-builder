@@ -90,6 +90,36 @@ func NewPassthroughRecipes(f fetch.Fetcher) []Recipe {
 			Fetcher:            f,
 		},
 		&PassthroughRecipe{
+			DepName:            "newrelic",
+			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("newrelic-java-%s.zip", v) },
+			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
+			Fetcher:            f,
+		},
+		&PassthroughRecipe{
+			DepName:            "google-stackdriver-profiler",
+			SourceFilenameFunc: func(v string) string { return "profiler_java_agent.tar.gz" },
+			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
+			Fetcher:            f,
+		},
+		&PassthroughRecipe{
+			DepName:            "groovy",
+			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("apache-groovy-binary-%s.zip", v) },
+			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
+			Fetcher:            f,
+		},
+		&PassthroughRecipe{
+			DepName:            "cf-metrics-exporter",
+			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("cf-metrics-exporter-%s.jar", v) },
+			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
+			Fetcher:            f,
+		},
+		&PassthroughRecipe{
+			DepName:            "spring-boot-cli",
+			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("spring-boot-cli-%s-bin.tar.gz", v) },
+			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
+			Fetcher:            f,
+		},
+		&PassthroughRecipe{
 			DepName:            "tomcat",
 			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("apache-tomcat-%s.tar.gz", v) },
 			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
