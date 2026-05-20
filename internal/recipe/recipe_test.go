@@ -266,6 +266,7 @@ func TestPassthroughSourceFilenames(t *testing.T) {
 		{"spring-boot-cli", "2.7.18", "spring-boot-cli-2.7.18-bin.tar.gz"},
 		{"sealights-agent", "4.0.2570", "sealights-java-4.0.2570.zip"},
 		{"jrebel", "2025.4.1", "jrebel-2025.4.1-nosetup.zip"},
+		{"datadog-javaagent", "1.42.1", "dd-java-agent-1.42.1.jar"},
 	}
 
 	recipeMap := make(map[string]recipe.Recipe)
@@ -308,7 +309,7 @@ func TestPassthroughArtifactMeta(t *testing.T) {
 		recipeMap[rec.Name()] = rec
 	}
 
-	anyStack := []string{"azure-application-insights", "splunk-otel-javaagent", "newrelic", "google-stackdriver-profiler", "groovy", "cf-metrics-exporter", "spring-boot-cli", "open-telemetry-javaagent", "java-cfenv", "tomcat", "composer", "appdynamics", "appdynamics-java", "skywalking-agent", "elastic-apm-agent", "postgresql-jdbc", "mariadb-jdbc", "jacoco", "sealights-agent", "jrebel"}
+	anyStack := []string{"azure-application-insights", "splunk-otel-javaagent", "newrelic", "google-stackdriver-profiler", "groovy", "cf-metrics-exporter", "spring-boot-cli", "open-telemetry-javaagent", "java-cfenv", "tomcat", "composer", "appdynamics", "appdynamics-java", "skywalking-agent", "elastic-apm-agent", "postgresql-jdbc", "mariadb-jdbc", "jacoco", "sealights-agent", "jrebel", "datadog-javaagent"}
 	for _, name := range anyStack {
 		t.Run(name+"_any-stack", func(t *testing.T) {
 			rec := recipeMap[name]
@@ -344,7 +345,7 @@ func TestNewPassthroughRecipesContents(t *testing.T) {
 		"jprofiler-profiler", "your-kit-profiler",
 		"elastic-apm-agent", "postgresql-jdbc", "mariadb-jdbc", "jacoco",
 		"newrelic", "google-stackdriver-profiler", "groovy", "cf-metrics-exporter", "spring-boot-cli",
-		"setuptools", "flit-core", "sealights-agent", "jrebel",
+		"setuptools", "flit-core", "sealights-agent", "jrebel", "datadog-javaagent",
 	})
 }
 

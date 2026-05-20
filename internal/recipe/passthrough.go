@@ -90,6 +90,12 @@ func NewPassthroughRecipes(f fetch.Fetcher) []Recipe {
 			Fetcher:            f,
 		},
 		&PassthroughRecipe{
+			DepName:            "datadog-javaagent",
+			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("dd-java-agent-%s.jar", v) },
+			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
+			Fetcher:            f,
+		},
+		&PassthroughRecipe{
 			DepName:            "azure-application-insights",
 			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("applicationinsights-agent-%s.jar", v) },
 			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
