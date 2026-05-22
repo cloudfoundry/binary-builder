@@ -269,6 +269,7 @@ func TestPassthroughSourceFilenames(t *testing.T) {
 		{"datadog-javaagent", "1.42.1", "dd-java-agent-1.42.1.jar"},
 		{"contrast-security", "6.23.0", "contrast-agent-6.23.0.jar"},
 		{"metric-writer", "3.5.0", "metric-writer-3.5.0-RELEASE.jar"},
+		{"client-certificate-mapper", "2.0.1", "client-certificate-mapper-2.0.1.jar"},
 	}
 
 	recipeMap := make(map[string]recipe.Recipe)
@@ -311,7 +312,7 @@ func TestPassthroughArtifactMeta(t *testing.T) {
 		recipeMap[rec.Name()] = rec
 	}
 
-	anyStack := []string{"azure-application-insights", "splunk-otel-javaagent", "newrelic", "google-stackdriver-profiler", "groovy", "cf-metrics-exporter", "spring-boot-cli", "open-telemetry-javaagent", "java-cfenv", "tomcat", "composer", "appdynamics", "appdynamics-java", "skywalking-agent", "elastic-apm-agent", "postgresql-jdbc", "mariadb-jdbc", "jacoco", "sealights-agent", "jrebel", "datadog-javaagent", "metric-writer", "contrast-security"}
+	anyStack := []string{"azure-application-insights", "splunk-otel-javaagent", "newrelic", "google-stackdriver-profiler", "groovy", "cf-metrics-exporter", "spring-boot-cli", "open-telemetry-javaagent", "java-cfenv", "tomcat", "composer", "appdynamics", "appdynamics-java", "skywalking-agent", "elastic-apm-agent", "postgresql-jdbc", "mariadb-jdbc", "jacoco", "sealights-agent", "jrebel", "datadog-javaagent", "metric-writer", "contrast-security", "client-certificate-mapper"}
 	for _, name := range anyStack {
 		t.Run(name+"_any-stack", func(t *testing.T) {
 			rec := recipeMap[name]
@@ -347,7 +348,7 @@ func TestNewPassthroughRecipesContents(t *testing.T) {
 		"jprofiler-profiler", "your-kit-profiler",
 		"elastic-apm-agent", "postgresql-jdbc", "mariadb-jdbc", "jacoco",
 		"newrelic", "google-stackdriver-profiler", "groovy", "cf-metrics-exporter", "spring-boot-cli",
-		"setuptools", "flit-core", "sealights-agent", "jrebel", "datadog-javaagent", "metric-writer", "contrast-security",
+		"setuptools", "flit-core", "sealights-agent", "jrebel", "datadog-javaagent", "metric-writer", "contrast-security", "client-certificate-mapper",
 	})
 }
 
