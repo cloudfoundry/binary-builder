@@ -183,6 +183,66 @@ func TestStripIncorrectWordsYAML(t *testing.T) {
 	assert.NotContains(t, entries, "incorrect_words.yaml")
 }
 
+// readTarEntry returns the header and content of the named entry, matching
+// either the bare name or its "./"-prefixed form.
+func readTarEntry(t *testing.T, path, name string) (*tar.Header, string) {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	require.NoError(t, err)
+
+	gr, err := gzip.NewReader(bytes.NewReader(data))
+	require.NoError(t, err)
+	defer gr.Close()
+
+	tr := tar.NewReader(gr)
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		require.NoError(t, err)
+		if hdr.Name != name && hdr.Name != "./"+name {
+			continue
+		}
+		content, err := io.ReadAll(tr)
+		require.NoError(t, err)
+		return hdr, string(content)
+	}
+
+	t.Fatalf("readTarEntry: %q not found in %s", name, path)
+	return nil, ""
+}
+
+func TestInjectFileDefaultsToNonExecutable(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "test.tgz")
+	require.NoError(t, os.WriteFile(path, createTestTarball(t, map[string]string{"bin/ruby": "binary"}), 0644))
+
+	require.NoError(t, archive.InjectFile(path, "sources.yml", []byte("---\n")))
+
+	// Existing entries survive.
+	assert.Contains(t, listTarEntries(t, path), "bin/ruby")
+
+	hdr, content := readTarEntry(t, path, "sources.yml")
+	assert.Equal(t, "---\n", content)
+	assert.Equal(t, int64(0644), hdr.Mode)
+}
+
+func TestInjectFileWithModePreservesModeAndPath(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "test.tgz")
+	require.NoError(t, os.WriteFile(path, createTestTarball(t, map[string]string{"bin/pnpm.mjs": "entrypoint"}), 0644))
+
+	require.NoError(t, archive.InjectFileWithMode(path, "bin/pnpm", []byte("#!/bin/sh\n"), 0755))
+
+	hdr, content := readTarEntry(t, path, "bin/pnpm")
+	assert.Equal(t, "#!/bin/sh\n", content)
+	assert.Equal(t, int64(0755), hdr.Mode, "injected wrapper must be executable")
+
+	// The directory prefix is kept rather than flattened to the archive root.
+	assert.NotContains(t, listTarEntries(t, path), "./pnpm")
+}
+
 func TestStripTopLevelDirFromZip(t *testing.T) {
 	tmpDir := t.TempDir()
 	path := filepath.Join(tmpDir, "test.zip")

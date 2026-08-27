@@ -16,7 +16,7 @@ A Go tool for building binaries used by Cloud Foundry buildpacks.
 | Apache HTTPD | cflinuxfs4, cflinuxfs5 |
 | Bundler | cflinuxfs4, cflinuxfs5 |
 | RubyGems | cflinuxfs4, cflinuxfs5 |
-| Yarn / Bower / Composer | cflinuxfs4, cflinuxfs5 |
+| Yarn / pnpm / Bower / Composer | cflinuxfs4, cflinuxfs5 |
 | Pip / Pipenv / Setuptools | cflinuxfs4, cflinuxfs5 |
 | OpenJDK / Zulu / SAPMachine | cflinuxfs4, cflinuxfs5 |
 | .NET SDK / Runtime / ASP.NET Core | cflinuxfs4, cflinuxfs5 |

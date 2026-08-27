@@ -215,6 +215,15 @@ func TestYarnBinary(t *testing.T) {
 	assertContains(t, out, os.Getenv("VERSION"))
 }
 
+func TestPnpmBinary(t *testing.T) {
+	a, s := artifact(t), stackEnv(t)
+	// The upstream archive has no bin/ dir — bin/pnpm is the wrapper the recipe
+	// injects, so this also asserts it is present, executable, and resolves the
+	// native binary next to it.
+	out := runInContainer(t, a, s, "./bin/pnpm", "--version")
+	assertContains(t, out, os.Getenv("VERSION"))
+}
+
 func TestRubygemsFiles(t *testing.T) {
 	a, s := artifact(t), stackEnv(t)
 	out := runInContainer(t, a, s, "bash", "-c", "ls rubygems-*/")
