@@ -401,6 +401,109 @@ func TestYarnRecipeNameAndArtifact(t *testing.T) {
 	assert.Equal(t, "noarch", r.Artifact().Arch)
 }
 
+// ── PnpmRecipe ────────────────────────────────────────────────────────────────
+
+func pnpmReleaseURLFor(version string) string {
+	return "https://github.com/pnpm/pnpm/releases/download/v" + version + "/pnpm-linux-x64.tar.gz"
+}
+
+// pnpmSupportedVersions spans the supported range. v11.0.0 is the first release
+// to publish pnpm-linux-x64.tar.gz at all; 12.0.0 is the first major after pnpm
+// gutted its npm package, which is why that package is not the source here.
+// Both archives have the same flat layout, so one recipe must serve both.
+var pnpmSupportedVersions = []string{"11.0.0", "11.24.0", "12.0.0"}
+
+func TestPnpmRecipeNameAndArtifact(t *testing.T) {
+	r := &recipe.PnpmRecipe{}
+	assert.Equal(t, "pnpm", r.Name())
+	assert.Equal(t, "linux", r.Artifact().OS)
+	// The release archive bundles a native executable, so it is not noarch.
+	assert.Equal(t, "x64", r.Artifact().Arch)
+}
+
+func TestPnpmRecipeStripsVPrefix(t *testing.T) {
+	for _, version := range pnpmSupportedVersions {
+		t.Run(version, func(t *testing.T) {
+			f := newFakeFetcher()
+			url := pnpmReleaseURLFor(version)
+
+			src := newInput("pnpm", "v"+version, url)
+			r := &recipe.PnpmRecipe{Fetcher: f}
+			outData := &output.OutData{}
+			require.NoError(t, r.Build(context.Background(), newStack(t), src, runner.NewFakeRunner(), outData))
+
+			require.Len(t, f.DownloadedURLs, 1)
+			assert.Equal(t, url, f.DownloadedURLs[0].URL)
+			// File on disk uses the stripped version so findIntermediateArtifact matches.
+			assert.Equal(t, filepath.Join(os.TempDir(), "pnpm-"+version+".tar.gz"), f.DownloadedURLs[0].Dest)
+			assert.Equal(t, version, outData.Version)
+			// src.Version must NOT be mutated — callers after Build rely on the original.
+			assert.Equal(t, "v"+version, src.Version)
+		})
+	}
+}
+
+func TestPnpmRecipeInjectsExecutableBinWrapper(t *testing.T) {
+	for _, version := range pnpmSupportedVersions {
+		t.Run(version, func(t *testing.T) {
+			f := newFakeFetcher()
+
+			dest := filepath.Join(os.TempDir(), "pnpm-"+version+".tar.gz")
+			t.Cleanup(func() { _ = os.Remove(dest) })
+
+			src := newInput("pnpm", "v"+version, pnpmReleaseURLFor(version))
+			r := &recipe.PnpmRecipe{Fetcher: f}
+			require.NoError(t, r.Build(context.Background(), newStack(t), src, runner.NewFakeRunner(), &output.OutData{}))
+
+			hdr, content := tarEntry(t, dest, "bin/pnpm")
+			require.NotNil(t, hdr, "artifact must contain a bin/pnpm entry")
+
+			// The release archive has no bin/ dir at all — the plain name only
+			// exists because we inject it, and it is useless unless executable.
+			assert.Equal(t, int64(0755), hdr.Mode)
+			// Buildpacks symlink bin/ entries elsewhere, so $0 must be resolved.
+			assert.Contains(t, content, "readlink -f")
+			assert.Contains(t, content, `exec "$basedir/../pnpm"`)
+			// The binary is native: pulling in an interpreter would be a regression.
+			assert.NotContains(t, content, "node")
+		})
+	}
+}
+
+func TestPnpmRecipeKeepsArchiveFlat(t *testing.T) {
+	for _, version := range pnpmSupportedVersions {
+		t.Run(version, func(t *testing.T) {
+			f := newFakeFetcher()
+
+			dest := filepath.Join(os.TempDir(), "pnpm-"+version+".tar.gz")
+			t.Cleanup(func() { _ = os.Remove(dest) })
+
+			src := newInput("pnpm", "v"+version, pnpmReleaseURLFor(version))
+			r := &recipe.PnpmRecipe{Fetcher: f}
+			require.NoError(t, r.Build(context.Background(), newStack(t), src, runner.NewFakeRunner(), &output.OutData{}))
+
+			// The upstream archive is already flat. Stripping a top-level
+			// directory would silently discard the native binary, so the fake's
+			// "fake-top/" entry must still be present.
+			hdr, _ := tarEntry(t, dest, "fake-top/")
+			assert.NotNil(t, hdr, "recipe must not strip a top-level directory")
+		})
+	}
+}
+
+func TestPnpmRecipePropagatesDownloadError(t *testing.T) {
+	f := newFakeFetcher()
+	url := pnpmReleaseURLFor("12.0.0")
+	f.ErrMap[url] = errors.New("boom")
+
+	src := newInput("pnpm", "v12.0.0", url)
+	r := &recipe.PnpmRecipe{Fetcher: f}
+	err := r.Build(context.Background(), newStack(t), src, runner.NewFakeRunner(), &output.OutData{})
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "downloading pnpm")
+}
+
 // ── PyPISourceRecipe ──────────────────────────────────────────────────────────
 
 func TestPyPISourceRecipeFilenameFromURL(t *testing.T) {

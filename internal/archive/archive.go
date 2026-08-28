@@ -269,10 +269,17 @@ func StripIncorrectWordsYAML(path string) error {
 	return StripFiles(path, "incorrect_words.yaml")
 }
 
-// InjectFile adds a file with the given name and content into an existing
-// gzipped tarball. The file is appended at the archive root (no directory
-// prefix). Typically used to inject sources.yml into an artifact tarball.
+// InjectFile adds a non-executable file with the given name and content into an
+// existing gzipped tarball. Typically used to inject sources.yml into an
+// artifact tarball.
 func InjectFile(tarPath, filename string, content []byte) error {
+	return InjectFileWithMode(tarPath, filename, content, 0644)
+}
+
+// InjectFileWithMode is InjectFile with an explicit file mode. Use it for
+// entries that must be executable, such as wrapper scripts placed in bin/.
+// filename may contain a directory prefix (e.g. "bin/pnpm").
+func InjectFileWithMode(tarPath, filename string, content []byte, mode int64) error {
 	data, err := os.ReadFile(tarPath)
 	if err != nil {
 		return fmt.Errorf("reading %s: %w", tarPath, err)
@@ -309,10 +316,10 @@ func InjectFile(tarPath, filename string, content []byte) error {
 		}
 	}
 
-	// Append the new file at the archive root.
+	// Append the new file, relative to the archive root.
 	hdr := &tar.Header{
 		Name:     "./" + filename,
-		Mode:     0644,
+		Mode:     mode,
 		Size:     int64(len(content)),
 		Typeflag: tar.TypeReg,
 	}
