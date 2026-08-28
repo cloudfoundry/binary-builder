@@ -48,7 +48,7 @@ func (p *PipRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input
 		ExtraDeps: []string{
 			"setuptools",
 			"wheel>=0.46.2", // CVE-2026-24049
-			"flit-core>=3.11", // build backend required by pip 26.x (downloaded as wheel to avoid circular dep)
+			"flit-core>=3.11,<4", // build backend required by pip 26.x; <4 matches pip's own build-requires constraint
 		},
 	}).Build(ctx, s, src, r, out)
 }
