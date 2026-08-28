@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/cloudfoundry/binary-builder/internal/fetch"
 	"github.com/cloudfoundry/binary-builder/internal/fileutil"
@@ -217,7 +219,7 @@ func NewPassthroughRecipes(f fetch.Fetcher) []Recipe {
 		},
 		&PassthroughRecipe{
 			DepName:            "your-kit-profiler",
-			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("YourKit-JavaProfiler-%s.zip", v) },
+			SourceFilenameFunc: yourKitFilename,
 			Meta:               ArtifactMeta{OS: "linux", Arch: "x64", Stack: ""},
 			Fetcher:            f,
 		},
@@ -252,6 +254,20 @@ func NewPassthroughRecipes(f fetch.Fetcher) []Recipe {
 	}
 }
 
+// yourKitFilename maps a three-part version (YEAR.MINOR.BUILD) to the correct
+// zip filename. Versions 2026+ use the new naming scheme from download.yourkit.com;
+// older versions use the archive scheme with a "-b<BUILD>" build suffix.
+func yourKitFilename(v string) string {
+	parts := strings.SplitN(v, ".", 3)
+	if len(parts) == 3 {
+		if year, err := strconv.Atoi(parts[0]); err == nil && year >= 2026 {
+			return fmt.Sprintf("YourKit-Java-Profiler-%s-x64.zip", v)
+		}
+		return fmt.Sprintf("YourKit-JavaProfiler-%s.%s-b%s-x64.zip", parts[0], parts[1], parts[2])
+	}
+	return fmt.Sprintf("YourKit-JavaProfiler-%s.zip", v)
+}
+
 // underscoreVersion replaces dots with underscores: "13.0.14" → "13_0_14".
 func underscoreVersion(v string) string {
 	result := make([]byte, len(v))
@@ -275,3 +291,4 @@ func archiveExt(filename string) string {
 	}
 	return filepath.Ext(filename)
 }
+

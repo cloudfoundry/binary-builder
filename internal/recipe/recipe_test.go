@@ -254,7 +254,8 @@ func TestPassthroughSourceFilenames(t *testing.T) {
 		{"zulu", "21.0.2", "zulu21.0.2-jre-linux_x64.tar.gz"},
 		{"sapmachine", "21.0.2", "sapmachine-jre-21.0.2_linux-x64_bin.tar.gz"},
 		{"jprofiler-profiler", "13.0.14", "jprofiler_linux_13_0_14.tar.gz"},
-		{"your-kit-profiler", "2023.11.462", "YourKit-JavaProfiler-2023.11.462.zip"},
+		{"your-kit-profiler", "2025.9.191", "YourKit-JavaProfiler-2025.9-b191-x64.zip"},
+		{"your-kit-profiler", "2026.3.176", "YourKit-Java-Profiler-2026.3.176-x64.zip"},
 		{"elastic-apm-agent", "1.51.0", "elastic-apm-agent-1.51.0.jar"},
 		{"postgresql-jdbc", "42.7.3", "postgresql-42.7.3.jar"},
 		{"mariadb-jdbc", "3.3.3", "mariadb-java-client-3.3.3.jar"},
@@ -935,3 +936,4 @@ func TestComputeSHA256Determinism(t *testing.T) {
 }
 
 // ── test helpers are in recipe_helpers_test.go ────────────────────────────────
+
