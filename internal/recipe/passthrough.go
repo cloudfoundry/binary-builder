@@ -170,6 +170,12 @@ func NewPassthroughRecipes(f fetch.Fetcher) []Recipe {
 			Fetcher:            f,
 		},
 		&PassthroughRecipe{
+			DepName:            "yarn-berry",
+			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("yarn-berry-%s.js", v) },
+			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
+			Fetcher:            f,
+		},
+		&PassthroughRecipe{
 			DepName:            "appdynamics",
 			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("appdynamics-php-agent-linux_x64-%s.tar.bz2", v) },
 			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
@@ -291,4 +297,3 @@ func archiveExt(filename string) string {
 	}
 	return filepath.Ext(filename)
 }
-
