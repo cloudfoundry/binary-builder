@@ -247,6 +247,7 @@ func TestPassthroughSourceFilenames(t *testing.T) {
 		{"java-cfenv", "3.5.0", "java-cfenv-3.5.0.jar"},
 		{"tomcat", "9.0.85", "apache-tomcat-9.0.85.tar.gz"},
 		{"composer", "2.7.1", "composer.phar"},
+		{"yarn-berry", "4.18.0", "yarn-berry-4.18.0.js"},
 		{"appdynamics", "23.11.0.35198", "appdynamics-php-agent-linux_x64-23.11.0.35198.tar.bz2"},
 		{"appdynamics-java", "23.11.0.35198", "appdynamics-java-agent-23.11.0.35198.zip"},
 		{"skywalking-agent", "9.2.0", "apache-skywalking-java-agent-9.2.0.tgz"},
@@ -313,7 +314,7 @@ func TestPassthroughArtifactMeta(t *testing.T) {
 		recipeMap[rec.Name()] = rec
 	}
 
-	anyStack := []string{"azure-application-insights", "splunk-otel-javaagent", "newrelic", "google-stackdriver-profiler", "groovy", "cf-metrics-exporter", "spring-boot-cli", "open-telemetry-javaagent", "java-cfenv", "tomcat", "composer", "appdynamics", "appdynamics-java", "skywalking-agent", "elastic-apm-agent", "postgresql-jdbc", "mariadb-jdbc", "jacoco", "sealights-agent", "jrebel", "datadog-javaagent", "metric-writer", "contrast-security", "client-certificate-mapper"}
+	anyStack := []string{"azure-application-insights", "splunk-otel-javaagent", "newrelic", "google-stackdriver-profiler", "groovy", "cf-metrics-exporter", "spring-boot-cli", "open-telemetry-javaagent", "java-cfenv", "tomcat", "composer", "yarn-berry", "appdynamics", "appdynamics-java", "skywalking-agent", "elastic-apm-agent", "postgresql-jdbc", "mariadb-jdbc", "jacoco", "sealights-agent", "jrebel", "datadog-javaagent", "metric-writer", "contrast-security", "client-certificate-mapper"}
 	for _, name := range anyStack {
 		t.Run(name+"_any-stack", func(t *testing.T) {
 			rec := recipeMap[name]
@@ -344,7 +345,7 @@ func TestNewPassthroughRecipesContents(t *testing.T) {
 	}
 	assert.Subset(t, names, []string{
 		"azure-application-insights", "splunk-otel-javaagent", "open-telemetry-javaagent", "java-cfenv",
-		"tomcat", "composer", "appdynamics", "appdynamics-java",
+		"tomcat", "composer", "yarn-berry", "appdynamics", "appdynamics-java",
 		"skywalking-agent", "openjdk", "zulu", "sapmachine",
 		"jprofiler-profiler", "your-kit-profiler",
 		"elastic-apm-agent", "postgresql-jdbc", "mariadb-jdbc", "jacoco",
@@ -936,4 +937,3 @@ func TestComputeSHA256Determinism(t *testing.T) {
 }
 
 // ── test helpers are in recipe_helpers_test.go ────────────────────────────────
-
