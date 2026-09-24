@@ -1,11 +1,13 @@
 package main
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/cloudfoundry/binary-builder/internal/output"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestBuildSummaryArtifactPath verifies that buildSummary uses ArtifactFilename
@@ -57,4 +59,40 @@ func TestBuildSummaryArtifactPath(t *testing.T) {
 
 		assert.Equal(t, filepath.Base(outData.URL), summary.ArtifactPath)
 	})
+}
+
+// TestFindIntermediateArtifactRecognizesAllPassthroughExtensions is a
+// regression test for the yarn-berry rollout: PassthroughRecipe-based
+// dependencies can produce a bare, non-archive file extension (e.g. ".js"
+// for yarn-berry's single bundled CLI script), and findIntermediateArtifact
+// must recognize every extension actually produced by a registered recipe,
+// or the build fails with "no intermediate artifact file found" even though
+// the recipe succeeded and the file is sitting right there in CWD.
+func TestFindIntermediateArtifactRecognizesAllPassthroughExtensions(t *testing.T) {
+	cases := []struct {
+		name     string
+		version  string
+		filename string
+	}{
+		{"yarn-berry", "4.18.0", "yarn-berry-4.18.0.js"},
+		{"composer", "2.7.1", "composer-2.7.1.phar"},
+		{"tomcat", "9.0.85", "tomcat-9.0.85.tar.gz"},
+		{"java-cfenv", "3.5.0", "java-cfenv-3.5.0.jar"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			origDir, err := os.Getwd()
+			require.NoError(t, err)
+			tmpDir := t.TempDir()
+			require.NoError(t, os.Chdir(tmpDir))
+			defer os.Chdir(origDir)
+
+			require.NoError(t, os.WriteFile(filepath.Join(tmpDir, tc.filename), []byte("fake artifact content"), 0644))
+
+			got, err := findIntermediateArtifact(tc.name, tc.version)
+			require.NoError(t, err)
+			assert.Equal(t, filepath.Join(".", tc.filename), got)
+		})
+	}
 }
