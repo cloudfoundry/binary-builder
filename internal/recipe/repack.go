@@ -37,6 +37,10 @@ type RepackRecipe struct {
 	// If nil, the default is "<depname>-<version>.<ext inferred from URL>".
 	// PyPI sdist recipes use this to infer the filename from the URL's last path segment.
 	DestFilename func(version, url string) string
+	// AfterRepack runs once the archive has been downloaded and stripped, with
+	// the path to the local artifact. Use it for per-dep transformations that
+	// would otherwise have to recompute the destination filename.
+	AfterRepack func(dest string) error
 }
 
 func (r *RepackRecipe) Name() string           { return r.DepName }
@@ -60,17 +64,26 @@ func (r *RepackRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.In
 		return fmt.Errorf("downloading %s: %w", r.DepName, err)
 	}
 
-	if !r.StripTopLevelDir {
-		return nil
+	if r.StripTopLevelDir {
+		// Use dest (already fragment-free) rather than src.URL to detect zip archives.
+		// PyPI download URLs may contain a #sha256=… fragment that would fool a
+		// suffix check on the raw URL.
+		var err error
+		if strings.HasSuffix(dest, ".zip") {
+			err = archive.StripTopLevelDirFromZip(dest)
+		} else {
+			err = archive.StripTopLevelDir(dest)
+		}
+		if err != nil {
+			return err
+		}
 	}
 
-	// Use dest (already fragment-free) rather than src.URL to detect zip archives.
-	// PyPI download URLs may contain a #sha256=… fragment that would fool a
-	// suffix check on the raw URL.
-	if strings.HasSuffix(dest, ".zip") {
-		return archive.StripTopLevelDirFromZip(dest)
+	if r.AfterRepack != nil {
+		return r.AfterRepack(dest)
 	}
-	return archive.StripTopLevelDir(dest)
+
+	return nil
 }
 
 // inferExt returns the file extension for a download URL, recognising .tar.gz

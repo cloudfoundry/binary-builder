@@ -3,6 +3,7 @@ package recipe_test
 import (
 	"archive/tar"
 	"compress/gzip"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -116,6 +117,44 @@ func useTempWorkDir(t *testing.T) string {
 	})
 
 	return tmp
+}
+
+// tarEntry returns the header and content of the named entry in a gzipped
+// tarball, matching either the bare name or its "./"-prefixed form. It returns
+// a nil header when the entry is absent.
+func tarEntry(t *testing.T, path, name string) (*tar.Header, string) {
+	t.Helper()
+
+	f, err := os.Open(path)
+	if err != nil {
+		t.Fatalf("tarEntry: open %s: %v", path, err)
+	}
+	defer f.Close()
+
+	gr, err := gzip.NewReader(f)
+	if err != nil {
+		t.Fatalf("tarEntry: gzip %s: %v", path, err)
+	}
+	defer gr.Close()
+
+	tr := tar.NewReader(gr)
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			return nil, ""
+		}
+		if err != nil {
+			t.Fatalf("tarEntry: read %s: %v", path, err)
+		}
+		if hdr.Name != name && hdr.Name != "./"+name {
+			continue
+		}
+		content, err := io.ReadAll(tr)
+		if err != nil {
+			t.Fatalf("tarEntry: read %q: %v", name, err)
+		}
+		return hdr, string(content)
+	}
 }
 
 // writeFakeArtifact creates a minimal valid .tgz at <name> in the current

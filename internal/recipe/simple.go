@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/cloudfoundry/binary-builder/internal/archive"
 	"github.com/cloudfoundry/binary-builder/internal/fetch"
 	"github.com/cloudfoundry/binary-builder/internal/output"
 	"github.com/cloudfoundry/binary-builder/internal/runner"
@@ -44,6 +45,58 @@ func (y *YarnRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Inpu
 		Fetcher:            y.Fetcher,
 		StripTopLevelDir:   true,
 		StripVersionPrefix: "v",
+	}).Build(ctx, s, src, r, out)
+}
+
+// pnpmWrapper is injected as bin/pnpm. The release archive lays the native
+// binary out flat at the archive root, so this wrapper supplies the bin/<dep>
+// layout consumers already expect from yarn.
+//
+// $0 is resolved with readlink -f because buildpacks symlink the artifact's
+// bin/ entries into their own bin directory — without it $0's dirname points at
+// the symlink's directory, where the binary does not exist. This mirrors what
+// upstream yarn's own bin/yarn wrapper does. No interpreter is involved: the
+// target is a native executable.
+const pnpmWrapper = `#!/bin/sh
+basedir=$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")
+exec "$basedir/../pnpm" "$@"
+`
+
+// PnpmRecipe downloads pnpm's self-contained linux-x64 release archive and
+// injects a bin/pnpm wrapper.
+//
+// The npm registry tarball is deliberately not used. As of pnpm 12 that package
+// is a ~1 MB stub: its preinstall script downloads a platform-native binary, and
+// the bin/pnpm.mjs Corepack shim fetches the same binary on first run. A
+// buildpack cannot depend on either in an offline or air-gapped deployment. The
+// release archive ships the native binary outright, so the artifact is
+// self-contained and needs no network access at staging time.
+//
+// The archive is linux-x64 and glibc-linked, which covers every current
+// cflinuxfs stack; musl and other architectures are published separately and are
+// not built here.
+type PnpmRecipe struct {
+	Fetcher fetch.Fetcher
+}
+
+func (p *PnpmRecipe) Name() string { return "pnpm" }
+func (p *PnpmRecipe) Artifact() ArtifactMeta {
+	return ArtifactMeta{OS: "linux", Arch: "x64", Stack: ""}
+}
+func (p *PnpmRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, r runner.Runner, out *output.OutData) error {
+	return (&RepackRecipe{
+		DepName: "pnpm",
+		Meta:    ArtifactMeta{OS: "linux", Arch: "x64"},
+		Fetcher: p.Fetcher,
+		// Release tags carry a "v" prefix; the archive itself is already flat,
+		// so there is no top-level directory to strip.
+		StripVersionPrefix: "v",
+		AfterRepack: func(dest string) error {
+			if err := archive.InjectFileWithMode(dest, "bin/pnpm", []byte(pnpmWrapper), 0755); err != nil {
+				return fmt.Errorf("pnpm: injecting bin/pnpm wrapper: %w", err)
+			}
+			return nil
+		},
 	}).Build(ctx, s, src, r, out)
 }
 
