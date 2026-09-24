@@ -402,6 +402,33 @@ func TestYarnRecipeNameAndArtifact(t *testing.T) {
 	assert.Equal(t, "noarch", r.Artifact().Arch)
 }
 
+// ── PnpmRecipe ────────────────────────────────────────────────────────────────
+
+func TestPnpmRecipeDownloads(t *testing.T) {
+	f := newFakeFetcher()
+	fakeRunner := runner.NewFakeRunner()
+
+	src := newInput("pnpm", "12.0.0", "https://example.com/pnpm-12.0.0.tar.gz")
+	r := &recipe.PnpmRecipe{Fetcher: f}
+	outData := &output.OutData{}
+	_ = r.Build(context.Background(), newStack(t), src, fakeRunner, outData)
+
+	require.Len(t, f.DownloadedURLs, 1)
+	// pnpm doesn't strip version prefix (no "v" prefix), so version is used as-is
+	assert.Equal(t, filepath.Join(os.TempDir(), "pnpm-12.0.0.tar.gz"), f.DownloadedURLs[0].Dest)
+	assert.Equal(t, "12.0.0", outData.Version)
+	// src.Version must NOT be mutated
+	assert.Equal(t, "12.0.0", src.Version)
+}
+
+func TestPnpmRecipeNameAndArtifact(t *testing.T) {
+	r := &recipe.PnpmRecipe{}
+	assert.Equal(t, "pnpm", r.Name())
+	assert.Equal(t, "x64", r.Artifact().Arch)
+	assert.Equal(t, "any-stack", r.Artifact().Stack)
+	// pnpm is architecture-specific (compiled binary), unlike yarn (noarch)
+}
+
 // ── PyPISourceRecipe ──────────────────────────────────────────────────────────
 
 func TestPyPISourceRecipeFilenameFromURL(t *testing.T) {
