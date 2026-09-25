@@ -59,10 +59,9 @@ func (p *PnpmRecipe) Artifact() ArtifactMeta {
 }
 func (p *PnpmRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, r runner.Runner, out *output.OutData) error {
 	return (&RepackRecipe{
-		DepName:          "pnpm",
-		Meta:             ArtifactMeta{OS: "linux", Arch: "x64", Stack: "any-stack"},
-		Fetcher:          p.Fetcher,
-		StripTopLevelDir: true,
+		DepName: "pnpm",
+		Meta:    ArtifactMeta{OS: "linux", Arch: "x64", Stack: "any-stack"},
+		Fetcher: p.Fetcher,
 		// pnpm versions don't have "v" prefix, so no StripVersionPrefix
 	}).Build(ctx, s, src, r, out)
 }

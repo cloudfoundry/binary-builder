@@ -8,11 +8,13 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/cloudfoundry/binary-builder/internal/fetch"
 	"github.com/cloudfoundry/binary-builder/internal/output"
 	"github.com/cloudfoundry/binary-builder/internal/recipe"
 	"github.com/cloudfoundry/binary-builder/internal/runner"
@@ -38,6 +40,25 @@ type fetchCall struct {
 	URL  string
 	Dest string
 }
+
+type flatTarballFetcher struct {
+	DownloadedURLs []fetchCall
+	TarballBytes   []byte
+}
+
+func (f *flatTarballFetcher) Download(_ context.Context, url, dest string, _ source.Checksum) error {
+	f.DownloadedURLs = append(f.DownloadedURLs, fetchCall{URL: url, Dest: dest})
+	if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
+		return err
+	}
+	return os.WriteFile(dest, f.TarballBytes, 0644)
+}
+
+func (f *flatTarballFetcher) ReadBody(_ context.Context, url string) ([]byte, error) {
+	return nil, fmt.Errorf("unexpected ReadBody call for %s", url)
+}
+
+var _ fetch.Fetcher = (*flatTarballFetcher)(nil)
 
 func newFakeFetcher() *FakeFetcher {
 	return &FakeFetcher{
@@ -411,7 +432,7 @@ func TestPnpmRecipeDownloads(t *testing.T) {
 	src := newInput("pnpm", "12.0.0", "https://example.com/pnpm-12.0.0.tar.gz")
 	r := &recipe.PnpmRecipe{Fetcher: f}
 	outData := &output.OutData{}
-	_ = r.Build(context.Background(), newStack(t), src, fakeRunner, outData)
+	require.NoError(t, r.Build(context.Background(), newStack(t), src, fakeRunner, outData))
 
 	require.Len(t, f.DownloadedURLs, 1)
 	// pnpm doesn't strip version prefix (no "v" prefix), so version is used as-is
@@ -427,6 +448,68 @@ func TestPnpmRecipeNameAndArtifact(t *testing.T) {
 	assert.Equal(t, "x64", r.Artifact().Arch)
 	assert.Equal(t, "any-stack", r.Artifact().Stack)
 	// pnpm is architecture-specific (compiled binary), unlike yarn (noarch)
+}
+
+func TestPnpmRecipeKeepsFlatTarballIntact(t *testing.T) {
+	flatTarball := makeFlatPnpmTarball(t)
+	f := &flatTarballFetcher{TarballBytes: flatTarball}
+	fakeRunner := runner.NewFakeRunner()
+	src := newInput("pnpm", "12.6.0", "https://example.com/pnpm-12.6.0.tar.gz")
+	r := &recipe.PnpmRecipe{Fetcher: f}
+	outData := &output.OutData{}
+	require.NoError(t, r.Build(context.Background(), newStack(t), src, fakeRunner, outData))
+	require.Len(t, f.DownloadedURLs, 1)
+	assert.Equal(t, "12.6.0", outData.Version)
+
+	entries := tarEntriesFromFile(t, f.DownloadedURLs[0].Dest)
+	assert.Contains(t, entries, "pnpm")
+	assert.Contains(t, entries, "dist/")
+	assert.Contains(t, entries, "dist/node-gyp-bin/")
+	assert.Contains(t, entries, "dist/node-gyp-bin/node-gyp")
+}
+
+func makeFlatPnpmTarball(t *testing.T) []byte {
+	t.Helper()
+
+	var tarBuf bytes.Buffer
+	gw := gzip.NewWriter(&tarBuf)
+	tw := tar.NewWriter(gw)
+
+	require.NoError(t, tw.WriteHeader(&tar.Header{Name: "pnpm", Mode: 0755, Size: int64(len("binary")), Typeflag: tar.TypeReg}))
+	_, err := tw.Write([]byte("binary"))
+	require.NoError(t, err)
+	require.NoError(t, tw.WriteHeader(&tar.Header{Name: "dist/", Mode: 0755, Typeflag: tar.TypeDir}))
+	require.NoError(t, tw.WriteHeader(&tar.Header{Name: "dist/node-gyp-bin/", Mode: 0755, Typeflag: tar.TypeDir}))
+	require.NoError(t, tw.WriteHeader(&tar.Header{Name: "dist/node-gyp-bin/node-gyp", Mode: 0755, Size: int64(len("shim")), Typeflag: tar.TypeReg}))
+	_, err = tw.Write([]byte("shim"))
+	require.NoError(t, err)
+	require.NoError(t, tw.Close())
+	require.NoError(t, gw.Close())
+
+	return tarBuf.Bytes()
+}
+
+func tarEntriesFromFile(t *testing.T, path string) []string {
+	t.Helper()
+
+	data, err := os.ReadFile(path)
+	require.NoError(t, err)
+
+	gr, err := gzip.NewReader(bytes.NewReader(data))
+	require.NoError(t, err)
+	defer gr.Close()
+
+	tr := tar.NewReader(gr)
+	var entries []string
+	for {
+		hdr, err := tr.Next()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		require.NoError(t, err)
+		entries = append(entries, hdr.Name)
+	}
+	return entries
 }
 
 // ── PyPISourceRecipe ──────────────────────────────────────────────────────────
