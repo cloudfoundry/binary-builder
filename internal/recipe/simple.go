@@ -47,6 +47,25 @@ func (y *YarnRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Inpu
 	}).Build(ctx, s, src, r, out)
 }
 
+// PnpmRecipe downloads pnpm from GitHub releases and strips top-level dir.
+// pnpm is a compiled x64 binary (not pure JavaScript like yarn).
+type PnpmRecipe struct {
+	Fetcher fetch.Fetcher
+}
+
+func (p *PnpmRecipe) Name() string { return "pnpm" }
+func (p *PnpmRecipe) Artifact() ArtifactMeta {
+	return ArtifactMeta{OS: "linux", Arch: "x64", Stack: "any-stack"}
+}
+func (p *PnpmRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, r runner.Runner, out *output.OutData) error {
+	return (&RepackRecipe{
+		DepName: "pnpm",
+		Meta:    ArtifactMeta{OS: "linux", Arch: "x64", Stack: "any-stack"},
+		Fetcher: p.Fetcher,
+		// pnpm versions don't have "v" prefix, so no StripVersionPrefix
+	}).Build(ctx, s, src, r, out)
+}
+
 // PyPISourceRecipe downloads a PyPI source tarball and strips its top-level
 // directory. It covers any dep published as a plain sdist on PyPI (e.g.
 // setuptools, flit-core) where no compilation step is required.

@@ -44,9 +44,9 @@ func (r *RepackRecipe) Artifact() ArtifactMeta { return r.Meta }
 
 func (r *RepackRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.Input, _ runner.Runner, outData *output.OutData) error {
 	version := strings.TrimPrefix(src.Version, r.StripVersionPrefix)
-	if r.StripVersionPrefix != "" {
-		outData.Version = version
-	}
+	// Always set outData.Version to the (possibly stripped) version so that
+	// findIntermediateArtifact can locate the built artifact by version.
+	outData.Version = version
 
 	var dest string
 	if r.DestFilename != nil {
