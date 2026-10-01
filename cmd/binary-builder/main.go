@@ -326,6 +326,7 @@ func buildRegistry() *recipe.Registry {
 	// Simple / repack recipes.
 	reg.Register(&recipe.PipRecipe{Fetcher: f})
 	reg.Register(&recipe.PipenvRecipe{Fetcher: f})
+	reg.Register(&recipe.UvRecipe{Fetcher: f})
 	reg.Register(&recipe.BowerRecipe{Fetcher: f})
 	reg.Register(&recipe.YarnRecipe{Fetcher: f})
 	reg.Register(&recipe.PnpmRecipe{Fetcher: f})
