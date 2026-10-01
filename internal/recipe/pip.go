@@ -99,24 +99,27 @@ func (p *PipenvRecipe) Build(ctx context.Context, s *stack.Stack, src *source.In
 // UvRecipe builds uv: pip3 download, no extra dependencies.
 //
 // Unlike pipenv, uv ships as a self-contained compiled (Rust) binary wrapped
-// in a platform-specific wheel with zero transitive Python dependencies
-// (confirmed via PyPI metadata: requires_dist is empty). BundleRecipe's
-// `pip3 download` step runs inside the target stack's own container, so pip
-// naturally resolves the correct manylinux wheel for that platform - no
-// special wheel-selection logic is needed here.
+// in an architecture-specific wheel (e.g. separate x86_64 and ARM64
+// manylinux wheels) with zero transitive Python dependencies (confirmed via
+// PyPI metadata: requires_dist is empty). BundleRecipe's `pip3 download`
+// step runs inside the target stack's own container, so pip naturally
+// resolves the correct manylinux wheel for that platform - no special
+// wheel-selection logic is needed here. The artifact itself must therefore
+// be published with an explicit architecture (not "noarch"), since a wheel
+// built on one architecture is not usable on another.
 type UvRecipe struct {
 	Fetcher fetch.Fetcher
 }
 
 func (u *UvRecipe) Name() string { return "uv" }
 func (u *UvRecipe) Artifact() ArtifactMeta {
-	return ArtifactMeta{OS: "linux", Arch: "noarch", Stack: ""}
+	return ArtifactMeta{OS: "linux", Arch: "x64", Stack: ""}
 }
 
 func (u *UvRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, r runner.Runner, out *output.OutData) error {
 	return (&BundleRecipe{
 		DepName: "uv",
-		Meta:    ArtifactMeta{OS: "linux", Arch: "noarch"},
+		Meta:    ArtifactMeta{OS: "linux", Arch: "x64"},
 		Fetcher: u.Fetcher,
 		MainPackage: func(version string) string {
 			return fmt.Sprintf("uv==%s", version)

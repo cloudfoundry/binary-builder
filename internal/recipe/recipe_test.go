@@ -818,7 +818,10 @@ func TestUvRecipeHasNoExtraDeps(t *testing.T) {
 func TestUvRecipeNameAndArtifact(t *testing.T) {
 	r := &recipe.UvRecipe{}
 	assert.Equal(t, "uv", r.Name())
-	assert.Equal(t, "noarch", r.Artifact().Arch)
+	// uv ships as architecture-specific manylinux wheels (x86_64, ARM64,
+	// etc.) - it must NOT be published as "noarch", or an x86_64 artifact
+	// could be incorrectly reused on another architecture.
+	assert.Equal(t, "x64", r.Artifact().Arch)
 	assert.Equal(t, "", r.Artifact().Stack)
 }
 
