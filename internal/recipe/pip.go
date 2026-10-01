@@ -47,7 +47,7 @@ func (p *PipRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input
 		},
 		ExtraDeps: []string{
 			"setuptools",
-			"wheel>=0.46.2", // CVE-2026-24049
+			"wheel>=0.46.2",   // CVE-2026-24049
 			"flit-core>=3.11", // build backend required by pip 26.x (downloaded as wheel to avoid circular dep)
 		},
 	}).Build(ctx, s, src, r, out)
@@ -93,6 +93,35 @@ func (p *PipenvRecipe) Build(ctx context.Context, s *stack.Stack, src *source.In
 		OutputPath: func(version string) string {
 			return fmt.Sprintf("/tmp/pipenv-v%s.tgz", version)
 		},
+	}).Build(ctx, s, src, r, out)
+}
+
+// UvRecipe builds uv: pip3 download, no extra dependencies.
+//
+// Unlike pipenv, uv ships as a self-contained compiled (Rust) binary wrapped
+// in a platform-specific wheel with zero transitive Python dependencies
+// (confirmed via PyPI metadata: requires_dist is empty). BundleRecipe's
+// `pip3 download` step runs inside the target stack's own container, so pip
+// naturally resolves the correct manylinux wheel for that platform - no
+// special wheel-selection logic is needed here.
+type UvRecipe struct {
+	Fetcher fetch.Fetcher
+}
+
+func (u *UvRecipe) Name() string { return "uv" }
+func (u *UvRecipe) Artifact() ArtifactMeta {
+	return ArtifactMeta{OS: "linux", Arch: "noarch", Stack: ""}
+}
+
+func (u *UvRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, r runner.Runner, out *output.OutData) error {
+	return (&BundleRecipe{
+		DepName: "uv",
+		Meta:    ArtifactMeta{OS: "linux", Arch: "noarch"},
+		Fetcher: u.Fetcher,
+		MainPackage: func(version string) string {
+			return fmt.Sprintf("uv==%s", version)
+		},
+		ExtraDeps: []string{}, // uv has zero transitive Python dependencies
 	}).Build(ctx, s, src, r, out)
 }
 
