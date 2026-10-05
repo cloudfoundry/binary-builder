@@ -779,6 +779,52 @@ func TestPipenvRecipeNameAndArtifact(t *testing.T) {
 	assert.Equal(t, "noarch", r.Artifact().Arch)
 }
 
+// ── UvRecipe ──────────────────────────────────────────────────────────────────
+
+func TestUvRecipeCallSequence(t *testing.T) {
+	f := newFakeFetcher()
+	fakeRunner := runner.NewFakeRunner()
+
+	r := &recipe.UvRecipe{Fetcher: f}
+	src := newInput("uv", "0.12.21", "https://example.com/uv.tgz")
+	err := r.Build(context.Background(), newStack(t), src, fakeRunner, &output.OutData{})
+	require.NoError(t, err)
+
+	assert.True(t, anyCallContains(fakeRunner.Calls, "/usr/bin/pip3"), "pip3 should be called")
+	assert.True(t, anyArgsContain(fakeRunner.Calls, "uv==0.12.21"), "uv==<version> should be requested")
+	assert.True(t, anyCallContains(fakeRunner.Calls, "tar"), "tar should be called")
+}
+
+func TestUvRecipeHasNoExtraDeps(t *testing.T) {
+	f := newFakeFetcher()
+	fakeRunner := runner.NewFakeRunner()
+
+	r := &recipe.UvRecipe{Fetcher: f}
+	src := newInput("uv", "0.12.21", "https://example.com/uv.tgz")
+	_ = r.Build(context.Background(), newStack(t), src, fakeRunner, &output.OutData{})
+
+	// Unlike pipenv (7 bundled deps), uv has zero transitive Python
+	// dependencies, so exactly one pip3 download call is expected (the main
+	// package) - no extra "pip3 download <dep>" calls.
+	downloadCalls := 0
+	for _, c := range fakeRunner.Calls {
+		if len(c.Args) > 0 && c.Args[0] == "download" {
+			downloadCalls++
+		}
+	}
+	assert.Equal(t, 1, downloadCalls, "uv should have exactly one pip3 download call (no extra deps)")
+}
+
+func TestUvRecipeNameAndArtifact(t *testing.T) {
+	r := &recipe.UvRecipe{}
+	assert.Equal(t, "uv", r.Name())
+	// uv ships as architecture-specific manylinux wheels (x86_64, ARM64,
+	// etc.) - it must NOT be published as "noarch", or an x86_64 artifact
+	// could be incorrectly reused on another architecture.
+	assert.Equal(t, "x64", r.Artifact().Arch)
+	assert.Equal(t, "", r.Artifact().Stack)
+}
+
 // ── HWCRecipe ─────────────────────────────────────────────────────────────────
 
 func TestHWCRecipeInstallsFromStackConfig(t *testing.T) {
