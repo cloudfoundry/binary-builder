@@ -293,6 +293,8 @@ func TestPassthroughSourceFilenames(t *testing.T) {
 		{"contrast-security", "6.23.0", "contrast-agent-6.23.0.jar"},
 		{"metric-writer", "3.5.0", "metric-writer-3.5.0-RELEASE.jar"},
 		{"client-certificate-mapper", "2.0.1", "client-certificate-mapper-2.0.1.jar"},
+		{"container-security-provider", "1.21.0", "container-security-provider-1.21.0.jar"},
+		{"elastic-otel-javaagent", "1.10.0", "elastic-otel-javaagent-1.10.0.jar"},
 	}
 
 	recipeMap := make(map[string]recipe.Recipe)
@@ -335,7 +337,7 @@ func TestPassthroughArtifactMeta(t *testing.T) {
 		recipeMap[rec.Name()] = rec
 	}
 
-	anyStack := []string{"azure-application-insights", "splunk-otel-javaagent", "newrelic", "google-stackdriver-profiler", "groovy", "cf-metrics-exporter", "spring-boot-cli", "open-telemetry-javaagent", "java-cfenv", "tomcat", "composer", "yarn-berry", "appdynamics", "appdynamics-java", "skywalking-agent", "elastic-apm-agent", "postgresql-jdbc", "mariadb-jdbc", "jacoco", "sealights-agent", "jrebel", "datadog-javaagent", "metric-writer", "contrast-security", "client-certificate-mapper"}
+	anyStack := []string{"azure-application-insights", "splunk-otel-javaagent", "newrelic", "google-stackdriver-profiler", "groovy", "cf-metrics-exporter", "spring-boot-cli", "open-telemetry-javaagent", "java-cfenv", "tomcat", "composer", "yarn-berry", "appdynamics", "appdynamics-java", "skywalking-agent", "elastic-apm-agent", "postgresql-jdbc", "mariadb-jdbc", "jacoco", "sealights-agent", "jrebel", "datadog-javaagent", "metric-writer", "contrast-security", "client-certificate-mapper", "container-security-provider", "elastic-otel-javaagent"}
 	for _, name := range anyStack {
 		t.Run(name+"_any-stack", func(t *testing.T) {
 			rec := recipeMap[name]
@@ -372,6 +374,7 @@ func TestNewPassthroughRecipesContents(t *testing.T) {
 		"elastic-apm-agent", "postgresql-jdbc", "mariadb-jdbc", "jacoco",
 		"newrelic", "google-stackdriver-profiler", "groovy", "cf-metrics-exporter", "spring-boot-cli",
 		"setuptools", "flit-core", "sealights-agent", "jrebel", "datadog-javaagent", "metric-writer", "contrast-security", "client-certificate-mapper",
+		"container-security-provider", "elastic-otel-javaagent",
 	})
 }
 

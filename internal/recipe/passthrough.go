@@ -104,6 +104,12 @@ func NewPassthroughRecipes(f fetch.Fetcher) []Recipe {
 			Fetcher:            f,
 		},
 		&PassthroughRecipe{
+			DepName:            "container-security-provider",
+			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("container-security-provider-%s.jar", v) },
+			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
+			Fetcher:            f,
+		},
+		&PassthroughRecipe{
 			DepName:            "contrast-security",
 			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("contrast-agent-%s.jar", v) },
 			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
@@ -232,6 +238,12 @@ func NewPassthroughRecipes(f fetch.Fetcher) []Recipe {
 		&PassthroughRecipe{
 			DepName:            "elastic-apm-agent",
 			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("elastic-apm-agent-%s.jar", v) },
+			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
+			Fetcher:            f,
+		},
+		&PassthroughRecipe{
+			DepName:            "elastic-otel-javaagent",
+			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("elastic-otel-javaagent-%s.jar", v) },
 			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
 			Fetcher:            f,
 		},
