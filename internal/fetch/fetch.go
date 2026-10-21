@@ -10,11 +10,21 @@ import (
 	"fmt"
 	"hash"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/cloudfoundry/binary-builder/internal/source"
+)
+
+const (
+	// MaxRetries is the number of additional attempts after the first failure.
+	// Exported so tests can reference it without duplicating the value.
+	MaxRetries = 5
+	// BaseRetryWait is the base wait time before the first retry.
+	// Exported so tests can override or reference it.
+	BaseRetryWait = 5 * time.Second
 )
 
 // Fetcher is the interface for downloading files and reading URL bodies.
@@ -29,7 +39,8 @@ type Fetcher interface {
 
 // HTTPFetcher implements Fetcher using net/http.
 type HTTPFetcher struct {
-	Client *http.Client
+	Client    *http.Client
+	RetryWait time.Duration // base wait between retries; 0 means use BaseRetryWait
 }
 
 // NewHTTPFetcher creates a Fetcher with a 10-minute HTTP client timeout.
@@ -38,22 +49,69 @@ func NewHTTPFetcher() *HTTPFetcher {
 	return &HTTPFetcher{Client: &http.Client{Timeout: 10 * time.Minute}}
 }
 
-// Download fetches a URL to dest, following redirects, and verifies the checksum.
-func (f *HTTPFetcher) Download(ctx context.Context, url, dest string, checksum source.Checksum) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return fmt.Errorf("creating request for %s: %w", url, err)
+// retryWait returns the configured base retry wait, defaulting to BaseRetryWait.
+func (f *HTTPFetcher) retryWait() time.Duration {
+	if f.RetryWait > 0 {
+		return f.RetryWait
+	}
+	return BaseRetryWait
+}
+
+// doWithRetry executes an HTTP GET request with retry on transient errors.
+// It retries up to MaxRetries times on server errors (5xx) and network
+// failures. Client errors (4xx) fail immediately. Returns a successful
+// response (HTTP 200) with an open body, or an error.
+func (f *HTTPFetcher) doWithRetry(ctx context.Context, url string) (*http.Response, error) {
+	var lastErr error
+
+	for attempt := 0; attempt <= MaxRetries; attempt++ {
+		if attempt > 0 {
+			wait := f.retryWait() * time.Duration(math.Pow(2, float64(attempt-1)))
+			fmt.Fprintf(os.Stderr, "fetch: retrying %s in %v (attempt %d/%d)\n", url, wait, attempt+1, MaxRetries+1)
+			select {
+			case <-time.After(wait):
+			case <-ctx.Done():
+				return nil, fmt.Errorf("fetching %s: %w", url, ctx.Err())
+			}
+		}
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		if err != nil {
+			return nil, fmt.Errorf("creating request for %s: %w", url, err)
+		}
+
+		resp, err := f.Client.Do(req)
+		if err != nil {
+			lastErr = fmt.Errorf("fetching %s: %w", url, err)
+			continue
+		}
+
+		if resp.StatusCode == http.StatusOK {
+			return resp, nil
+		}
+
+		resp.Body.Close()
+
+		// Only retry on server errors (5xx); client errors (4xx) are permanent.
+		if resp.StatusCode >= 500 {
+			lastErr = fmt.Errorf("fetching %s: HTTP %d", url, resp.StatusCode)
+			continue
+		}
+
+		return nil, fmt.Errorf("fetching %s: HTTP %d", url, resp.StatusCode)
 	}
 
-	resp, err := f.Client.Do(req)
+	return nil, lastErr
+}
+
+// Download fetches a URL to dest, following redirects, and verifies the checksum.
+// Retries up to MaxRetries times on transient HTTP errors (5xx, timeouts).
+func (f *HTTPFetcher) Download(ctx context.Context, url, dest string, checksum source.Checksum) error {
+	resp, err := f.doWithRetry(ctx, url)
 	if err != nil {
-		return fmt.Errorf("downloading %s: %w", url, err)
+		return err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("downloading %s: HTTP %d", url, resp.StatusCode)
-	}
 
 	out, err := os.Create(dest)
 	if err != nil {
@@ -95,21 +153,13 @@ func (f *HTTPFetcher) Download(ctx context.Context, url, dest string, checksum s
 }
 
 // ReadBody fetches a URL and returns the response body.
+// Retries up to MaxRetries times on transient HTTP errors (5xx, timeouts).
 func (f *HTTPFetcher) ReadBody(ctx context.Context, url string) ([]byte, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	resp, err := f.doWithRetry(ctx, url)
 	if err != nil {
-		return nil, fmt.Errorf("creating request for %s: %w", url, err)
-	}
-
-	resp, err := f.Client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("fetching %s: %w", url, err)
+		return nil, err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("fetching %s: HTTP %d", url, resp.StatusCode)
-	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
