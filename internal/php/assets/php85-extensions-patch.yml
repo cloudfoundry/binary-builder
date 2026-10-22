@@ -2,8 +2,8 @@
 extensions:
   exclusions:
     - name: mongodb
-      version: 1.18.1
-      md5: 8939b5f966fa3ba6bb8e25206b9dae0f
+      version: 1.21.12
+      md5: 0cd4c765161794c749521adcb81dc269
       klass: PeclRecipe
     # oauth 2.0.7 uses php_rand.h which was removed in PHP 8.4+; replaced by 2.0.10
     - name: oauth
@@ -91,8 +91,8 @@ extensions:
       md5: nil
       klass: IonCubeRecipe
     - name: mongodb
-      version: 2.2.1
-      md5: 40b977a2d22c41958d57d31f8e4d44da
+      version: 2.5.5
+      md5: 7fd1c98fb542dd99806da858467ed001
       klass: PeclRecipe
     # oauth 2.0.10 adds PHP 8.4+ support (php_rand.h conditional)
     - name: oauth
