@@ -1,6 +1,8 @@
 package php_test
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/cloudfoundry/binary-builder/internal/php"
@@ -138,4 +140,146 @@ func TestLoad_RealPhp83Patch(t *testing.T) {
 	for _, e := range set.Extensions {
 		assert.NotEqual(t, "yaf", e.Name, "yaf should be excluded in php83")
 	}
+}
+
+// --- LoadFromDir tests ---
+
+// writeFile is a test helper that creates a file with the given content.
+func writeFile(t *testing.T, dir, name, content string) {
+	t.Helper()
+	require.NoError(t, os.WriteFile(filepath.Join(dir, name), []byte(content), 0644))
+}
+
+func TestLoadFromDir_BaseOnly(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "php8-base-extensions.yml", `---
+native_modules:
+- name: lua
+  version: 5.4.6
+  md5: abc123
+  klass: LuaRecipe
+extensions:
+- name: redis
+  version: 6.0.2
+  md5: def456
+  klass: PeclRecipe
+- name: mongodb
+  version: 1.21.12
+  md5: ghi789
+  klass: PeclRecipe
+`)
+
+	set, err := php.LoadFromDir(dir, "8", "2")
+	require.NoError(t, err)
+
+	assert.Len(t, set.NativeModules, 1)
+	assert.Equal(t, "lua", set.NativeModules[0].Name)
+	assert.Equal(t, "5.4.6", set.NativeModules[0].Version)
+
+	assert.Len(t, set.Extensions, 2)
+	assert.Equal(t, "redis", set.Extensions[0].Name)
+	assert.Equal(t, "mongodb", set.Extensions[1].Name)
+	assert.Equal(t, "1.21.12", set.Extensions[1].Version)
+}
+
+func TestLoadFromDir_WithPatch(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "php8-base-extensions.yml", `---
+extensions:
+- name: redis
+  version: 6.0.2
+  md5: aaa
+  klass: PeclRecipe
+- name: mongodb
+  version: 1.18.1
+  md5: bbb
+  klass: PeclRecipe
+- name: xdebug
+  version: 3.3.2
+  md5: ccc
+  klass: PeclRecipe
+`)
+	writeFile(t, dir, "php84-extensions-patch.yml", `---
+extensions:
+  exclusions:
+    - name: mongodb
+      version: 1.18.1
+      md5: bbb
+      klass: PeclRecipe
+    - name: xdebug
+      version: 3.3.2
+      md5: ccc
+      klass: PeclRecipe
+  additions:
+    - name: mongodb
+      version: 2.5.5
+      md5: ddd
+      klass: PeclRecipe
+    - name: xdebug
+      version: 3.4.0
+      md5: eee
+      klass: PeclRecipe
+`)
+
+	set, err := php.LoadFromDir(dir, "8", "4")
+	require.NoError(t, err)
+
+	// redis is unchanged from base.
+	assert.Equal(t, "redis", set.Extensions[0].Name)
+	assert.Equal(t, "6.0.2", set.Extensions[0].Version)
+
+	// mongodb was excluded and replaced in-place.
+	assert.Equal(t, "mongodb", set.Extensions[1].Name)
+	assert.Equal(t, "2.5.5", set.Extensions[1].Version)
+
+	// xdebug was excluded and replaced in-place.
+	assert.Equal(t, "xdebug", set.Extensions[2].Name)
+	assert.Equal(t, "3.4.0", set.Extensions[2].Version)
+
+	assert.Len(t, set.Extensions, 3)
+}
+
+func TestLoadFromDir_MissingBaseFile(t *testing.T) {
+	dir := t.TempDir()
+	// No files — should fail with a clear error.
+	_, err := php.LoadFromDir(dir, "8", "4")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "base file")
+}
+
+func TestLoadFromDir_MissingPatchIsOK(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "php8-base-extensions.yml", `---
+extensions:
+- name: redis
+  version: 6.0.2
+  md5: aaa
+  klass: PeclRecipe
+`)
+
+	// No patch file for php84 — should succeed with base only.
+	set, err := php.LoadFromDir(dir, "8", "4")
+	require.NoError(t, err)
+	assert.Len(t, set.Extensions, 1)
+	assert.Equal(t, "redis", set.Extensions[0].Name)
+}
+
+func TestLoadFromDir_MatchesEmbeddedLoad(t *testing.T) {
+	// LoadFromDir reading the real embedded assets directory should produce
+	// the same result as the embedded Load() function.
+	//
+	// This verifies that the two code paths are functionally equivalent.
+	embeddedSet, err := php.Load("8", "4")
+	require.NoError(t, err)
+
+	// The embedded assets live at internal/php/assets/ relative to the repo root.
+	// In tests, the working directory is the package directory (internal/php/),
+	// so the assets dir is at "./assets".
+	dirSet, err := php.LoadFromDir("assets", "8", "4")
+	require.NoError(t, err)
+
+	assert.Equal(t, embeddedSet.NativeModules, dirSet.NativeModules,
+		"NativeModules should match between embedded and directory-based loading")
+	assert.Equal(t, embeddedSet.Extensions, dirSet.Extensions,
+		"Extensions should match between embedded and directory-based loading")
 }

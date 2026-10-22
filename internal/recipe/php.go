@@ -64,11 +64,14 @@ var phpConfigureFlags = []string{
 }
 
 // PHPRecipe builds PHP and all of its extensions.
-// Extension data (which PECL extensions and native modules to build) is embedded
-// directly in the internal/php package — see internal/php/extensions.go and the
-// YAML files alongside it.
+//
+// By default, extension data (which PECL extensions and native modules to build)
+// is loaded from YAML files embedded in the internal/php package. When ExtensionsDir
+// is set, extension data is loaded from that directory instead, allowing the
+// configuration to be owned by a different repository (e.g. the php-buildpack).
 type PHPRecipe struct {
-	Fetcher fetch.Fetcher
+	Fetcher       fetch.Fetcher
+	ExtensionsDir string // optional: filesystem directory containing extension YAML files
 }
 
 func (p *PHPRecipe) Name() string { return "php" }
@@ -86,8 +89,18 @@ func (p *PHPRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input
 	phpMajor := parts[0]
 	phpMinor := parts[1]
 
-	// Load extension set (base + patch) from embedded YAML data in internal/php/.
-	extSet, err := php.Load(phpMajor, phpMinor)
+	// Load extension set (base + patch).
+	// If ExtensionsDir is set, load from the filesystem; otherwise use the
+	// embedded YAML data compiled into internal/php/.
+	var (
+		extSet *php.ExtensionSet
+		err    error
+	)
+	if p.ExtensionsDir != "" {
+		extSet, err = php.LoadFromDir(p.ExtensionsDir, phpMajor, phpMinor)
+	} else {
+		extSet, err = php.Load(phpMajor, phpMinor)
+	}
 	if err != nil {
 		return fmt.Errorf("php: loading extensions: %w", err)
 	}
