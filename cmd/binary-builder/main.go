@@ -97,6 +97,12 @@ func run() error {
 
 	stacksDir := fs.String("stacks-dir", "stacks", "Directory containing stack YAML files")
 
+	// PHP extension config — allows the extension YAML files to be owned by an
+	// external repository (e.g. the php-buildpack) rather than embedded in
+	// binary-builder. When set, the PHP recipe loads extensions from this
+	// directory instead of from the compiled-in defaults.
+	extensionsDir := fs.String("extensions-dir", "", "Directory containing PHP extension YAML files (default: use embedded)")
+
 	// Output — JSON summary is always written to a file, never to stdout.
 	// Build subprocess output (compilers, make, etc.) flows to stdout/stderr
 	// so it is visible in logs without corrupting the structured JSON output.
@@ -108,6 +114,17 @@ func run() error {
 
 	if *stackName == "" {
 		return fmt.Errorf("--stack is required")
+	}
+
+	// Fail fast if --extensions-dir is set but the path is invalid. This avoids
+	// surfacing the error deep inside PHPRecipe.Build after expensive apt-install
+	// and configure steps have already run.
+	if *extensionsDir != "" {
+		if info, err := os.Stat(*extensionsDir); err != nil {
+			return fmt.Errorf("--extensions-dir: %w", err)
+		} else if !info.IsDir() {
+			return fmt.Errorf("--extensions-dir: %s is not a directory", *extensionsDir)
+		}
 	}
 
 	// Determine whether --source-file was explicitly passed.
@@ -162,7 +179,7 @@ func run() error {
 	}
 
 	// Look up the recipe.
-	reg := buildRegistry()
+	reg := buildRegistry(*extensionsDir)
 	rec, err := reg.Get(src.Name)
 	if err != nil {
 		return fmt.Errorf("no recipe for %q — registered: %v", src.Name, reg.Names())
@@ -297,7 +314,9 @@ func finalizeArtifact(src *source.Input, rec recipe.Recipe, s *stack.Stack, outD
 }
 
 // buildRegistry constructs and populates the full recipe registry.
-func buildRegistry() *recipe.Registry {
+// extensionsDir, when non-empty, is passed to PHPRecipe so that extension
+// config is loaded from the filesystem instead of from embedded defaults.
+func buildRegistry(extensionsDir string) *recipe.Registry {
 	f := fetch.NewHTTPFetcher()
 	reg := recipe.NewRegistry()
 
@@ -321,7 +340,7 @@ func buildRegistry() *recipe.Registry {
 	reg.Register(&recipe.HWCRecipe{Fetcher: f})
 
 	// PHP recipe.
-	reg.Register(&recipe.PHPRecipe{Fetcher: f})
+	reg.Register(&recipe.PHPRecipe{Fetcher: f, ExtensionsDir: extensionsDir})
 
 	// Simple / repack recipes.
 	reg.Register(&recipe.PipRecipe{Fetcher: f})

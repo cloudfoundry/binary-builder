@@ -2,6 +2,7 @@ package recipe_test
 
 import (
 	"context"
+	"os"
 	"strings"
 	"testing"
 
@@ -163,4 +164,60 @@ func TestPHPRecipeBuildInvalidVersion(t *testing.T) {
 	err := r.Build(context.Background(), s, src, fakeRun, outData)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid version")
+}
+
+func TestPHPRecipeBuildExtensionsDirDispatch(t *testing.T) {
+	// When ExtensionsDir is set, PHPRecipe should load extensions from
+	// that directory via LoadFromDir rather than using the embedded defaults.
+	useTempWorkDir(t)
+	fakeRun := runner.NewFakeRunner()
+
+	// Create a minimal extensions directory with a single extension.
+	extDir := t.TempDir()
+	require.NoError(t, os.WriteFile(
+		extDir+"/php8-base-extensions.yml",
+		[]byte("---\nextensions:\n- name: testonly\n  version: 1.0.0\n  md5: abc\n  klass: PeclRecipe\n"),
+		0644,
+	))
+
+	s := &stack.Stack{
+		Name:        "cflinuxfs4",
+		AptPackages: map[string][]string{"php_build": {}},
+		PHPSymlinks: []stack.Symlink{},
+	}
+	src := &source.Input{Version: "8.3.2"}
+	outData := &output.OutData{}
+
+	r := &recipe.PHPRecipe{Fetcher: newFakeFetcher(), ExtensionsDir: extDir}
+	_ = r.Build(context.Background(), s, src, fakeRun, outData)
+
+	// SubDependencies should contain "testonly" from our custom dir,
+	// NOT the full set from the embedded YAML.
+	require.NotNil(t, outData.SubDependencies)
+	assert.Contains(t, outData.SubDependencies, "testonly",
+		"should load extensions from ExtensionsDir, not embedded defaults")
+	assert.NotContains(t, outData.SubDependencies, "apcu",
+		"should NOT contain embedded extensions when ExtensionsDir is set")
+}
+
+func TestPHPRecipeBuildExtensionsDirMissingBaseFile(t *testing.T) {
+	// When ExtensionsDir points to an empty directory, Build should fail
+	// with a clear error about the missing base file.
+	useTempWorkDir(t)
+	fakeRun := runner.NewFakeRunner()
+
+	emptyDir := t.TempDir()
+
+	s := &stack.Stack{
+		Name:        "cflinuxfs4",
+		AptPackages: map[string][]string{"php_build": {}},
+		PHPSymlinks: []stack.Symlink{},
+	}
+	src := &source.Input{Version: "8.3.2"}
+	outData := &output.OutData{}
+
+	r := &recipe.PHPRecipe{Fetcher: newFakeFetcher(), ExtensionsDir: emptyDir}
+	err := r.Build(context.Background(), s, src, fakeRun, outData)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "extensions")
 }

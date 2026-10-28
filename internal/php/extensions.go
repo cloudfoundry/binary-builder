@@ -11,6 +11,20 @@
 //	  php82-extensions-patch.yml    — overrides/exclusions specific to PHP 8.2.x
 //	  php83-extensions-patch.yml    — overrides/exclusions specific to PHP 8.3.x
 //
+// # Loading extensions
+//
+// There are two ways to load extensions:
+//
+//   - [Load] reads from the YAML files embedded in this package at compile time.
+//     This is the default behavior when binary-builder runs without --extensions-dir.
+//
+//   - [LoadFromDir] reads from a directory on the filesystem, using the same
+//     naming convention as the embedded assets. This allows the extension
+//     configuration to be owned by a different repository (e.g. the php-buildpack)
+//     and passed to binary-builder at build time via the --extensions-dir CLI flag.
+//
+// Both functions return an [ExtensionSet] after applying base + patch merging.
+//
 // # Adding a new PHP minor version (e.g. 8.4)
 //
 //  1. Create assets/php84-extensions-patch.yml with any additions or exclusions
@@ -38,6 +52,8 @@ package php
 import (
 	"embed"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -138,14 +154,55 @@ func Load(phpMajor, phpMinor string) (*ExtensionSet, error) {
 		return nil, fmt.Errorf("php/extensions: no base extensions file for PHP major version %q", phpMajor)
 	}
 
+	var patchData []byte
+	if pd, ok := embeddedPatches[phpMajor+phpMinor]; ok {
+		patchData = pd
+	}
+
+	return loadFromData(baseData, patchData, phpMajor, phpMinor)
+}
+
+// LoadFromDir returns the ExtensionSet for the given PHP major+minor version by
+// reading YAML files from a directory on the filesystem. The directory must use
+// the same naming convention as the embedded assets:
+//
+//   - Base files:  php{major}-base-extensions.yml   (e.g. php8-base-extensions.yml)
+//   - Patch files: php{major}{minor}-extensions-patch.yml (e.g. php84-extensions-patch.yml)
+//
+// This allows the extension configuration to be owned by a different repository
+// (e.g. the php-buildpack) and passed to binary-builder at build time via the
+// --extensions-dir CLI flag.
+func LoadFromDir(dir, phpMajor, phpMinor string) (*ExtensionSet, error) {
+	basePath := filepath.Join(dir, fmt.Sprintf("php%s-base-extensions.yml", phpMajor))
+	baseData, err := os.ReadFile(basePath)
+	if err != nil {
+		return nil, fmt.Errorf("php/extensions: reading base file %s: %w", basePath, err)
+	}
+
+	var patchData []byte
+	patchPath := filepath.Join(dir, fmt.Sprintf("php%s%s-extensions-patch.yml", phpMajor, phpMinor))
+	switch pd, err := os.ReadFile(patchPath); {
+	case err == nil:
+		patchData = pd
+	case os.IsNotExist(err):
+		// Missing patch file is not an error — not all minor versions have patches.
+	default:
+		return nil, fmt.Errorf("php/extensions: reading patch file %s: %w", patchPath, err)
+	}
+
+	return loadFromData(baseData, patchData, phpMajor, phpMinor)
+}
+
+// loadFromData is the shared implementation for Load and LoadFromDir. It parses
+// the base YAML, optionally applies a patch, and returns the merged ExtensionSet.
+// When patchData is nil or empty, the base set is returned as-is.
+func loadFromData(baseData, patchData []byte, phpMajor, phpMinor string) (*ExtensionSet, error) {
 	var set ExtensionSet
 	if err := yaml.Unmarshal(baseData, &set); err != nil {
 		return nil, fmt.Errorf("php/extensions: parsing base file for PHP %s: %w", phpMajor, err)
 	}
 
-	patchData, ok := embeddedPatches[phpMajor+phpMinor]
-	if !ok {
-		// No patch for this minor version — return base as-is.
+	if len(patchData) == 0 {
 		return &set, nil
 	}
 

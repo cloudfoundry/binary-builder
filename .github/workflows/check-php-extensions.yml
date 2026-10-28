@@ -1,0 +1,201 @@
+name: Check PHP extension versions
+
+on:
+  schedule:
+    # Run weekly on Monday at 08:00 UTC.
+    - cron: '0 8 * * 1'
+  workflow_dispatch: {} # Allow manual trigger from the Actions tab.
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  check:
+    name: Check for outdated PECL extensions
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout binary-builder
+        uses: actions/checkout@v4
+
+      - name: Checkout buildpacks-ci (for bump-versions.rb)
+        uses: actions/checkout@v4
+        with:
+          repository: cloudfoundry/buildpacks-ci
+          path: buildpacks-ci
+
+      - name: Checkout php-buildpack (authoritative extension config)
+        uses: actions/checkout@v4
+        with:
+          repository: cloudfoundry/php-buildpack
+          path: php-buildpack
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+
+      - name: Install Ruby dependencies
+        working-directory: buildpacks-ci/scripts/php-modules
+        run: bundle install --jobs 4 --retry 3
+
+      - name: Determine extension config directory
+        id: ext-dir
+        run: |
+          # Prefer php-buildpack (authoritative after Phase 2+3), fall back to
+          # binary-builder assets/ (pre-Phase 5) or testdata/ (post-Phase 5).
+          if [ -d "php-buildpack/config/extensions" ]; then
+            echo "path=php-buildpack/config/extensions" >> "$GITHUB_OUTPUT"
+          elif [ -d "internal/php/assets" ]; then
+            echo "path=${{ github.workspace }}/internal/php/assets" >> "$GITHUB_OUTPUT"
+          elif [ -d "internal/php/testdata" ]; then
+            echo "path=${{ github.workspace }}/internal/php/testdata" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::No extension YAML directory found"
+            exit 1
+          fi
+
+      - name: Check for outdated extensions
+        id: check
+        working-directory: buildpacks-ci/scripts/php-modules
+        env:
+          EXTENSIONS_DIR: ${{ steps.ext-dir.outputs.path }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          bundle exec ruby bump-versions.rb --dry-run --format=json > /tmp/report.json 2>/tmp/check-stderr.log
+          exit_code=$?
+          set -e
+
+          cat /tmp/check-stderr.log >&2
+
+          if [ $exit_code -ne 0 ]; then
+            echo "bump-versions.rb failed with exit code $exit_code"
+            echo "has_updates=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Parse the JSON report to determine if there are outdated extensions.
+          outdated_count=$(jq '.outdated | length' /tmp/report.json)
+          error_count=$(jq '.error_count' /tmp/report.json)
+
+          echo "outdated_count=${outdated_count}" >> "$GITHUB_OUTPUT"
+          echo "error_count=${error_count}" >> "$GITHUB_OUTPUT"
+
+          if [ "$outdated_count" -gt 0 ]; then
+            echo "has_updates=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_updates=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          # Make report available to downstream steps.
+          cp /tmp/report.json "$GITHUB_WORKSPACE/report.json"
+
+      - name: Create or update GitHub issue
+        if: steps.check.outputs.has_updates == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('report.json', 'utf8'));
+
+            const title = `[Automated] PHP extensions: ${report.outdated.length} outdated version(s) detected`;
+            const label = 'php-extensions';
+
+            // Build the issue body as a markdown table.
+            let body = `## PHP Extension Version Check\n\n`;
+            body += `**Checked at:** ${report.checked_at}\n\n`;
+
+            if (report.outdated.length > 0) {
+              body += `### Outdated Extensions\n\n`;
+              body += `| Extension | Type | Current | Latest |\n`;
+              body += `|-----------|------|---------|--------|\n`;
+              for (const item of report.outdated) {
+                body += `| ${item.name} | ${item.klass} | ${item.current} | ${item.latest} |\n`;
+              }
+            }
+
+            body += `\n**Up to date:** ${report.up_to_date_count} extension(s)\n`;
+
+            if (report.errors.length > 0) {
+              body += `\n### Errors\n\n`;
+              for (const err of report.errors) {
+                body += `- **${err.name}** (${err.klass}): ${err.message}\n`;
+              }
+            }
+
+            body += `\n---\n`;
+            body += `*This issue was automatically created by the [Check PHP extension versions](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}) workflow.*\n`;
+            body += `\n### Next Steps\n\n`;
+            body += `1. Review the outdated extensions above\n`;
+            body += `2. Check PHP version compatibility for each bump\n`;
+            body += `3. Run \`bump-versions.sh\` locally (in buildpacks-ci/scripts/php-modules/), review the diff\n`;
+            body += `4. Run \`update-hashes.sh\` to recompute MD5 hashes\n`;
+            body += `5. Open a PR with the version bumps against the repo that owns the extension YAML files\n`;
+
+            // Ensure the label exists.
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label,
+              });
+            } catch (e) {
+              if (e.status === 404) {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label,
+                  color: 'c5def5',
+                  description: 'PHP extension version updates',
+                });
+              }
+            }
+
+            // Check if an open issue with this label already exists.
+            const { data: existingIssues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: label,
+              state: 'open',
+              per_page: 1,
+            });
+
+            if (existingIssues.length > 0) {
+              // Update the existing issue.
+              const issue = existingIssues[0];
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                title: title,
+                body: body,
+              });
+              core.info(`Updated existing issue #${issue.number}`);
+            } else {
+              // Create a new issue.
+              const { data: newIssue } = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: [label],
+              });
+              core.info(`Created issue #${newIssue.number}`);
+            }
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## PHP Extension Check Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Outdated:** ${{ steps.check.outputs.outdated_count || 0 }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Errors:** ${{ steps.check.outputs.error_count || 0 }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.check.outputs.has_updates }}" = "true" ]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "A GitHub issue has been created/updated with details." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "All extensions are up to date." >> "$GITHUB_STEP_SUMMARY"
+          fi
