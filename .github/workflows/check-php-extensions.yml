@@ -25,6 +25,12 @@ jobs:
           repository: cloudfoundry/buildpacks-ci
           path: buildpacks-ci
 
+      - name: Checkout php-buildpack (authoritative extension config)
+        uses: actions/checkout@v4
+        with:
+          repository: cloudfoundry/php-buildpack
+          path: php-buildpack
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -34,11 +40,27 @@ jobs:
         working-directory: buildpacks-ci/scripts/php-modules
         run: bundle install --jobs 4 --retry 3
 
+      - name: Determine extension config directory
+        id: ext-dir
+        run: |
+          # Prefer php-buildpack (authoritative after Phase 2+3), fall back to
+          # binary-builder assets/ (pre-Phase 5) or testdata/ (post-Phase 5).
+          if [ -d "php-buildpack/config/extensions" ]; then
+            echo "path=php-buildpack/config/extensions" >> "$GITHUB_OUTPUT"
+          elif [ -d "internal/php/assets" ]; then
+            echo "path=${{ github.workspace }}/internal/php/assets" >> "$GITHUB_OUTPUT"
+          elif [ -d "internal/php/testdata" ]; then
+            echo "path=${{ github.workspace }}/internal/php/testdata" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::No extension YAML directory found"
+            exit 1
+          fi
+
       - name: Check for outdated extensions
         id: check
         working-directory: buildpacks-ci/scripts/php-modules
         env:
-          BINARY_BUILDER_DIR: ${{ github.workspace }}
+          EXTENSIONS_DIR: ${{ steps.ext-dir.outputs.path }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set +e
@@ -108,9 +130,9 @@ jobs:
             body += `\n### Next Steps\n\n`;
             body += `1. Review the outdated extensions above\n`;
             body += `2. Check PHP version compatibility for each bump\n`;
-            body += `3. Run \`scripts/php-modules/bump-versions.sh\` locally, review the diff\n`;
-            body += `4. Run \`scripts/php-modules/update-hashes.sh\` to recompute MD5 hashes\n`;
-            body += `5. Open a PR against binary-builder with the version bumps\n`;
+            body += `3. Run \`bump-versions.sh\` locally (in buildpacks-ci/scripts/php-modules/), review the diff\n`;
+            body += `4. Run \`update-hashes.sh\` to recompute MD5 hashes\n`;
+            body += `5. Open a PR with the version bumps against the repo that owns the extension YAML files\n`;
 
             // Ensure the label exists.
             try {
