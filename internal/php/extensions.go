@@ -11,6 +11,20 @@
 //	  php82-extensions-patch.yml    — overrides/exclusions specific to PHP 8.2.x
 //	  php83-extensions-patch.yml    — overrides/exclusions specific to PHP 8.3.x
 //
+// # Loading extensions
+//
+// There are two ways to load extensions:
+//
+//   - [Load] reads from the YAML files embedded in this package at compile time.
+//     This is the default behavior when binary-builder runs without --extensions-dir.
+//
+//   - [LoadFromDir] reads from a directory on the filesystem, using the same
+//     naming convention as the embedded assets. This allows the extension
+//     configuration to be owned by a different repository (e.g. the php-buildpack)
+//     and passed to binary-builder at build time via the --extensions-dir CLI flag.
+//
+// Both functions return an [ExtensionSet] after applying base + patch merging.
+//
 // # Adding a new PHP minor version (e.g. 8.4)
 //
 //  1. Create assets/php84-extensions-patch.yml with any additions or exclusions
@@ -167,23 +181,28 @@ func LoadFromDir(dir, phpMajor, phpMinor string) (*ExtensionSet, error) {
 
 	var patchData []byte
 	patchPath := filepath.Join(dir, fmt.Sprintf("php%s%s-extensions-patch.yml", phpMajor, phpMinor))
-	if pd, err := os.ReadFile(patchPath); err == nil {
+	switch pd, err := os.ReadFile(patchPath); {
+	case err == nil:
 		patchData = pd
+	case os.IsNotExist(err):
+		// Missing patch file is not an error — not all minor versions have patches.
+	default:
+		return nil, fmt.Errorf("php/extensions: reading patch file %s: %w", patchPath, err)
 	}
-	// Missing patch file is not an error — not all minor versions have patches.
 
 	return loadFromData(baseData, patchData, phpMajor, phpMinor)
 }
 
 // loadFromData is the shared implementation for Load and LoadFromDir. It parses
 // the base YAML, optionally applies a patch, and returns the merged ExtensionSet.
+// When patchData is nil or empty, the base set is returned as-is.
 func loadFromData(baseData, patchData []byte, phpMajor, phpMinor string) (*ExtensionSet, error) {
 	var set ExtensionSet
 	if err := yaml.Unmarshal(baseData, &set); err != nil {
 		return nil, fmt.Errorf("php/extensions: parsing base file for PHP %s: %w", phpMajor, err)
 	}
 
-	if patchData == nil {
+	if len(patchData) == 0 {
 		return &set, nil
 	}
 

@@ -116,6 +116,17 @@ func run() error {
 		return fmt.Errorf("--stack is required")
 	}
 
+	// Fail fast if --extensions-dir is set but the path is invalid. This avoids
+	// surfacing the error deep inside PHPRecipe.Build after expensive apt-install
+	// and configure steps have already run.
+	if *extensionsDir != "" {
+		if info, err := os.Stat(*extensionsDir); err != nil {
+			return fmt.Errorf("--extensions-dir: %w", err)
+		} else if !info.IsDir() {
+			return fmt.Errorf("--extensions-dir: %s is not a directory", *extensionsDir)
+		}
+	}
+
 	// Determine whether --source-file was explicitly passed.
 	sourceFileExplicit := false
 	fs.Visit(func(f *flag.Flag) {

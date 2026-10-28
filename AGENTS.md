@@ -268,11 +268,14 @@ R sub-dep data.json files live under `/tmp/r-sub-deps/source-{pkg}-latest/data.j
 
 | File | Purpose |
 |------|---------|
-| `cmd/binary-builder/main.go` | CLI, `findIntermediateArtifact`, `handleArtifact`, `buildRegistry` |
+| `cmd/binary-builder/main.go` | CLI, `findIntermediateArtifact`, `handleArtifact`, `buildRegistry`; `--extensions-dir` flag |
 | `internal/runner/runner.go` | `Runner` interface, `RealRunner`, `FakeRunner` + `Call` type |
 | `internal/fetch/fetch.go` | `Fetcher` interface, `HTTPFetcher` |
 | `internal/stack/stack.go` | `Stack` struct, `Load(stacksDir, name)` |
 | `internal/recipe/recipe.go` | `Recipe` interface, `Registry` |
+| `internal/recipe/php.go` | `PHPRecipe`; dispatches to `Load` or `LoadFromDir` based on `ExtensionsDir` |
+| `internal/php/extensions.go` | `Load`, `LoadFromDir`, `applyPatch` — extension YAML loading + merge |
+| `internal/php/assets/` | Extension YAML files (base + per-version patches) |
 | `internal/archive/archive.go` | `StripTopLevelDir`, `StripFiles`, `InjectFile` |
 | `internal/portile/` | configure/make/install abstraction |
 | `internal/apt/` | apt-get install wrapper |

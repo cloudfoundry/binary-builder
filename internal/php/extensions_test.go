@@ -283,3 +283,23 @@ func TestLoadFromDir_MatchesEmbeddedLoad(t *testing.T) {
 	assert.Equal(t, embeddedSet.Extensions, dirSet.Extensions,
 		"Extensions should match between embedded and directory-based loading")
 }
+
+func TestLoadFromDir_PatchFileReadError(t *testing.T) {
+	// A patch file that exists but cannot be read (e.g. permission denied)
+	// should return an error rather than silently falling back to base-only.
+	dir := t.TempDir()
+	writeFile(t, dir, "php8-base-extensions.yml", `---
+extensions:
+- name: redis
+  version: 6.0.2
+  md5: aaa
+  klass: PeclRecipe
+`)
+	// Create a patch file with no read permissions.
+	patchPath := filepath.Join(dir, "php84-extensions-patch.yml")
+	require.NoError(t, os.WriteFile(patchPath, []byte("---\n"), 0000))
+
+	_, err := php.LoadFromDir(dir, "8", "4")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "patch file")
+}
