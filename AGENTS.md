@@ -274,8 +274,8 @@ R sub-dep data.json files live under `/tmp/r-sub-deps/source-{pkg}-latest/data.j
 | `internal/stack/stack.go` | `Stack` struct, `Load(stacksDir, name)` |
 | `internal/recipe/recipe.go` | `Recipe` interface, `Registry` |
 | `internal/recipe/php.go` | `PHPRecipe`; dispatches to `Load` or `LoadFromDir` based on `ExtensionsDir` |
-| `internal/php/extensions.go` | `Load`, `LoadFromDir`, `applyPatch` — extension YAML loading + merge |
-| `internal/php/assets/` | Extension YAML files (base + per-version patches) |
+| `internal/php/extensions.go` | `LoadFromDir`, `applyPatch` — extension YAML loading + merge; `--extensions-dir` is required |
+| `internal/php/testdata/` | Extension YAML files (base + per-version patches) — test fixtures only, not embedded |
 | `internal/archive/archive.go` | `StripTopLevelDir`, `StripFiles`, `InjectFile` |
 | `internal/portile/` | configure/make/install abstraction |
 | `internal/apt/` | apt-get install wrapper |

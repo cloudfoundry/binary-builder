@@ -2,113 +2,36 @@
 //
 // # Extension data files
 //
-// The YAML files that define which PHP extensions and native modules are built
-// live in assets/ alongside the Go source:
+// Extension YAML files define which PHP extensions and native modules are compiled
+// into PHP binaries. In production, these files are owned by the php-buildpack
+// repository (config/extensions/) and passed to binary-builder at build time via
+// the --extensions-dir CLI flag.
 //
-//	internal/php/assets/
-//	  php8-base-extensions.yml      — full list for all PHP 8.x (native modules + PECL extensions)
-//	  php81-extensions-patch.yml    — overrides/exclusions specific to PHP 8.1.x
-//	  php82-extensions-patch.yml    — overrides/exclusions specific to PHP 8.2.x
-//	  php83-extensions-patch.yml    — overrides/exclusions specific to PHP 8.3.x
+// The testdata/ directory in this package contains a copy of the extension YAML
+// files for use in unit tests. These are NOT compiled into the binary.
 //
 // # Loading extensions
 //
-// There are two ways to load extensions:
+// [LoadFromDir] is the primary API. It reads base + patch YAML files from a
+// directory on the filesystem and returns a merged [ExtensionSet].
 //
-//   - [Load] reads from the YAML files embedded in this package at compile time.
-//     This is the default behavior when binary-builder runs without --extensions-dir.
+// [Load] is a convenience wrapper for tests that delegates to LoadFromDir
+// using the testdata/ directory relative to the caller's working directory.
+// It should NOT be used in production code paths.
 //
-//   - [LoadFromDir] reads from a directory on the filesystem, using the same
-//     naming convention as the embedded assets. This allows the extension
-//     configuration to be owned by a different repository (e.g. the php-buildpack)
-//     and passed to binary-builder at build time via the --extensions-dir CLI flag.
-//
-// Both functions return an [ExtensionSet] after applying base + patch merging.
-//
-// # Adding a new PHP minor version (e.g. 8.4)
-//
-//  1. Create assets/php84-extensions-patch.yml with any additions or exclusions
-//     relative to the PHP 8 base (an empty patch is valid: "---\nextensions:\n").
-//
-// No code changes are required — the file is discovered automatically via the
-// embedded FS glob.
-//
-// # Adding a new PHP major version (e.g. 9)
-//
-//  1. Create assets/php9-base-extensions.yml with the full extension list for PHP 9.x.
-//  2. Create a patch file for each shipped minor version (e.g. assets/php90-extensions-patch.yml).
-//
-// Again, no code changes are required.
-//
-// # File naming convention (drives auto-discovery)
+// # File naming convention
 //
 //   - Base files:  php{major}-base-extensions.yml   (e.g. php8-base-extensions.yml)
 //   - Patch files: php{major}{minor}-extensions-patch.yml (e.g. php84-extensions-patch.yml)
-//
-// Important: only .yml files are embedded (the glob is assets/*.yml). A file with a
-// .yaml extension would be silently ignored.
 package php
 
 import (
-	"embed"
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strings"
 
 	"gopkg.in/yaml.v3"
 )
-
-//go:embed assets/*.yml
-var assetsFS embed.FS
-
-var (
-	// baseFileRE matches e.g. "assets/php8-base-extensions.yml" and captures the major version ("8").
-	baseFileRE = regexp.MustCompile(`^assets/php(\d+)-base-extensions\.yml$`)
-	// patchFileRE matches e.g. "assets/php83-extensions-patch.yml" and captures major+minor ("83").
-	// The \d{2,} quantifier is intentional: patch filenames must encode both the major AND minor
-	// digit together (e.g. "php81", "php90"), never a bare major digit. This prevents a file named
-	// "php8-extensions-patch.yml" from matching (that would be a base file), and ensures a future
-	// PHP 9 patch is named "php90-extensions-patch.yml", not "php9-extensions-patch.yml" (which
-	// would be silently ignored).
-	patchFileRE = regexp.MustCompile(`^assets/php(\d{2,})-extensions-patch\.yml$`)
-)
-
-// embeddedBases maps PHP major version (e.g. "8") → base YAML bytes.
-// embeddedPatches maps PHP major+minor (e.g. "83") → patch YAML bytes.
-// Both are populated once at init() from the embedded FS.
-var (
-	embeddedBases   map[string][]byte
-	embeddedPatches map[string][]byte
-)
-
-func init() {
-	embeddedBases = make(map[string][]byte)
-	embeddedPatches = make(map[string][]byte)
-
-	entries, err := assetsFS.ReadDir("assets")
-	if err != nil {
-		panic("php/extensions: cannot read embedded assets: " + err.Error())
-	}
-
-	for _, e := range entries {
-		if e.IsDir() || !strings.HasSuffix(e.Name(), ".yml") {
-			continue
-		}
-		path := "assets/" + e.Name()
-		data, err := assetsFS.ReadFile(path)
-		if err != nil {
-			panic("php/extensions: cannot read embedded file " + path + ": " + err.Error())
-		}
-
-		if m := baseFileRE.FindStringSubmatch(path); m != nil {
-			embeddedBases[m[1]] = data
-		} else if m := patchFileRE.FindStringSubmatch(path); m != nil {
-			embeddedPatches[m[1]] = data
-		}
-	}
-}
 
 // Extension represents a single PHP extension or native module.
 type Extension struct {
@@ -136,11 +59,9 @@ type patchCategory struct {
 }
 
 // Load returns the ExtensionSet for the given PHP major+minor version by reading
-// the embedded YAML data compiled into this package.
-//
-// It loads the base file for the major version (e.g. "8" → php8-base-extensions.yml),
-// then applies the patch file for the specific minor version if one exists
-// (e.g. "8"+"2" → php82-extensions-patch.yml).
+// from the testdata/ directory in this package. This is a convenience function
+// for tests only — production code should use [LoadFromDir] with the path provided
+// via the --extensions-dir CLI flag.
 //
 // Merge rules (applied by applyPatch):
 //   - Exclusions run first. If an exclusion has a matching addition, the addition
@@ -149,29 +70,19 @@ type patchCategory struct {
 //   - Remaining additions (no matching exclusion) override by name if present,
 //     or are appended.
 func Load(phpMajor, phpMinor string) (*ExtensionSet, error) {
-	baseData, ok := embeddedBases[phpMajor]
-	if !ok {
-		return nil, fmt.Errorf("php/extensions: no base extensions file for PHP major version %q", phpMajor)
-	}
-
-	var patchData []byte
-	if pd, ok := embeddedPatches[phpMajor+phpMinor]; ok {
-		patchData = pd
-	}
-
-	return loadFromData(baseData, patchData, phpMajor, phpMinor)
+	return LoadFromDir("testdata", phpMajor, phpMinor)
 }
 
 // LoadFromDir returns the ExtensionSet for the given PHP major+minor version by
 // reading YAML files from a directory on the filesystem. The directory must use
-// the same naming convention as the embedded assets:
+// the following naming convention:
 //
 //   - Base files:  php{major}-base-extensions.yml   (e.g. php8-base-extensions.yml)
 //   - Patch files: php{major}{minor}-extensions-patch.yml (e.g. php84-extensions-patch.yml)
 //
-// This allows the extension configuration to be owned by a different repository
-// (e.g. the php-buildpack) and passed to binary-builder at build time via the
-// --extensions-dir CLI flag.
+// This is the primary API for loading extension configuration. In production,
+// the directory is provided by the php-buildpack repo via the --extensions-dir
+// CLI flag.
 func LoadFromDir(dir, phpMajor, phpMinor string) (*ExtensionSet, error) {
 	basePath := filepath.Join(dir, fmt.Sprintf("php%s-base-extensions.yml", phpMajor))
 	baseData, err := os.ReadFile(basePath)
@@ -193,8 +104,8 @@ func LoadFromDir(dir, phpMajor, phpMinor string) (*ExtensionSet, error) {
 	return loadFromData(baseData, patchData, phpMajor, phpMinor)
 }
 
-// loadFromData is the shared implementation for Load and LoadFromDir. It parses
-// the base YAML, optionally applies a patch, and returns the merged ExtensionSet.
+// loadFromData is the shared implementation. It parses the base YAML, optionally
+// applies a patch, and returns the merged ExtensionSet.
 // When patchData is nil or empty, the base set is returned as-is.
 func loadFromData(baseData, patchData []byte, phpMajor, phpMinor string) (*ExtensionSet, error) {
 	var set ExtensionSet
