@@ -65,13 +65,12 @@ var phpConfigureFlags = []string{
 
 // PHPRecipe builds PHP and all of its extensions.
 //
-// By default, extension data (which PECL extensions and native modules to build)
-// is loaded from YAML files embedded in the internal/php package. When ExtensionsDir
-// is set, extension data is loaded from that directory instead, allowing the
-// configuration to be owned by a different repository (e.g. the php-buildpack).
+// ExtensionsDir is required and must point to a directory containing the extension
+// YAML files (base + per-version patches). In production, this is provided by the
+// php-buildpack repo via the --extensions-dir CLI flag.
 type PHPRecipe struct {
 	Fetcher       fetch.Fetcher
-	ExtensionsDir string // optional: filesystem directory containing extension YAML files
+	ExtensionsDir string // required: filesystem directory containing extension YAML files
 }
 
 func (p *PHPRecipe) Name() string { return "php" }
@@ -89,18 +88,13 @@ func (p *PHPRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input
 	phpMajor := parts[0]
 	phpMinor := parts[1]
 
-	// Load extension set (base + patch).
-	// If ExtensionsDir is set, load from the filesystem; otherwise use the
-	// embedded YAML data compiled into internal/php/.
-	var (
-		extSet *php.ExtensionSet
-		err    error
-	)
-	if p.ExtensionsDir != "" {
-		extSet, err = php.LoadFromDir(p.ExtensionsDir, phpMajor, phpMinor)
-	} else {
-		extSet, err = php.Load(phpMajor, phpMinor)
+	// Load extension set (base + patch) from the extensions directory.
+	// ExtensionsDir is required — it is provided by the php-buildpack repo via
+	// the --extensions-dir CLI flag in production, or by test fixtures in tests.
+	if p.ExtensionsDir == "" {
+		return fmt.Errorf("php: --extensions-dir is required for PHP builds (extension config has moved to the php-buildpack repo)")
 	}
+	extSet, err := php.LoadFromDir(p.ExtensionsDir, phpMajor, phpMinor)
 	if err != nil {
 		return fmt.Errorf("php: loading extensions: %w", err)
 	}

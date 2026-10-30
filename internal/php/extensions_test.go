@@ -264,24 +264,21 @@ extensions:
 	assert.Equal(t, "redis", set.Extensions[0].Name)
 }
 
-func TestLoadFromDir_MatchesEmbeddedLoad(t *testing.T) {
-	// LoadFromDir reading the real embedded assets directory should produce
-	// the same result as the embedded Load() function.
-	//
-	// This verifies that the two code paths are functionally equivalent.
-	embeddedSet, err := php.Load("8", "4")
+func TestLoadFromDir_MatchesLoad(t *testing.T) {
+	// Load() delegates to LoadFromDir("testdata", ...), so both should
+	// produce identical results. This verifies the delegation works.
+	loadSet, err := php.Load("8", "4")
 	require.NoError(t, err)
 
-	// The embedded assets live at internal/php/assets/ relative to the repo root.
 	// In tests, the working directory is the package directory (internal/php/),
-	// so the assets dir is at "./assets".
-	dirSet, err := php.LoadFromDir("assets", "8", "4")
+	// so the testdata dir is at "./testdata".
+	dirSet, err := php.LoadFromDir("testdata", "8", "4")
 	require.NoError(t, err)
 
-	assert.Equal(t, embeddedSet.NativeModules, dirSet.NativeModules,
-		"NativeModules should match between embedded and directory-based loading")
-	assert.Equal(t, embeddedSet.Extensions, dirSet.Extensions,
-		"Extensions should match between embedded and directory-based loading")
+	assert.Equal(t, loadSet.NativeModules, dirSet.NativeModules,
+		"NativeModules should match between Load and LoadFromDir")
+	assert.Equal(t, loadSet.Extensions, dirSet.Extensions,
+		"Extensions should match between Load and LoadFromDir")
 }
 
 func TestLoadFromDir_PatchFileReadError(t *testing.T) {

@@ -3,6 +3,7 @@ package recipe_test
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -14,6 +15,19 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// phpTestdataDir is the absolute path to the extension YAML testdata files.
+// Must be resolved at init time before any test calls useTempWorkDir() which
+// changes the working directory.
+var phpTestdataDir string
+
+func init() {
+	abs, err := filepath.Abs("../php/testdata")
+	if err != nil {
+		panic("php_test: cannot resolve testdata path: " + err.Error())
+	}
+	phpTestdataDir = abs
+}
 
 func TestPHPRecipeName(t *testing.T) {
 	r := &recipe.PHPRecipe{}
@@ -41,7 +55,7 @@ func TestPHPRecipeBuildInstallsAptPackages(t *testing.T) {
 	src := &source.Input{Version: "8.3.2"}
 	outData := &output.OutData{}
 
-	r := &recipe.PHPRecipe{Fetcher: newFakeFetcher()}
+	r := &recipe.PHPRecipe{Fetcher: newFakeFetcher(), ExtensionsDir: phpTestdataDir}
 	_ = r.Build(context.Background(), s, src, fakeRun, outData)
 
 	assert.True(t, hasCallMatching(fakeRun.Calls, "apt-get", "libssl-dev"), "should apt-get install libssl-dev")
@@ -65,7 +79,7 @@ func TestPHPRecipeBuildCreatesSymlinks(t *testing.T) {
 	src := &source.Input{Version: "8.3.2"}
 	outData := &output.OutData{}
 
-	r := &recipe.PHPRecipe{Fetcher: newFakeFetcher()}
+	r := &recipe.PHPRecipe{Fetcher: newFakeFetcher(), ExtensionsDir: phpTestdataDir}
 	_ = r.Build(context.Background(), s, src, fakeRun, outData)
 
 	assert.True(t, hasCallMatching(fakeRun.Calls, "ln", "/usr/local/include/curl"), "should create curl symlink")
@@ -84,7 +98,7 @@ func TestPHPRecipeBuildConfigureFlags(t *testing.T) {
 	src := &source.Input{Version: "8.3.2"}
 	outData := &output.OutData{}
 
-	r := &recipe.PHPRecipe{Fetcher: newFakeFetcher()}
+	r := &recipe.PHPRecipe{Fetcher: newFakeFetcher(), ExtensionsDir: phpTestdataDir}
 	_ = r.Build(context.Background(), s, src, fakeRun, outData)
 
 	// The configure command is run via bash -c with LIBS=-lz prefix.
@@ -113,15 +127,15 @@ func TestPHPRecipeBuildPopulatesSubDependencies(t *testing.T) {
 	src := &source.Input{Version: "8.3.2"}
 	outData := &output.OutData{}
 
-	r := &recipe.PHPRecipe{Fetcher: newFakeFetcher()}
+	r := &recipe.PHPRecipe{Fetcher: newFakeFetcher(), ExtensionsDir: phpTestdataDir}
 	_ = r.Build(context.Background(), s, src, fakeRun, outData)
 
-	// SubDependencies should be populated from the embedded extension YAML.
+	// SubDependencies should be populated from the extension YAML testdata.
 	// Check a representative sample of well-known extensions.
 	require.NotNil(t, outData.SubDependencies)
 	assert.Contains(t, outData.SubDependencies, "apcu", "apcu should be in sub-dependencies")
 	assert.Contains(t, outData.SubDependencies, "rabbitmq", "rabbitmq should be in sub-dependencies")
-	assert.Greater(t, len(outData.SubDependencies), 20, "should have many sub-dependencies from the embedded YAML")
+	assert.Greater(t, len(outData.SubDependencies), 20, "should have many sub-dependencies from the testdata YAML")
 }
 
 func TestPHPRecipeBuildDownloadsSource(t *testing.T) {
@@ -141,7 +155,7 @@ func TestPHPRecipeBuildDownloadsSource(t *testing.T) {
 	outData := &output.OutData{}
 
 	f := newFakeFetcher()
-	r := &recipe.PHPRecipe{Fetcher: f}
+	r := &recipe.PHPRecipe{Fetcher: f, ExtensionsDir: phpTestdataDir}
 	_ = r.Build(context.Background(), s, src, fakeRun, outData)
 
 	// Should download PHP source via Fetcher (not wget).
@@ -160,7 +174,7 @@ func TestPHPRecipeBuildInvalidVersion(t *testing.T) {
 	src := &source.Input{Version: "invalid"}
 	outData := &output.OutData{}
 
-	r := &recipe.PHPRecipe{Fetcher: newFakeFetcher()}
+	r := &recipe.PHPRecipe{Fetcher: newFakeFetcher(), ExtensionsDir: phpTestdataDir}
 	err := r.Build(context.Background(), s, src, fakeRun, outData)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid version")
@@ -220,4 +234,24 @@ func TestPHPRecipeBuildExtensionsDirMissingBaseFile(t *testing.T) {
 	err := r.Build(context.Background(), s, src, fakeRun, outData)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "extensions")
+}
+
+func TestPHPRecipeBuildRequiresExtensionsDir(t *testing.T) {
+	// ExtensionsDir is required. Build should fail with a clear error when
+	// it is not set (empty string).
+	useTempWorkDir(t)
+	fakeRun := runner.NewFakeRunner()
+
+	s := &stack.Stack{
+		Name:        "cflinuxfs4",
+		AptPackages: map[string][]string{"php_build": {}},
+		PHPSymlinks: []stack.Symlink{},
+	}
+	src := &source.Input{Version: "8.3.2"}
+	outData := &output.OutData{}
+
+	r := &recipe.PHPRecipe{Fetcher: newFakeFetcher(), ExtensionsDir: ""}
+	err := r.Build(context.Background(), s, src, fakeRun, outData)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "--extensions-dir is required")
 }
