@@ -100,6 +100,10 @@ bootstrap:
     url: https://java-buildpack.cloudfoundry.org/openjdk-jdk/jammy/x86_64/bellsoft-jdk8u452%2B11-linux-amd64.tar.gz
     sha256: d87d70d286150e662f12650ed22d91f1663c267b27ab3b0775eed1416ef3bd12
     install_dir: /opt/java
+  jruby_jdk21:
+    url: https://java-buildpack.cloudfoundry.org/openjdk-jdk/jammy/x86_64/bellsoft-jdk21.0.7%2B9-linux-amd64.tar.gz
+    sha256: 52104f50eeb5f5299ea83dd25262a2f9847ee57b0240adced538cbebb19a42f2
+    install_dir: /opt/java21
   ruby:
     url: https://buildpacks.cloudfoundry.org/dependencies/ruby/ruby_3.3.6_linux_x64_cflinuxfs4_e4311262.tgz
     sha256: e4311262803d0e1a01c83001e3e98ad58700b5cc36eff12433f24312b11e3dc9

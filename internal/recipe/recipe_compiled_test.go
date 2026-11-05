@@ -34,6 +34,11 @@ func newCompiledStack(t *testing.T) *stack.Stack {
 				SHA256:     "cafebabe",
 				InstallDir: t.TempDir() + "/java",
 			},
+			JRubyJDK21: stack.BootstrapBinary{
+				URL:        "https://example.com/openjdk21.tar.gz",
+				SHA256:     "feedface",
+				InstallDir: t.TempDir() + "/java21",
+			},
 			Go: stack.BootstrapBinary{
 				URL:    "https://example.com/go-bootstrap.tar.gz",
 				SHA256: "deadbeef",
@@ -936,6 +941,66 @@ func TestJRubyRecipeVersion93(t *testing.T) {
 		"JRuby 9.3.x should produce artifact with ruby-2.6")
 }
 
+func TestJRubyRecipeRubyVersionMapping(t *testing.T) {
+	tests := []struct {
+		jruby, ruby string
+	}{
+		{"9.4.14.0", "3.1"},
+		{"10.0.7.0", "3.4"},
+		{"10.1.2.0", "4.0"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.jruby, func(t *testing.T) {
+			useTempWorkDir(t)
+			full := tc.jruby + "-ruby-" + tc.ruby
+			writeFakeArtifact(t, "jruby-"+full+"-linux-x64.tgz")
+
+			r := &recipe.JRubyRecipe{Fetcher: newFakeFetcher()}
+			run := runner.NewFakeRunner()
+			s := newCompiledStack(t)
+			require.NoError(t, os.MkdirAll(filepath.Join(s.Bootstrap.JRuby.InstallDir, "jdk8u452"), 0755))
+			require.NoError(t, os.MkdirAll(filepath.Join(s.Bootstrap.JRubyJDK21.InstallDir, "jdk-21.0.7"), 0755))
+			src := newInput("jruby", tc.jruby, "https://repo1.maven.org/maven2/org/jruby/jruby-dist/"+tc.jruby+"/jruby-dist-"+tc.jruby+"-src.zip")
+
+			out := &output.OutData{}
+			require.NoError(t, r.Build(context.Background(), s, src, run, out))
+			assert.Equal(t, full, out.ArtifactVersion)
+			assert.True(t, hasCallMatching(run.Calls, "sh", "-Djruby.default.ruby.version="+tc.ruby))
+		})
+	}
+}
+
+func TestJRubyRecipeToolchainPerMajorVersion(t *testing.T) {
+	tests := []struct {
+		name, version, wantJDK, wantMaven, wantJavaHome string
+		useJDK21                                        bool
+	}{
+		{"9.x uses JDK 8 and Maven 3.6.3", "9.4.14.0", "https://example.com/openjdk.tar.gz", "apache-maven-3.6.3", "jdk8u452", false},
+		{"10.x uses JDK 21 and Maven 3.9", "10.0.7.0", "https://example.com/openjdk21.tar.gz", "apache-maven-3.9.9", "jdk-21.0.7", true},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			useTempWorkDir(t)
+			ruby := map[bool]string{false: "3.1", true: "3.4"}[tc.useJDK21]
+			writeFakeArtifact(t, "jruby-"+tc.version+"-ruby-"+ruby+"-linux-x64.tgz")
+
+			f := newFakeFetcher()
+			r := &recipe.JRubyRecipe{Fetcher: f}
+			run := runner.NewFakeRunner()
+			s := newCompiledStack(t)
+			require.NoError(t, os.MkdirAll(filepath.Join(s.Bootstrap.JRuby.InstallDir, "jdk8u452"), 0755))
+			require.NoError(t, os.MkdirAll(filepath.Join(s.Bootstrap.JRubyJDK21.InstallDir, "jdk-21.0.7"), 0755))
+			src := newInput("jruby", tc.version, "https://repo1.maven.org/maven2/org/jruby/jruby-dist/"+tc.version+"/jruby-dist-"+tc.version+"-src.zip")
+
+			require.NoError(t, r.Build(context.Background(), s, src, run, &output.OutData{}))
+			assert.True(t, hasDownload(f, tc.wantJDK), "should download %s", tc.wantJDK)
+			assert.True(t, hasDownloadContaining(f, tc.wantMaven), "should download %s", tc.wantMaven)
+			assert.True(t, hasCallMatching(run.Calls, "sh", "export JAVA_HOME="), "mvn call sets JAVA_HOME")
+			assert.True(t, hasCallMatching(run.Calls, "sh", tc.wantJavaHome), "JAVA_HOME must point to %s", tc.wantJavaHome)
+		})
+	}
+}
+
 func TestJRubyRecipeUnknownVersion(t *testing.T) {
 	f := newFakeFetcher()
 	r := &recipe.JRubyRecipe{Fetcher: f}
@@ -946,6 +1011,7 @@ func TestJRubyRecipeUnknownVersion(t *testing.T) {
 	err := r.Build(context.Background(), s, src, run, &output.OutData{})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "9.9")
+	assert.Contains(t, err.Error(), "9.3, 9.4, 10.0, 10.1")
 }
 
 // ── HTTPDRecipe ───────────────────────────────────────────────────────────────
