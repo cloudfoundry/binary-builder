@@ -843,6 +843,85 @@ func TestRRecipeRemovesRemotes(t *testing.T) {
 		"should call remove.packages(\"remotes\") after package installs")
 }
 
+func TestRRecipeUsesBundledLibuvForPackageInstalls(t *testing.T) {
+	useTempWorkDir(t)
+	writeRSubDepFiles(t)
+
+	r := &recipe.RRecipe{Fetcher: newFakeFetcher()}
+	run := runner.NewFakeRunner()
+	s := newCompiledStack(t)
+	s.AptPackages["r_build"] = []string{"r-base"}
+	src := newInput("r", "4.3.1", "https://cran.r-project.org/src/base/R-4.3.1.tar.gz")
+
+	require.NoError(t, r.Build(context.Background(), s, src, run, &output.OutData{}))
+
+	installs := 0
+	for _, c := range run.Calls {
+		joined := strings.Join(c.Args, " ")
+		if c.Name == "sh" && (strings.Contains(joined, "install.packages(") || strings.Contains(joined, "install_version")) {
+			installs++
+			assert.Equal(t, "1", c.Env["USE_BUNDLED_LIBUV"], "package install must set USE_BUNDLED_LIBUV: %s", joined)
+		}
+	}
+	assert.Equal(t, 6, installs, "expected remotes, explicit deps, and 4 sub-dependency installs")
+}
+
+func TestRRecipeVerifiesPackagesBeforeRemovingRemotes(t *testing.T) {
+	useTempWorkDir(t)
+	writeRSubDepFiles(t)
+
+	r := &recipe.RRecipe{Fetcher: newFakeFetcher()}
+	run := runner.NewFakeRunner()
+	s := newCompiledStack(t)
+	s.AptPackages["r_build"] = []string{"r-base"}
+	src := newInput("r", "4.3.1", "https://cran.r-project.org/src/base/R-4.3.1.tar.gz")
+
+	require.NoError(t, r.Build(context.Background(), s, src, run, &output.OutData{}))
+
+	verifyIdx, removeIdx := -1, -1
+	for i, c := range run.Calls {
+		joined := strings.Join(c.Args, " ")
+		if c.Name == "sh" && strings.Contains(joined, "installed.packages()") {
+			verifyIdx = i
+			for _, pkg := range []string{"'fs'", "'shiny'", "'forecast'", "'plumber'", "'Rserve'"} {
+				assert.Contains(t, joined, pkg)
+			}
+		}
+		if c.Name == "sh" && strings.Contains(joined, `remove.packages("remotes")`) {
+			removeIdx = i
+		}
+	}
+	require.True(t, verifyIdx >= 0, "package verification call not found")
+	assert.Less(t, verifyIdx, removeIdx)
+}
+
+func TestRRecipeFailsWhenPackageVerificationFails(t *testing.T) {
+	useTempWorkDir(t)
+	writeRSubDepFiles(t)
+
+	s := newCompiledStack(t)
+	s.AptPackages["r_build"] = []string{"r-base"}
+	src := newInput("r", "4.3.1", "https://cran.r-project.org/src/base/R-4.3.1.tar.gz")
+
+	// First pass records the verification command so the second can fail on it.
+	probe := runner.NewFakeRunner()
+	r := &recipe.RRecipe{Fetcher: newFakeFetcher()}
+	require.NoError(t, r.Build(context.Background(), s, src, probe, &output.OutData{}))
+	var verifyKey string
+	for _, c := range probe.Calls {
+		if c.Name == "sh" && strings.Contains(strings.Join(c.Args, " "), "installed.packages()") {
+			verifyKey = "sh " + strings.Join(c.Args, " ")
+		}
+	}
+	require.NotEmpty(t, verifyKey)
+
+	run := runner.NewFakeRunner()
+	run.ErrorMap = map[string]error{verifyKey: fmt.Errorf("missing R packages: fs")}
+	err := (&recipe.RRecipe{Fetcher: newFakeFetcher()}).Build(context.Background(), s, src, run, &output.OutData{})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "verifying installed R packages")
+}
+
 func TestRserveVersionFormatting(t *testing.T) {
 	useTempWorkDir(t)
 	writeRSubDepFiles(t)
