@@ -36,6 +36,10 @@ type rPackage struct {
 	srcDir string // e.g. "source-forecast-latest"
 }
 
+// rExplicitDeps are packages that devtools used to bundle as freebies. They are
+// installed up front and stay in the artifact as R app runtime dependencies.
+var rExplicitDeps = []string{"cli", "curl", "lifecycle", "R6", "rlang", "withr", "processx", "callr", "stringr"}
+
 // rSubDeps lists the R packages to install, in the same order as the Ruby builder:
 // Rserve, forecast, shiny, plumber.
 var rSubDeps = []rPackage{
@@ -98,13 +102,20 @@ func (r *RRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, 
 	// the remotes package separately. Use remotes directly instead.
 	// We also explicitly install packages that devtools used to bundle as freebies
 	// (stringr, cli, etc.) to avoid breaking R apps that depend on them implicitly.
+	//
+	// fs >= 2.0.0 (pulled in by shiny via sass/bslib) needs libuv headers, which the
+	// stacks do not ship. USE_BUNDLED_LIBUV makes it build its vendored libuv instead.
+	rEnv := map[string]string{"USE_BUNDLED_LIBUV": "1"}
 	remotesCmd := `/usr/local/lib/R/bin/R --vanilla -e 'install.packages("remotes", repos="https://cran.r-project.org")'`
-	if err := run.Run("sh", "-c", remotesCmd); err != nil {
+	if err := run.RunWithEnv(rEnv, "sh", "-c", remotesCmd); err != nil {
 		return fmt.Errorf("r: installing remotes: %w", err)
 	}
 
-	depsCmd := `/usr/local/lib/R/bin/R --vanilla -e 'install.packages(c("cli", "curl", "lifecycle", "R6", "rlang", "withr", "processx", "callr", "stringr"), repos="https://cran.r-project.org")'`
-	if err := run.Run("sh", "-c", depsCmd); err != nil {
+	depsCmd := fmt.Sprintf(
+		`/usr/local/lib/R/bin/R --vanilla -e 'install.packages(c(%s), repos="https://cran.r-project.org")'`,
+		quoteRNames(`"`, rExplicitDeps),
+	)
+	if err := run.RunWithEnv(rEnv, "sh", "-c", depsCmd); err != nil {
 		return fmt.Errorf("r: installing explicit r dependencies: %w", err)
 	}
 
@@ -129,7 +140,7 @@ func (r *RRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, 
 			`/usr/local/lib/R/bin/R --vanilla -e "require('remotes'); remotes::install_version('%s', '%s', repos='https://cran.r-project.org', type='source', dependencies=TRUE)"`,
 			pkg.name, pkgVersion,
 		)
-		if err := run.Run("sh", "-c", rCmd); err != nil {
+		if err := run.RunWithEnv(rEnv, "sh", "-c", rCmd); err != nil {
 			return fmt.Errorf("r: installing R package %s: %w", pkg.name, err)
 		}
 
@@ -140,6 +151,12 @@ func (r *RRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, 
 			},
 			Version: subInput.Version,
 		}
+	}
+
+	// R exits 0 when install.packages fails for a dependency, so verify the
+	// packages (and the dependencies that the buildpack tests rely on) are present.
+	if err := run.Run("sh", "-c", verifyRPackagesCmd()); err != nil {
+		return fmt.Errorf("r: verifying installed R packages: %w", err)
 	}
 
 	// Step 7: Remove remotes after use. The explicitly pre-installed packages
@@ -176,6 +193,31 @@ func (r *RRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, 
 	outData.GitCommitSHA = sourceSHA
 
 	return nil
+}
+
+// quoteRNames wraps each name in the given quote character and joins them
+// into the body of an R c(...) call.
+func quoteRNames(quote string, names []string) string {
+	quoted := make([]string, len(names))
+	for i, n := range names {
+		quoted[i] = quote + n + quote
+	}
+	return strings.Join(quoted, ", ")
+}
+
+// verifyRPackagesCmd returns an R command that exits non-zero if fs, the
+// explicitly installed dependencies or the sub-dependency packages cannot be
+// loaded. Loading (not just being listed as installed) also catches a broken
+// native build such as fs against the bundled libuv.
+func verifyRPackagesCmd() string {
+	names := append([]string{"fs"}, rExplicitDeps...)
+	for _, pkg := range rSubDeps {
+		names = append(names, pkg.name)
+	}
+	return fmt.Sprintf(
+		`/usr/local/lib/R/bin/R --vanilla -e "pkgs <- c(%s); missing <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly=TRUE)]; if (length(missing) > 0) stop('missing R packages: ', paste(missing, collapse=', '))"`,
+		quoteRNames("'", names),
+	)
 }
 
 // formatRserveVersion converts "1.8.14" → "1.8-14"
