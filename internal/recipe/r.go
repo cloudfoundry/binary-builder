@@ -36,6 +36,10 @@ type rPackage struct {
 	srcDir string // e.g. "source-forecast-latest"
 }
 
+// rExplicitDeps are packages that devtools used to bundle as freebies. They are
+// installed up front and stay in the artifact as R app runtime dependencies.
+var rExplicitDeps = []string{"cli", "curl", "lifecycle", "R6", "rlang", "withr", "processx", "callr", "stringr"}
+
 // rSubDeps lists the R packages to install, in the same order as the Ruby builder:
 // Rserve, forecast, shiny, plumber.
 var rSubDeps = []rPackage{
@@ -107,7 +111,10 @@ func (r *RRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, 
 		return fmt.Errorf("r: installing remotes: %w", err)
 	}
 
-	depsCmd := `/usr/local/lib/R/bin/R --vanilla -e 'install.packages(c("cli", "curl", "lifecycle", "R6", "rlang", "withr", "processx", "callr", "stringr"), repos="https://cran.r-project.org")'`
+	depsCmd := fmt.Sprintf(
+		`/usr/local/lib/R/bin/R --vanilla -e 'install.packages(c(%s), repos="https://cran.r-project.org")'`,
+		quoteRNames(`"`, rExplicitDeps),
+	)
 	if err := run.RunWithEnv(rEnv, "sh", "-c", depsCmd); err != nil {
 		return fmt.Errorf("r: installing explicit r dependencies: %w", err)
 	}
@@ -188,21 +195,28 @@ func (r *RRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, 
 	return nil
 }
 
-// verifyRPackagesCmd returns an R command that exits non-zero if any of the
-// sub-dependency packages or the fs package is not installed.
+// quoteRNames wraps each name in the given quote character and joins them
+// into the body of an R c(...) call.
+func quoteRNames(quote string, names []string) string {
+	quoted := make([]string, len(names))
+	for i, n := range names {
+		quoted[i] = quote + n + quote
+	}
+	return strings.Join(quoted, ", ")
+}
+
+// verifyRPackagesCmd returns an R command that exits non-zero if fs, the
+// explicitly installed dependencies or the sub-dependency packages cannot be
+// loaded. Loading (not just being listed as installed) also catches a broken
+// native build such as fs against the bundled libuv.
 func verifyRPackagesCmd() string {
-	names := []string{"fs"}
+	names := append([]string{"fs"}, rExplicitDeps...)
 	for _, pkg := range rSubDeps {
 		names = append(names, pkg.name)
 	}
-	quoted := make([]string, len(names))
-	for i, n := range names {
-		quoted[i] = fmt.Sprintf("'%s'", n)
-	}
-	list := strings.Join(quoted, ", ")
 	return fmt.Sprintf(
-		`/usr/local/lib/R/bin/R --vanilla -e "pkgs <- c(%s); missing <- setdiff(pkgs, rownames(installed.packages())); if (length(missing) > 0) stop('missing R packages: ', paste(missing, collapse=', '))"`,
-		list,
+		`/usr/local/lib/R/bin/R --vanilla -e "pkgs <- c(%s); missing <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly=TRUE)]; if (length(missing) > 0) stop('missing R packages: ', paste(missing, collapse=', '))"`,
+		quoteRNames("'", names),
 	)
 }
 
