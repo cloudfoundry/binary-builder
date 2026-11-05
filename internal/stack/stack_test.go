@@ -201,6 +201,19 @@ func TestJRubyConfigCflinuxfs4(t *testing.T) {
 	assert.Equal(t, "/opt/java", s.Bootstrap.JRuby.InstallDir)
 }
 
+func TestJRubyJDK21Config(t *testing.T) {
+	for _, name := range []string{"cflinuxfs4", "cflinuxfs5"} {
+		t.Run(name, func(t *testing.T) {
+			s, err := stack.Load(stacksDir(t), name)
+			require.NoError(t, err)
+
+			assert.Contains(t, s.Bootstrap.JRubyJDK21.URL, "jdk21")
+			assert.NotEmpty(t, s.Bootstrap.JRubyJDK21.SHA256)
+			assert.Equal(t, "/opt/java21", s.Bootstrap.JRubyJDK21.InstallDir)
+		})
+	}
+}
+
 func TestJRubyConfigCflinuxfs5(t *testing.T) {
 	s, err := stack.Load(stacksDir(t), "cflinuxfs5")
 	require.NoError(t, err)

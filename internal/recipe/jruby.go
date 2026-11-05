@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/cloudfoundry/binary-builder/internal/archive"
@@ -30,8 +32,9 @@ func jdkSubdir(jdkInstallDir string) (string, error) {
 }
 
 // JRubyRecipe builds JRuby by:
-//  1. Downloading the JDK from the stack-specific URL.
-//  2. Building Maven from source (pinned version).
+//  1. Downloading the JDK from the stack-specific URL (JDK 8 for JRuby 9.x,
+//     JDK 21 for JRuby 10.x).
+//  2. Downloading Maven (pinned version, 3.6.3 for 9.x, 3.9.9 for 10.x).
 //  3. Compiling JRuby via Maven.
 //  4. Stripping incorrect_words.yaml from the resulting jar files.
 //
@@ -57,12 +60,38 @@ var jrubyToRubyVersion = map[string]string{
 	"10.1": "4.0",
 }
 
-// mavenVersion is the pinned Maven version used for the JRuby build.
-// SHA512 matches the official Apache Maven 3.6.3 binary distribution.
-const (
-	mavenVersion = "3.6.3"
-	mavenSHA512  = "c35a1803a6e70a126e80b2b3ae33eed961f83ed74d18fcd16909b2d44d7dada3203f1ffe726c17ef8dcca2dcaa9fca676987befeadc9b9f759967a8cb77181c0"
-)
+// jrubyToolchain is the JDK and Maven combination used to build a JRuby version.
+// SHA512 values match the official Apache Maven binary distributions.
+type jrubyToolchain struct {
+	jdk          stack.BootstrapBinary
+	jdkTarball   string
+	mavenVersion string
+	mavenSHA512  string
+}
+
+// jrubyToolchainFor returns the toolchain for a JRuby version. JRuby 10.x
+// requires Java 21+ and Maven 3.9+; 9.x builds with JDK 8 and Maven 3.6.3.
+func jrubyToolchainFor(s *stack.Stack, jrubyVersion string) (jrubyToolchain, error) {
+	major, _, _ := strings.Cut(jrubyVersion, ".")
+	n, err := strconv.Atoi(major)
+	if err != nil {
+		return jrubyToolchain{}, fmt.Errorf("unexpected jruby version format %q", jrubyVersion)
+	}
+	if n >= 10 {
+		return jrubyToolchain{
+			jdk:          s.Bootstrap.JRubyJDK21,
+			jdkTarball:   "openjdk-21-jdk.tar.gz",
+			mavenVersion: "3.9.9",
+			mavenSHA512:  "a555254d6b53d267965a3404ecb14e53c3827c09c3b94b5678835887ab404556bfaf78dcfe03ba76fa2508649dca8531c74bca4d5846513522404d48e8c4ac8b",
+		}, nil
+	}
+	return jrubyToolchain{
+		jdk:          s.Bootstrap.JRuby,
+		jdkTarball:   "openjdk-8-jdk.tar.gz",
+		mavenVersion: "3.6.3",
+		mavenSHA512:  "c35a1803a6e70a126e80b2b3ae33eed961f83ed74d18fcd16909b2d44d7dada3203f1ffe726c17ef8dcca2dcaa9fca676987befeadc9b9f759967a8cb77181c0",
+	}, nil
+}
 
 func (j *JRubyRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Input, run runner.Runner, outData *output.OutData) error {
 	jrubyVersion := src.Version
@@ -83,16 +112,21 @@ func (j *JRubyRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Inp
 	// source_input.version (never overwritten by build_jruby).
 	outData.ArtifactVersion = fullVersion
 
+	tc, err := jrubyToolchainFor(s, jrubyVersion)
+	if err != nil {
+		return fmt.Errorf("jruby: %w", err)
+	}
+
 	// Step 2: Download and install JDK from stack-specific URL.
-	jdkDir := s.Bootstrap.JRuby.InstallDir
-	jdkTar := fmt.Sprintf("%s/openjdk-8-jdk.tar.gz", jdkDir)
+	jdkDir := tc.jdk.InstallDir
+	jdkTar := fmt.Sprintf("%s/%s", jdkDir, tc.jdkTarball)
 
 	if err := run.Run("mkdir", "-p", jdkDir); err != nil {
 		return fmt.Errorf("jruby: creating JDK dir: %w", err)
 	}
 
-	jdkChecksum := source.Checksum{Algorithm: "sha256", Value: s.Bootstrap.JRuby.SHA256}
-	if err := j.Fetcher.Download(ctx, s.Bootstrap.JRuby.URL, jdkTar, jdkChecksum); err != nil {
+	jdkChecksum := source.Checksum{Algorithm: "sha256", Value: tc.jdk.SHA256}
+	if err := j.Fetcher.Download(ctx, tc.jdk.URL, jdkTar, jdkChecksum); err != nil {
 		return fmt.Errorf("jruby: downloading JDK: %w", err)
 	}
 
@@ -108,15 +142,15 @@ func (j *JRubyRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Inp
 	}
 
 	// Step 3: Download and set up Maven.
-	mavenURL := fmt.Sprintf("https://archive.apache.org/dist/maven/maven-3/%s/binaries/apache-maven-%s-bin.tar.gz", mavenVersion, mavenVersion)
-	mavenTar := fmt.Sprintf("/tmp/apache-maven-%s-bin.tar.gz", mavenVersion)
-	mavenChecksum := source.Checksum{Algorithm: "sha512", Value: mavenSHA512}
+	mavenURL := fmt.Sprintf("https://archive.apache.org/dist/maven/maven-3/%s/binaries/apache-maven-%s-bin.tar.gz", tc.mavenVersion, tc.mavenVersion)
+	mavenTar := fmt.Sprintf("/tmp/apache-maven-%s-bin.tar.gz", tc.mavenVersion)
+	mavenChecksum := source.Checksum{Algorithm: "sha512", Value: tc.mavenSHA512}
 
 	if err := j.Fetcher.Download(ctx, mavenURL, mavenTar, mavenChecksum); err != nil {
 		return fmt.Errorf("jruby: downloading Maven: %w", err)
 	}
 
-	mavenInstallDir := fmt.Sprintf("/tmp/apache-maven-%s", mavenVersion)
+	mavenInstallDir := fmt.Sprintf("/tmp/apache-maven-%s", tc.mavenVersion)
 	if err := run.Run("tar", "xf", mavenTar, "-C", "/tmp"); err != nil {
 		return fmt.Errorf("jruby: extracting Maven: %w", err)
 	}
@@ -205,6 +239,31 @@ func (j *JRubyRecipe) Build(ctx context.Context, s *stack.Stack, src *source.Inp
 	return nil
 }
 
+func supportedJRubyPrefixes() string {
+	prefixes := make([]string, 0, len(jrubyToRubyVersion))
+	for p := range jrubyToRubyVersion {
+		prefixes = append(prefixes, p)
+	}
+	sort.Slice(prefixes, func(i, j int) bool {
+		return versionPrefixLess(prefixes[i], prefixes[j])
+	})
+	return strings.Join(prefixes, ", ")
+}
+
+// versionPrefixLess orders "major.minor" strings numerically (9.4 < 10.0).
+func versionPrefixLess(a, b string) bool {
+	am, an, _ := strings.Cut(a, ".")
+	bm, bn, _ := strings.Cut(b, ".")
+	ai, _ := strconv.Atoi(am)
+	bi, _ := strconv.Atoi(bm)
+	if ai != bi {
+		return ai < bi
+	}
+	aj, _ := strconv.Atoi(an)
+	bj, _ := strconv.Atoi(bn)
+	return aj < bj
+}
+
 // jrubyRubyVersion maps a JRuby version string to the Ruby compatibility version.
 func jrubyRubyVersion(jrubyVersion string) (string, error) {
 	// Extract major.minor prefix (first two parts).
@@ -216,7 +275,7 @@ func jrubyRubyVersion(jrubyVersion string) (string, error) {
 
 	rubyVer, ok := jrubyToRubyVersion[prefix]
 	if !ok {
-		return "", fmt.Errorf("unknown JRuby version %q — cannot determine Ruby compatibility version (supported prefixes: 9.3, 9.4)", jrubyVersion)
+		return "", fmt.Errorf("unknown JRuby version %q — cannot determine Ruby compatibility version (supported prefixes: %s)", jrubyVersion, supportedJRubyPrefixes())
 	}
 	return rubyVer, nil
 }

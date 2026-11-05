@@ -59,7 +59,9 @@ type BootstrapBinary struct {
 type BootstrapConfig struct {
 	Go    BootstrapBinary `yaml:"go"`
 	JRuby BootstrapBinary `yaml:"jruby"`
-	Ruby  BootstrapBinary `yaml:"ruby"`
+	// JRubyJDK21 is the JDK used to build JRuby 10.x, which requires Java 21+.
+	JRubyJDK21 BootstrapBinary `yaml:"jruby_jdk21"`
+	Ruby       BootstrapBinary `yaml:"ruby"`
 }
 
 // PythonConfig holds Python-specific build settings.
