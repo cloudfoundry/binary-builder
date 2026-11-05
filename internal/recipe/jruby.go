@@ -51,8 +51,10 @@ func (j *JRubyRecipe) Artifact() ArtifactMeta {
 // jrubyToRubyVersion maps a JRuby major.minor prefix to the Ruby compatibility version.
 // This mapping is JRuby's own versioning scheme — not stack-specific.
 var jrubyToRubyVersion = map[string]string{
-	"9.3": "2.6",
-	"9.4": "3.1",
+	"9.3":  "2.6",
+	"9.4":  "3.1",
+	"10.0": "3.4",
+	"10.1": "4.0",
 }
 
 // mavenVersion is the pinned Maven version used for the JRuby build.
