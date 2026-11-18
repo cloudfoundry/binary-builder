@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/cloudfoundry/binary-builder/internal/artifact"
 	"github.com/cloudfoundry/binary-builder/internal/fetch"
 	"github.com/cloudfoundry/binary-builder/internal/fileutil"
 	"github.com/cloudfoundry/binary-builder/internal/output"
@@ -51,7 +52,7 @@ func (p *PassthroughRecipe) Build(ctx context.Context, _ *stack.Stack, src *sour
 	// intermediate filename (e.g. composer-2.7.1.phar, tomcat-9.0.85.tar.gz)
 	// so that findIntermediateArtifact in main.go can locate it via glob
 	// patterns like "tomcat-9.0.85*.tar.gz".
-	ext := archiveExt(filename)
+	ext := artifact.SuffixFromPath(filename)
 	intermediateName := fmt.Sprintf("%s-%s%s", p.DepName, src.Version, ext)
 	if err := fileutil.MoveFile(localPath, intermediateName); err != nil {
 		return fmt.Errorf("staging artifact %s: %w", p.DepName, err)
@@ -297,15 +298,4 @@ func underscoreVersion(v string) string {
 		}
 	}
 	return string(result)
-}
-
-// archiveExt returns the full file extension, handling compound extensions
-// like ".tar.gz", ".tar.bz2", ".tar.xz" that filepath.Ext misses.
-func archiveExt(filename string) string {
-	for _, compound := range []string{".tar.gz", ".tar.bz2", ".tar.xz"} {
-		if len(filename) > len(compound) && filename[len(filename)-len(compound):] == compound {
-			return compound
-		}
-	}
-	return filepath.Ext(filename)
 }

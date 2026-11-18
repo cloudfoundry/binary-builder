@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/cloudfoundry/binary-builder/internal/archive"
+	"github.com/cloudfoundry/binary-builder/internal/artifact"
 	"github.com/cloudfoundry/binary-builder/internal/fetch"
 	"github.com/cloudfoundry/binary-builder/internal/output"
 	"github.com/cloudfoundry/binary-builder/internal/runner"
@@ -73,23 +74,15 @@ func (r *RepackRecipe) Build(ctx context.Context, _ *stack.Stack, src *source.In
 	return archive.StripTopLevelDir(dest)
 }
 
-// inferExt returns the file extension for a download URL, recognising .tar.gz
-// as a two-part extension and falling back to the last path segment's suffix.
-// Any URL fragment (e.g. #sha256=…) is stripped before inspection.
+// inferExt returns the file extension for a download URL, recognising compound
+// suffixes like .tar.gz via artifact.SuffixFromPath. Any URL fragment
+// (e.g. #sha256=…) is stripped before inspection.
 func inferExt(rawURL string) string {
 	// Strip fragment (e.g. "#sha256=abc123") before inspecting the path.
 	u := rawURL
 	if i := strings.Index(u, "#"); i >= 0 {
 		u = u[:i]
 	}
-	if strings.HasSuffix(u, ".tar.gz") {
-		return ".tar.gz"
-	}
 	parts := strings.Split(u, "/")
-	last := parts[len(parts)-1]
-	idx := strings.LastIndex(last, ".")
-	if idx < 0 {
-		return ""
-	}
-	return last[idx:]
+	return artifact.SuffixFromPath(parts[len(parts)-1])
 }

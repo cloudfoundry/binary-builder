@@ -364,10 +364,11 @@ func buildRegistry(extensionsDir string) *recipe.Registry {
 }
 
 // findIntermediateArtifact searches CWD (and os.TempDir as fallback) for the
-// artifact file produced by a recipe. Extensions are tried in priority order.
+// artifact file produced by a recipe. Extensions are tried in priority order;
+// the list comes from artifact.SearchSuffixes so it cannot drift from the
+// extensions known to artifact.ExtFromPath (which names the published file).
 func findIntermediateArtifact(name, version string) (string, error) {
-	// Extensions in priority order (matches ArtifactOutput.ext in the old Ruby code).
-	exts := []string{"tgz", "tar.gz", "zip", "tar.xz", "tar.bz2", "sh", "phar", "jar", "js", "txt"}
+	exts := artifact.SearchSuffixes()
 
 	// Recipes that cannot write to CWD (e.g. pip, pipenv) write to os.TempDir.
 	searchDirs := []string{".", os.TempDir()}
