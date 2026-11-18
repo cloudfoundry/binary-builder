@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -66,25 +67,44 @@ func SHA256File(path string) (string, error) {
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
-// ExtFromPath extracts the file extension from a path, normalizing
+// extensions is the single source of truth for the dependency file formats
+// binary-builder understands. Each entry pairs the on-disk suffix of a file
+// with the extension it is published under.
+//
+// Everything else derives from this table:
+//
+//   - SearchSuffixes → findIntermediateArtifact's glob patterns (which file a
+//     recipe produced)
+//   - SuffixFromPath → intermediate file naming (e.g. PassthroughRecipe)
+//   - ExtFromPath    → the published artifact filename
+//
+// Adding a new format (say ".cjs") is therefore a one-line change here that
+// takes effect in all three places at once. Before this table was shared, a
+// format could be added to the intermediate-file search but forgotten when
+// naming the published artifact, which is how yarn-berry's raw yarn.js was
+// published as a ".tgz" that consumers could not gunzip.
+//
+// Order matters for findIntermediateArtifact, which globs in this order.
+var extensions = []struct {
+	suffix string // on-disk suffix, with dot, compound suffixes first-class
+	ext    string // published extension, no dot
+}{
+	{".tgz", "tgz"},
+	{".tar.gz", "tgz"},
+	{".zip", "zip"},
+	{".tar.xz", "tar.xz"},
+	{".tar.bz2", "tar.bz2"},
+	{".sh", "sh"},
+	{".phar", "phar"},
+	{".jar", "jar"},
+	{".js", "js"},
+	{".txt", "txt"},
+}
+
+// ExtFromPath extracts the published file extension from a path, normalizing
 // "tar.gz" to "tgz" to match the existing artifact naming convention.
 func ExtFromPath(path string) string {
 	base := strings.ToLower(path)
-
-	extensions := []struct {
-		suffix string
-		ext    string
-	}{
-		{".tar.gz", "tgz"},
-		{".tgz", "tgz"},
-		{".tar.xz", "tar.xz"},
-		{".tar.bz2", "tar.bz2"},
-		{".zip", "zip"},
-		{".phar", "phar"},
-		{".jar", "jar"},
-		{".sh", "sh"},
-		{".txt", "txt"},
-	}
 
 	for _, e := range extensions {
 		if strings.HasSuffix(base, e.suffix) {
@@ -93,4 +113,33 @@ func ExtFromPath(path string) string {
 	}
 
 	return "tgz" // default
+}
+
+// SuffixFromPath returns the on-disk suffix of path, with the leading dot and
+// compound suffixes preserved (".tar.gz", ".js"). Use this when naming
+// intermediate files; unlike ExtFromPath it does not normalize to the
+// published extension. Suffixes not in the table fall back to filepath.Ext.
+//
+// Matching is case-insensitive, so the returned suffix is always lowercase
+// ("foo.TAR.GZ" → ".tar.gz").
+func SuffixFromPath(path string) string {
+	base := strings.ToLower(path)
+
+	for _, e := range extensions {
+		if strings.HasSuffix(base, e.suffix) {
+			return e.suffix
+		}
+	}
+
+	return filepath.Ext(base)
+}
+
+// SearchSuffixes returns the on-disk suffixes (without the leading dot) that
+// findIntermediateArtifact globs for, in priority order.
+func SearchSuffixes() []string {
+	suffixes := make([]string, 0, len(extensions))
+	for _, e := range extensions {
+		suffixes = append(suffixes, strings.TrimPrefix(e.suffix, "."))
+	}
+	return suffixes
 }

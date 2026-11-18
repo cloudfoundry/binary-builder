@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/cloudfoundry/binary-builder/internal/artifact"
@@ -127,6 +128,7 @@ func TestExtFromPath(t *testing.T) {
 		{"appdynamics.tar.bz2", "tar.bz2"},
 		{"hwc.zip", "zip"},
 		{"composer.phar", "phar"},
+		{"yarn-berry-4.18.1.js", "js"},
 		{"install.sh", "sh"},
 		{"version.txt", "txt"},
 		{"unknown.bin", "tgz"}, // default
@@ -137,6 +139,54 @@ func TestExtFromPath(t *testing.T) {
 			assert.Equal(t, tt.expected, artifact.ExtFromPath(tt.path))
 		})
 	}
+}
+
+// TestSuffixFromPath covers the on-disk-suffix view of the same extension
+// table: compound suffixes are preserved and unknown suffixes fall through to
+// filepath.Ext instead of being normalized for publishing.
+func TestSuffixFromPath(t *testing.T) {
+	tests := []struct {
+		path     string
+		expected string
+	}{
+		{"apache-tomcat-9.0.98.tar.gz", ".tar.gz"},
+		{"appdynamics-23.11.0.tar.bz2", ".tar.bz2"},
+		{"dotnet-sdk-8.0.101.tar.xz", ".tar.xz"},
+		{"yarn-1.22.22.tgz", ".tgz"},
+		{"hwc.zip", ".zip"},
+		{"composer.phar", ".phar"},
+		{"java-cfenv-3.5.0.jar", ".jar"},
+		{"yarn-berry-4.18.1.js", ".js"},
+		{"sources.txt", ".txt"},
+		{"archive.whl", ".whl"},   // not in the table: filepath.Ext fallback
+		{"agent.JAR", ".jar"},     // matching is case-insensitive
+		{"Foo.TAR.GZ", ".tar.gz"}, // ...and the result is lowercased
+		{"noextension", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.path, func(t *testing.T) {
+			assert.Equal(t, tt.expected, artifact.SuffixFromPath(tt.path))
+		})
+	}
+}
+
+// TestSearchSuffixes verifies the glob list handed to findIntermediateArtifact
+// is derived from the same table as ExtFromPath, so a format cannot be found
+// on disk but misnamed on publish (the yarn-berry ".js" bug).
+func TestSearchSuffixes(t *testing.T) {
+	suffixes := artifact.SearchSuffixes()
+	require.NotEmpty(t, suffixes)
+
+	for _, suffix := range suffixes {
+		assert.NotEmpty(t, suffix)
+		assert.False(t, strings.HasPrefix(suffix, "."), "suffix %q must be glob-safe (no leading dot)", suffix)
+		assert.Equal(t, "."+suffix, artifact.SuffixFromPath("dep-1.2.3."+suffix),
+			"suffix %q must round-trip through SuffixFromPath", suffix)
+	}
+
+	assert.Contains(t, suffixes, "js")
+	assert.Contains(t, suffixes, "tar.gz")
 }
 
 func TestFilenamePrefix(t *testing.T) {

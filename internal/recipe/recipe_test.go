@@ -593,6 +593,67 @@ func TestPyPISourceRecipeStripsURLFragment(t *testing.T) {
 		"destination filename must use dep name (not raw URL basename) and contain no fragment")
 }
 
+// ── RepackRecipe extension inference ─────────────────────────────────────────
+
+// TestRepackRecipeInfersExtensionFromURL pins the intermediate filename that
+// RepackRecipe derives from the source URL (inferExt). The suffix must match
+// the on-disk name exactly, because findIntermediateArtifact globs
+// "<dep>-<version>*.<suffix>": a shortened suffix (e.g. ".bz2" instead of
+// ".tar.bz2") leaves the artifact unfindable. URL fragments must never leak
+// into the filename.
+func TestRepackRecipeInfersExtensionFromURL(t *testing.T) {
+	cases := []struct {
+		name    string
+		url     string
+		wantDst string
+	}{
+		{
+			name:    "tar.gz keeps compound suffix and drops sha256 fragment",
+			url:     "https://files.pythonhosted.org/packages/flit_core-3.9.0.tar.gz#sha256=abc123",
+			wantDst: filepath.Join(os.TempDir(), "infer-ext-1.2.3.tar.gz"),
+		},
+		{
+			name:    "tar.bz2 keeps compound suffix",
+			url:     "https://example.com/pkg-1.2.3.tar.bz2",
+			wantDst: filepath.Join(os.TempDir(), "infer-ext-1.2.3.tar.bz2"),
+		},
+		{
+			name:    "tar.xz keeps compound suffix",
+			url:     "https://example.com/pkg-1.2.3.tar.xz",
+			wantDst: filepath.Join(os.TempDir(), "infer-ext-1.2.3.tar.xz"),
+		},
+		{
+			name:    "tgz",
+			url:     "https://registry.npmjs.org/bower/-/bower-1.2.3.tgz",
+			wantDst: filepath.Join(os.TempDir(), "infer-ext-1.2.3.tgz"),
+		},
+		{
+			name:    "zip",
+			url:     "https://example.com/pkg-1.2.3.zip",
+			wantDst: filepath.Join(os.TempDir(), "infer-ext-1.2.3.zip"),
+		},
+		{
+			name:    "no extension",
+			url:     "https://example.com/download",
+			wantDst: filepath.Join(os.TempDir(), "infer-ext-1.2.3"),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			f := newFakeFetcher()
+			r := &recipe.RepackRecipe{DepName: "infer-ext", Fetcher: f}
+			src := newInput("infer-ext", "1.2.3", tc.url)
+
+			err := r.Build(context.Background(), newStack(t), src, runner.NewFakeRunner(), &output.OutData{})
+			require.NoError(t, err)
+
+			require.Len(t, f.DownloadedURLs, 1)
+			assert.Equal(t, tc.wantDst, f.DownloadedURLs[0].Dest)
+		})
+	}
+}
+
 // ── RubygemsRecipe ────────────────────────────────────────────────────────────
 
 func TestRubygemsRecipeDownloads(t *testing.T) {
