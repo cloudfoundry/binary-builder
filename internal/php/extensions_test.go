@@ -53,14 +53,21 @@ func TestLoad_PatchOverridesVersion(t *testing.T) {
 
 // TestLoad_PatchRemovesExclusion verifies that an exclusion in a patch file
 // removes the named extension from the result.
-// php82-extensions-patch.yml excludes yaf.
+// php84-extensions-patch.yml excludes phalcon, which has no replacement.
 func TestLoad_PatchRemovesExclusion(t *testing.T) {
-	set, err := php.Load("8", "2")
-	require.NoError(t, err)
+	names := func(phpMinor string) []string {
+		set, err := php.Load("8", phpMinor)
+		require.NoError(t, err)
 
-	for _, e := range set.Extensions {
-		assert.NotEqual(t, "yaf", e.Name, "yaf should be excluded in php82")
+		var result []string
+		for _, e := range set.Extensions {
+			result = append(result, e.Name)
+		}
+		return result
 	}
+
+	assert.Contains(t, names("3"), "phalcon", "phalcon should be present in php83")
+	assert.NotContains(t, names("4"), "phalcon", "phalcon should be excluded in php84")
 }
 
 // TestLoad_PatchNativeModuleAddition verifies that native modules are
@@ -126,20 +133,32 @@ func TestLoad_RealPhp82Patch(t *testing.T) {
 	set, err := php.Load("8", "2")
 	require.NoError(t, err)
 
-	// php82 patch removes yaf
-	for _, e := range set.Extensions {
-		assert.NotEqual(t, "yaf", e.Name, "yaf should be excluded in php82")
-	}
+	// php82 patch overrides oci8; yaf comes from the base file, as the patch no longer excludes it.
+	assert.Equal(t, "3.3.0", extensionVersion(t, set, "oci8"))
+	assert.NotEmpty(t, extensionVersion(t, set, "yaf"))
 }
 
 func TestLoad_RealPhp83Patch(t *testing.T) {
 	set, err := php.Load("8", "3")
 	require.NoError(t, err)
 
-	// php83 patch also removes yaf
+	// php83 patch adds ioncube; yaf comes from the base file, as the patch no longer excludes it.
+	assert.Equal(t, "14.0.0", extensionVersion(t, set, "ioncube"))
+	assert.NotEmpty(t, extensionVersion(t, set, "yaf"))
+}
+
+// extensionVersion returns the version of the named extension, failing the test if it is missing.
+func extensionVersion(t *testing.T, set *php.ExtensionSet, name string) string {
+	t.Helper()
+
 	for _, e := range set.Extensions {
-		assert.NotEqual(t, "yaf", e.Name, "yaf should be excluded in php83")
+		if e.Name == name {
+			return e.Version
+		}
 	}
+
+	t.Fatalf("extension %q not found", name)
+	return ""
 }
 
 // --- LoadFromDir tests ---
