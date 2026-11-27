@@ -21,7 +21,7 @@ type SourceFilenameFunc func(version string) string
 
 // PassthroughRecipe handles dependencies that are downloaded and passed through
 // without compilation. Covers: tomcat, composer, appdynamics, appdynamics-java,
-// skywalking-agent, openjdk, zulu, sapmachine, jprofiler-profiler, your-kit-profiler.
+// skywalking-agent, openjdk, zulu, sapmachine, jprofiler-profiler, your-kit-profiler, memory-calculator.
 type PassthroughRecipe struct {
 	DepName            string
 	SourceFilenameFunc SourceFilenameFunc
@@ -107,6 +107,14 @@ func NewPassthroughRecipes(f fetch.Fetcher) []Recipe {
 			DepName:            "container-security-provider",
 			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("container-security-provider-%s.jar", v) },
 			Meta:               ArtifactMeta{OS: "linux", Arch: "noarch", Stack: "any-stack"},
+			Fetcher:            f,
+		},
+		// A static Go binary, built per CPU architecture and independent of the stack. Only the
+		// linux/amd64 archive is picked up: the release also has a -linux-arm64 archive.
+		&PassthroughRecipe{
+			DepName:            "memory-calculator",
+			SourceFilenameFunc: func(v string) string { return fmt.Sprintf("memory-calculator-%s-linux-amd64.tgz", v) },
+			Meta:               ArtifactMeta{OS: "linux", Arch: "x64", Stack: "any-stack"},
 			Fetcher:            f,
 		},
 		&PassthroughRecipe{

@@ -295,6 +295,7 @@ func TestPassthroughSourceFilenames(t *testing.T) {
 		{"client-certificate-mapper", "2.0.1", "client-certificate-mapper-2.0.1.jar"},
 		{"container-security-provider", "1.21.0", "container-security-provider-1.21.0.jar"},
 		{"elastic-otel-javaagent", "1.10.0", "elastic-otel-javaagent-1.10.0.jar"},
+		{"memory-calculator", "4.3.0", "memory-calculator-4.3.0-linux-amd64.tgz"},
 	}
 
 	recipeMap := make(map[string]recipe.Recipe)
@@ -353,6 +354,14 @@ func TestPassthroughArtifactMeta(t *testing.T) {
 			assert.Equal(t, "x64", rec.Artifact().Arch)
 		})
 	}
+
+	// A static Go binary: CPU-specific but independent of the stack.
+	t.Run("memory-calculator_x64_any-stack", func(t *testing.T) {
+		rec := recipeMap["memory-calculator"]
+		assert.Equal(t, "linux", rec.Artifact().OS)
+		assert.Equal(t, "x64", rec.Artifact().Arch)
+		assert.Equal(t, "any-stack", rec.Artifact().Stack)
+	})
 }
 
 // ── NewPassthroughRecipes ─────────────────────────────────────────────────────
@@ -374,7 +383,7 @@ func TestNewPassthroughRecipesContents(t *testing.T) {
 		"elastic-apm-agent", "postgresql-jdbc", "mariadb-jdbc", "jacoco",
 		"newrelic", "google-stackdriver-profiler", "groovy", "cf-metrics-exporter", "spring-boot-cli",
 		"setuptools", "flit-core", "sealights-agent", "jrebel", "datadog-javaagent", "metric-writer", "contrast-security", "client-certificate-mapper",
-		"container-security-provider", "elastic-otel-javaagent",
+		"container-security-provider", "elastic-otel-javaagent", "memory-calculator",
 	})
 }
 
